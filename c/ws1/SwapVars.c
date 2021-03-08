@@ -4,8 +4,9 @@ void SwapVars(int *ptr_x, int *ptr_y);
 
 int main()
 {
-	int arr_test_x[6] = {1, (-5), 0, 1000, -7, 3}; // test array for x values.
-	int arr_test_y[6] = {7, 8, (-15), 1, -9, 3}; // test array for y values.
+	int arr_test_x[] = {1, (-5), 0, 1000, -7, 3}; // test array for x values.
+	int arr_test_y[] = {7, 8, (-15), 1, -9, 3}; // test array for y values.
+	int array_size = sizeof(arr_test_x) / sizeof(arr_test_x[0]);
 	int temp_x,temp_y; // temp values for comparassion.
 	int i; // index for loop/
 	
@@ -15,7 +16,7 @@ int main()
 		temp_x = arr_test_x[i];
 		temp_y = arr_test_y[i];
 		SwapVars(&arr_test_x[i], &arr_test_y[i]);
-		printf("Values after swap: x: %d, y: %d.\n", arr_test_x[i], arr_test_y[i]);
+		printf("Values after swap: x: %d, y: %d.\t", arr_test_x[i], arr_test_y[i]);
 		if(arr_test_x[i] == temp_y && arr_test_y[i] == temp_x)
 		{
 			printf("Success!\n");

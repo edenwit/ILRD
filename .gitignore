@@ -1,0 +1,14 @@
+*
+# do not ignore the .c files
+!*.c
+!.out
+# do not ignore the .h files
+!.h
+# do not ignore the .md files
+!.md
+# do not ignore the myfuncs
+!.myfuncs
+# folder c  and c/ws1
+!c
+!c/**/.c
+!.gitignore

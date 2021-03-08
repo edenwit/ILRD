@@ -25,10 +25,11 @@ double Power10 (int n)
 int main()
 {
 	int i;
-	int arr_test[6] = {1, (-5), 8, (-1), (-3), (-6)};
-	double arr_results[6] = {10, 0.1*0.1*0.1*0.1*0.1, 1, 0.1, 0.1*0.1*0.1, 0.1*0.1*0.1*0.1*0.1*0.1};
+	int arr_test[] = {1, (-5), 8, (-1), (-3), (-6)};
+	double arr_results[] = {10, 0.1*0.1*0.1*0.1*0.1, 1, 0.1, 0.1*0.1*0.1, 0.1*0.1*0.1*0.1*0.1*0.1};
+	int array_size = sizeof(arr_test) / sizeof(arr_test[0]);
 	
-	for (i = 0; i < 6; i++)
+	for (i = 0; i < array_size; i++)
 	{   
 		printf("Test #%d: got: %f, expacted: %f  ", i + 1, Power10(arr_test[i]),
 			arr_results[i]);
