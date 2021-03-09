@@ -1,7 +1,9 @@
-#include <stdio.h>
+#include <stdio.h> /* size_t */
+#include <assert.h> /* assert */
 
-size_t StrLen(char *s)
+size_t StrLen(const char *s)
 {
+	assert (s != NULL);
 	size_t i = 0;
 	
 	while(*(s + i) != 0)
@@ -12,17 +14,16 @@ size_t StrLen(char *s)
 	return i;
 }
 
-int StrCmp(char *s1, char *s2)
+int StrCmp(const char *s1, const char *s2)
 {
-	size_t i = 0;
-	
-	while(*(s1 + i) != 0 || *(s2 + i) != 0)	
+	assert (s1 != NULL || s1 != NULL);
+	while( 0 != *s1 || 0 != *s2)	
 	{
-		if( *(s1 + i) - *(s2 + i) !=0)
+		if( *s1 - *s2 != 0)
 		{
-			return *(s1 + i) - *(s2 + i);
+			return *s1 - *s2;
 		}
-		++i;
+		++s1; ++s2;
 	}
 	
 	return 0;
