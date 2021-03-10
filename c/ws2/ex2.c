@@ -10,7 +10,7 @@ int main()
 	int arr_1[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 	size_t arr_size = sizeof(arr_1) / sizeof(arr_1[0]);
 	int *arr_2 = CopyArr(arr_1, arr_size);
-	int i = 0;
+	size_t i = 0;
 
 	printf("Array 1: \n");
 	for ( i = 0; i < arr_size; i++ )

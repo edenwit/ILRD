@@ -16,7 +16,7 @@ size_t StrLen(const char *s)
 
 int StrCmp(const char *s1, const char *s2)
 {
-	assert (s1 != NULL || s1 != NULL);
+	assert (s1 != NULL && s1 != NULL);
 	while( 0 != *s1 || 0 != *s2)	
 	{
 		if( *s1 - *s2 != 0)
