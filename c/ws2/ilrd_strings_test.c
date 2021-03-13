@@ -1,6 +1,8 @@
 #include <stdio.h> /* printf */
 #include <string.h>
+#include <ctype.h> /* isspace*/
 #include "ilrd_strings.h" /* StrLen, StrCmp */
+
 
 static void StrCpyTest();
 static void StrNCpyTest();
@@ -9,6 +11,9 @@ static void StrChrTest();
 static void StrDupTest();
 static void StrCatTest();
 static void StrNCatTest();
+static void StrStrTest();
+static void StrSpnTest();
+static void IsPalindromeTest();
 
 int main()
 {
@@ -65,7 +70,7 @@ int main()
 	{
 		printf("Failure!\n");
 	}	
-	printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_3,StrLen(str_test_3),str_test_5,StrLen(str_test_5));
+	printf("Str1: \"%s\"\tstatic void StrStrTest() | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_3,StrLen(str_test_3),str_test_5,StrLen(str_test_5));
 	cmp_result = StrCmp(str_test_3, str_test_5);
 	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[4]);
 	if(cmp_result == size_res_test[4])
@@ -106,6 +111,10 @@ int main()
 	StrDupTest();
 	StrCatTest();
 	StrNCatTest();
+	StrStrTest();
+	StrSpnTest();
+	IsPalindromeTest();
+	
 	return 0;
 	
 }
@@ -321,3 +330,99 @@ static void StrNCatTest()
 	}
 	return;
 }
+
+static void StrStrTest()
+{
+	char test_strs1[][40] = {"abcd", "", "hello_g", "ABC", "xyz", "fshkl4hl,AbcdEb"};
+	char test_strs2[][40] = {"bc", "b", "llop", "C", "xyz", "fshkl4hlp,b"};
+	const size_t test_n[] = 	{1, -1, -1, 2, 0, -1, 1};
+	size_t arr_size = sizeof(test_strs1) / sizeof(test_strs1[0]);
+	size_t i = 0;
+	char *cpy_str_p = NULL;
+	
+	printf("\n\n-----------StrStr-------------: \n\n");
+	
+	for (i = 0; i < arr_size; ++i)
+	{
+			printf("Haystack: \"%s\", needle: \"%s\"\n", test_strs1[i],test_strs2[i]);
+	
+			cpy_str_p = StrStr(test_strs1[i], test_strs2[i]);
+	
+			printf("Compare result: \"%p\". Expected: \"%p"". ", cpy_str_p, test_strs1[i] + test_n[i]);
+		
+			if (test_n[i] == (size_t)-1 && NULL == cpy_str_p)
+			{
+				printf("Success!\n\n");
+			}
+			else if (cpy_str_p == test_strs1[i] + test_n[i])
+			{
+				printf("Success!\n\n");
+			}
+			else
+			{
+				printf("Failure!\n\n");
+			}
+	}
+	return;
+}
+
+static void StrSpnTest()
+{
+	char test_strs1[][40] = {"babcd"	, ""	, "hello_g"	, "ABC"	, "xyz"	, "fshkl4hl,AbcdEb", "hey friend"};
+	char test_strs2[][40] = {"bc"	, "b"	, "hlp"		, "ABC"	, ""	, "fshkl4hlp,b", "he you"};
+	size_t arr_size = sizeof(test_strs1) / sizeof(test_strs1[0]);
+	size_t i = 0;
+	size_t result = 0;
+	
+	printf("\n\n-----------StrSpn-------------: \n\n");
+	
+	for (i = 0; i < arr_size; ++i)
+	{
+			printf("Str: \"%s\", chars: \"%s\"\n", test_strs1[i],test_strs2[i]);
+	
+			result = StrSpn(test_strs1[i], test_strs2[i]);
+	
+			printf("Compare result: \"%lu\". Expected: \"%lu"". ", result, strspn(test_strs1[i], test_strs2[i]));
+		
+			if (result == strspn(test_strs1[i], test_strs2[i]))
+			{
+				printf("Success!\n\n");
+			}
+			else
+			{
+				printf("Failure!\n\n");
+			}
+	}
+	return;
+}
+
+static void IsPalindromeTest()
+{
+	char test_strs1[][40] = {"babcd"	, ""	, "abanibi"	, "ABCCBA"	, "ABCBA"	, "abc c ba", "32546543"};
+	const size_t test_n[] = 	{0, 1, 0, 1, 1, 1, 0};
+	size_t arr_size = sizeof(test_strs1) / sizeof(test_strs1[0]);
+	size_t i = 0;
+	size_t result = 0;
+	
+	printf("\n\n-----------IsPalindrome-------------: \n\n");
+	
+	for (i = 0; i < arr_size; ++i)
+	{
+			printf("Str: \"%s\"\n", test_strs1[i]);
+	
+			result = IsPalindrome(test_strs1[i]);
+	
+			printf("Compare result: \"%lu\". Expected: \"%lu"". ", result, test_n[i]);
+		
+			if (result == test_n[i])
+			{
+				printf("Success!\n\n");
+			}
+			else
+			{
+				printf("Failure!\n\n");
+			}
+	}
+	return;
+}
+

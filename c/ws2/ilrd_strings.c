@@ -158,3 +158,79 @@ char *StrNCat(char *dest, const char *src, size_t n)
 
 	return dest;
 }
+
+char *StrStr(const char *haystack, const char *needle)
+{
+	char *temp_hay = (char *)haystack;
+	char *p1 = NULL;
+	char *p2 = NULL;
+ 
+ 	assert (NULL != haystack && NULL != needle);
+ 	
+	if ('\0' == *needle)
+	{
+		return temp_hay;
+	}
+ 
+	while ('\0' != *temp_hay)
+	{
+		p1 = temp_hay;
+		p2 = (char *)needle;
+ 
+		while ('\0' != *p1 && '\0' != *p2 && 0 != (*p1 - *p2))
+		{
+			++p1;
+			++p2;
+		}
+ 
+		if ('\0' != *p2)
+		{
+			return temp_hay;
+		}
+		++temp_hay;
+	}
+ 
+	return NULL;
+}
+
+size_t StrSpn(const char *s, const char *accept)
+{
+	char *start_s = (char *)s;
+	
+	assert (NULL != s && NULL != accept);
+		
+	while ('\0' != *s && StrChr(accept, *s))
+	{
+		++s;
+	}
+	
+	return (size_t)(s - start_s);
+}
+
+int IsPalindrome(const char *str)
+{
+	char * rev_p = (char *)(str + StrLen(str) - 1);
+	
+	assert (NULL != str);
+	
+	while (str < rev_p)
+	{
+		while (isspace(*str))
+		{
+			++str;
+		}
+		while (isspace(*rev_p))
+		{
+			--rev_p;
+		}
+		if (*str != *rev_p)
+		{
+			printf("\nFall in %c - %c\n",*str, *rev_p);
+			return 0;
+		}
+		++str;
+		--rev_p;
+	}
+	
+	return 1;
+}

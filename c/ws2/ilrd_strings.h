@@ -3,6 +3,7 @@
 #include <stdio.h> /* size_t */
 #include <assert.h> /* assert */
 #include <stdlib.h>
+#include <ctype.h>
 
 size_t StrLen(const char *s);
 
@@ -21,3 +22,10 @@ char *StrDup(const char *s);
 char *StrCat(char *dest, const char *src);
 
 char *StrNCat(char *dest, const char *src, size_t n);
+
+char *StrStr(const char *haystack, const char *needle);
+
+size_t StrSpn(const char *s, const char *accept);
+
+int IsPalindrome(const char *str);
+
