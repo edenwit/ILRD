@@ -1,9 +1,11 @@
 #include <stdio.h> /* printf */
 #include <string.h>
+#include <strings.h>
 #include <ctype.h> /* isspace*/
 #include "ilrd_strings.h" /* StrLen, StrCmp */
 
-
+static void StrLenTest();
+static void StrCmpTest();
 static void StrCpyTest();
 static void StrNCpyTest();
 static void StrCaseCmpTest();
@@ -17,93 +19,8 @@ static void IsPalindromeTest();
 
 int main()
 {
-	char str_test_1[] = "Eden";
-	char str_test_2[] = "eden";	
-	char str_test_3[] = ""	  ;		
-	char str_test_4[] = "E";		
-	char str_test_5[] = "0";
-	char str_test_6[] = "Eden W";
-	int size_res_test[] = {-32, -69, -21, 100, -48, -32};
-	int cmp_result = 0;
-	
-	printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len:  %lu\n",str_test_1,StrLen(str_test_1),str_test_2,StrLen(str_test_2));
-	cmp_result = StrCmp(str_test_1, str_test_2);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[0]);
-	if(cmp_result == size_res_test[0])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}
-	printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_3,StrLen(str_test_3),str_test_4,StrLen(str_test_4));
-	cmp_result = StrCmp(str_test_3, str_test_4);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[1]);
-	if(cmp_result == size_res_test[1])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}	
-	printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_5,StrLen(str_test_5),str_test_6,StrLen(str_test_6));
-	cmp_result = StrCmp(str_test_5, str_test_6);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[2]);
-	if(cmp_result == size_res_test[2])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}	
-	printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_1,StrLen(str_test_1),str_test_4,StrLen(str_test_4));
-	cmp_result = StrCmp(str_test_1, str_test_4);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[3]);
-	if(cmp_result == size_res_test[3])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}	
-	printf("Str1: \"%s\"\tstatic void StrStrTest() | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_3,StrLen(str_test_3),str_test_5,StrLen(str_test_5));
-	cmp_result = StrCmp(str_test_3, str_test_5);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[4]);
-	if(cmp_result == size_res_test[4])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}	
-	printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",str_test_1,StrLen(str_test_1),str_test_6,StrLen(str_test_6));
-	cmp_result = StrCmp(str_test_1, str_test_6);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[5]);
-	if(cmp_result == size_res_test[5])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}
-	/*printf("Test For NULL value: len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",StrLen(NULL),str_test_6,StrLen(str_test_6));
-	cmp_result = StrCmp(NULL, str_test_6);
-	printf("Compare result: %d. Expected: %d.",cmp_result, size_res_test[5]);
-	if(cmp_result == size_res_test[5])
-	{
-		printf("Success!\n");
-	}
-	else
-	{
-		printf("Failure!\n");
-	}*/
-	
+	StrLenTest();
+	StrCmpTest();
 	StrCpyTest();
 	StrNCpyTest();
 	StrCaseCmpTest();
@@ -117,6 +34,70 @@ int main()
 	
 	return 0;
 	
+}
+
+
+static void StrLenTest()
+{
+	const char *test_strs[] = {"abcd", "abcde", "", "0", "abcdef"};
+	size_t arr_size = sizeof(test_strs) / sizeof(test_strs[0]);
+	size_t i = 0;
+	
+	printf("\n\n-----------StrLen-------------: \n\n");
+	
+	for (i = 0; i < arr_size; ++i)
+	{
+			printf("Input  str: \"%s\". Length: %lu\n", test_strs[i],StrLen(test_strs[i]));
+			
+			if (StrLen(test_strs[i]) == strlen(test_strs[i]))
+			{
+				printf("Success!\n");
+			}
+			else
+			{
+				printf("Failure!\n");
+			}
+	}
+	return;
+}
+
+
+static void StrCmpTest()
+{
+	const char *test_strs_1[] = {"abcd", "aBc", "AbCDE", ""};
+	const char *test_strs_2[] = {"Abcd", "abc", "ABC", "0"};
+	size_t arr_size = sizeof(test_strs_1) / sizeof(test_strs_1[0]);
+	size_t i = 0;
+	int cmp_result = 0;
+	
+	printf("\n\n-----------StrCaseCmp-------------: \n\n");
+	
+	for (i = 0; i < arr_size; ++i)
+	{
+		printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",test_strs_1[i], StrLen(test_strs_1[i]), test_strs_2[i], StrLen(test_strs_2[i]));
+		
+		cmp_result = StrCmp(test_strs_1[i], test_strs_2[i]);
+		
+		printf("Compare result: %d. Expected: %d. ",cmp_result, strcmp(test_strs_1[i], test_strs_2[i]));
+		
+		if(cmp_result < 0 && strcmp(test_strs_1[i], test_strs_2[i]) < 0)
+		{
+			printf("Success!\n");
+		}
+		else if(cmp_result > 0 && strcmp(test_strs_1[i], test_strs_2[i]) > 0)
+		{
+			printf("Success!\n");
+		}
+		else if(cmp_result == 0 && strcmp(test_strs_1[i], test_strs_2[i]) == 0)
+		{
+			printf("Success!\n");
+		}
+		else
+		{
+			printf("Failure!\n");
+		}	
+	}
+	return;
 }
 
 static void StrCpyTest()
@@ -185,7 +166,6 @@ static void StrCaseCmpTest()
 {
 	const char *test_strs_1[] = {"abcd", "aBc", "AbCDE", ""};
 	const char *test_strs_2[] = {"Abcd", "abc", "ABC", "0"};
-	const int exp_res[] = {0, 0, 68, 111};
 	size_t arr_size = sizeof(test_strs_1) / sizeof(test_strs_1[0]);
 	size_t i = 0;
 	int cmp_result = 0;
@@ -195,9 +175,20 @@ static void StrCaseCmpTest()
 	for (i = 0; i < arr_size; ++i)
 	{
 		printf("Str1: \"%s\"\t | Str1 len: %lu\t, Str2: \"%s\"\t | Str2 len: %lu\n",test_strs_1[i], StrLen(test_strs_1[i]), test_strs_2[i], StrLen(test_strs_2[i]));
+		
 		cmp_result = StrCaseCmp(test_strs_1[i], test_strs_2[i]);
-		printf("Compare result: %d. Expected: %d. ",cmp_result, exp_res[i]);
-		if(0 == cmp_result)
+		
+		printf("Compare result: %d. Expected: %d. ",cmp_result, strcasecmp(test_strs_1[i], test_strs_2[i]));
+		
+		if(cmp_result < 0 && strcasecmp(test_strs_1[i], test_strs_2[i]) < 0)
+		{
+			printf("Success!\n");
+		}
+		else if(cmp_result > 0 && strcasecmp(test_strs_1[i], test_strs_2[i]) > 0)
+		{
+			printf("Success!\n");
+		}
+		else if(cmp_result == 0 && strcasecmp(test_strs_1[i], test_strs_2[i]) == 0)
 		{
 			printf("Success!\n");
 		}
@@ -315,7 +306,7 @@ static void StrNCatTest()
 	{
 			printf("Input  str1: \"%s\", Str2: \"%s\", n: %lu\n", test_strs1[i],test_strs2[i], test_n[i]);
 	
-			cpy_str_p = StrNCat(test_strs1[i], test_strs2[i], test_n[i]);
+			cpy_str_p = StrnCat(test_strs1[i], test_strs2[i], test_n[i]);
 	
 			printf("Compare result: \"%s\". Expected: \"%s"". ", cpy_str_p, strncat(test_strs1_bk[i], test_strs2[i], test_n[i]));
 		
@@ -369,7 +360,7 @@ static void StrStrTest()
 static void StrSpnTest()
 {
 	char test_strs1[][40] = {"babcd"	, ""	, "hello_g"	, "ABC"	, "xyz"	, "fshkl4hl,AbcdEb", "hey friend"};
-	char test_strs2[][40] = {"bc"	, "b"	, "hlp"		, "ABC"	, ""	, "fshkl4hlp,b", "he you"};
+	char test_strs2[][40] = {"bc"	, "b "	, "hlp"		, "ABC"	, ""	, "fshkl4hlp,b", "he you"};
 	size_t arr_size = sizeof(test_strs1) / sizeof(test_strs1[0]);
 	size_t i = 0;
 	size_t result = 0;

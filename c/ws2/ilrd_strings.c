@@ -75,12 +75,13 @@ char *StrNCpy(char *dest, const char *src, size_t n)
 
 int StrCaseCmp(const char *s1, const char *s2)
 {
-	assert (NULL != s1 && NULL != s1);
-	while ( 0 != *s1 || 0 != *s2)	
+	assert (NULL != s1 && NULL != s2);
+	
+	while ( '\0' != *s1 || '\0' != *s2)	
 	{
-		if (((90 >= *s1 && 65 <= *s1) && (*s1 - *s2 != 0) && (*s1 - *s2 != -32)) || ((90 >= *s2 && 65 <= *s2) && (*s1 - *s2 != 0) && (*s1 - *s2 != 32)))
+		if (tolower(*s1) != tolower(*s2))
 		{
-			return *s1 - *s2;
+			return (tolower(*s1) - tolower(*s2));
 		}
 		++s1;
 		++s2;
@@ -91,6 +92,7 @@ int StrCaseCmp(const char *s1, const char *s2)
 char *StrChr(const char *s, int c)
 {
 	assert (NULL != s);
+	
 	while ( '\0' != *s)	
 	{
 		if (c == *s)
@@ -103,13 +105,14 @@ char *StrChr(const char *s, int c)
 	{
 		return (char *)s;
 	}
-	return '\0';
+	return NULL;
 }
 
 char *StrDup(const char *s)
 {	
 	size_t length = StrLen(s) + 1;
     char *new_str = (char *)malloc(length * sizeof(char));
+    
 	assert(NULL != s && NULL != new_str);
 	
 	while( '\0' != *s)
@@ -119,6 +122,8 @@ char *StrDup(const char *s)
 		++s;
     }
     *new_str = '\0';
+    
+    free(new_str - (length - 1));
     
     return new_str - (length - 1) ;
 }
@@ -134,14 +139,13 @@ char *StrCat(char *dest, const char *src)
     	*p = *src;
 		++p;
 		++src;
-
     }
     *p = '\0';
     
     return dest;
 }
 
-char *StrNCat(char *dest, const char *src, size_t n)
+char *StrnCat(char *dest, const char *src, size_t n)
 {
 	char *cur_dest = dest + StrLen(dest) ;
 	const char *final_dest = cur_dest + n ;
@@ -154,6 +158,7 @@ char *StrNCat(char *dest, const char *src, size_t n)
 		++src;
 		++cur_dest;
 	}
+	
 	*cur_dest = '\0';
 
 	return dest;
@@ -198,34 +203,25 @@ size_t StrSpn(const char *s, const char *accept)
 	char *start_s = (char *)s;
 	
 	assert (NULL != s && NULL != accept);
-		
-	while ('\0' != *s && StrChr(accept, *s))
+	
+	while ('\0' != *s && StrChr(accept, *s) != NULL)
 	{
 		++s;
 	}
 	
-	return (size_t)(s - start_s);
+	return (s - start_s);
 }
 
 int IsPalindrome(const char *str)
 {
-	char * rev_p = (char *)(str + StrLen(str) - 1);
+	const char *rev_p = (str + StrLen(str) - 1);
 	
 	assert (NULL != str);
 	
 	while (str < rev_p)
 	{
-		while (isspace(*str))
-		{
-			++str;
-		}
-		while (isspace(*rev_p))
-		{
-			--rev_p;
-		}
 		if (*str != *rev_p)
 		{
-			printf("\nFall in %c - %c\n",*str, *rev_p);
 			return 0;
 		}
 		++str;

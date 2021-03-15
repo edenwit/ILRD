@@ -1,3 +1,4 @@
+#ifndef __ILRD_STRINGS_H__
 #define _ILRD_STRINGS_H
 
 #include <stdio.h> /* size_t */
@@ -21,7 +22,7 @@ char *StrDup(const char *s);
 
 char *StrCat(char *dest, const char *src);
 
-char *StrNCat(char *dest, const char *src, size_t n);
+char *StrnCat(char *dest, const char *src, size_t n);
 
 char *StrStr(const char *haystack, const char *needle);
 
@@ -29,3 +30,4 @@ size_t StrSpn(const char *s, const char *accept);
 
 int IsPalindrome(const char *str);
 
+#endif /* __ILRD_STRINGS_H__ */
