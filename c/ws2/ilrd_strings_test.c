@@ -7,7 +7,7 @@
 static void StrLenTest();
 static void StrCmpTest();
 static void StrCpyTest();
-static void StrNCpyTest();
+static void StrnCpyTest();
 static void StrCaseCmpTest();
 static void StrChrTest();
 static void StrDupTest();
@@ -22,7 +22,7 @@ int main()
 	StrLenTest();
 	StrCmpTest();
 	StrCpyTest();
-	StrNCpyTest();
+	StrnCpyTest();
 	StrCaseCmpTest();
 	StrChrTest();
 	StrDupTest();
@@ -130,27 +130,29 @@ static void StrCpyTest()
 	return;
 }
 
-static void StrNCpyTest()
+static void StrnCpyTest()
 {
 	const char *test_strs[] = {"abcd", "abcde", "", "0", "abcdef"};
+	const char *test_strs_bk[] = {"abcd", "abcde", "", "0", "abcdef"};
 	const size_t test_n[] = {2, 7, 10, 8, 6};
-	const char *exp_res[] = {"ab", "abcde\0", "\0\0\0\0\0\0\0\0\0", "0\0\0\0\0\0\0", "abcdef"};
 	size_t arr_size = sizeof(test_strs) / sizeof(test_strs[0]);
 	size_t i = 0;
-	char buff[10] = {0};
+	char buff[100] = {0};
 	char *cpy_str_p = NULL;
+	char *cpy_str_p_bk = NULL;
 	
-	printf("\n\n-----------StrNCpy-------------: \n\n");
+	printf("\n\n-----------StrnCpy-------------: \n\n");
 	
 	for (i = 0; i < arr_size; ++i)
 	{
 			printf("Input  str: \"%s\"\n", test_strs[i]);
 	
-			cpy_str_p = StrNCpy(buff, test_strs[i], test_n[i]);
-	
+			cpy_str_p = StrnCpy(buff, test_strs[i], test_n[i]);
+			cpy_str_p_bk = strncpy(buff, test_strs_bk[i], test_n[i]);
+			
 			printf("Output str: \"%s\" , n: \"%lu\"\n", buff, test_n[i]);
 	
-			if (cpy_str_p == buff && 0 == StrCmp(buff, exp_res[i]))
+			if (cpy_str_p == cpy_str_p_bk)
 			{
 				printf("Success!\n");
 			}

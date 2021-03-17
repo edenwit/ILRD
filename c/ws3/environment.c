@@ -5,70 +5,111 @@
 #include <string.h> /* strlen */
 
 
-size_t CountChars(char **env);
-char *AllocateBuffer(size_t size);
-char *InsertEnvVarsToArr(char *buff, char **env);
+char **PrintEnv(char **env);
+
+size_t CountEnvs(char **env);
+
+char **AllocateStrings(char ** buffer, char **env, size_t env_count);
+
+char *InsertEnvVarsToArr(char **buff, char **env);
+
+char **FreeMem(char **buff, size_t n);
 
 int main(int argc, char **argv, char **envp)
+
+
 {
+	
 	char **env = envp;
-	size_t size_to_allocate = CountChars(env);
-	char *buffer = AllocateBuffer(size_to_allocate);
-
+	size_t env_count = CountEnvs(env) + 1;
+	char **buffer = (char **)malloc(env_count * sizeof(char **));
+		
+	PrintEnv(env);
+	
 	assert(NULL != buffer);
-	
-	
-	printf("Buffer size       : %lu\n", size_to_allocate);
-	printf("Buffer adress from: %p\n", buffer);
-	printf("Buffer adress to  : %p\n", buffer + size_to_allocate - 1);
-	buffer = InsertEnvVarsToArr(buffer, env);
-	
-	printf("Buffer: \n%s\n", buffer);
+		printf("\n\n\n----------------------------------\n\n\n");
+	buffer = AllocateStrings(buffer, env, env_count);
 
+	PrintEnv(buffer);
+	buffer = FreeMem(buffer, env_count);
 	
 	return 0;
 }
 
-size_t CountChars(char **env)
+char **PrintEnv(char **env)
 {
-	size_t size_count = 0;
-	
-	for (; *env != 0; env++)
-	{
-		size_count = size_count + strlen(*env) + 1;
-	}
-	
-	return size_count;
-}
-
-char *AllocateBuffer(size_t size)
-{	
-    char *buffer = (char *)malloc(size * sizeof(char));
-	
-	return buffer;
-}
-
-char *InsertEnvVarsToArr(char *buff, char **env)
-{
-	char *buff_loc = buff;
+	char **orig_env = env;
 	size_t i = 0;
-	size_t env_len = 0;
-	
-	for (; *env != 0; env++)
+	while (0 != *env)
 	{
-		env_len = strlen(*env);
-		printf("env: %s, len: %lu.\n", *env, env_len);
-		for (i = 0; i < env_len; ++i)
-		{
-			*buff_loc = tolower(**(env + i));
-			++buff_loc;
-		}
-		*buff_loc = ' ';
-		++buff_loc;
+		printf("env %lu: %s\n",++i, *env);
+		++env;
 	}
-	*(buff_loc -1) = '\0';
 	
-	return buff;
+	return orig_env;
+}
+
+size_t CountEnvs(char **env)
+{
+	size_t counter = 0;
 	
+	while (0 != *env)
+	{
+		++counter;
+		++env;
+	}
 	
+	return counter;
+}
+
+
+char **AllocateStrings(char ** buffer, char **env, size_t env_count)
+{	
+	char **orig_buffer = buffer;
+	/*char **orig_env = env;*/
+	size_t i = 0;
+	size_t j = 0;
+	size_t string_len = 0;
+	
+	for (i = 0; i < env_count - 1; ++i)
+	{	
+		string_len = strlen(*env) + 1;
+		*buffer = (char *)malloc((string_len)* sizeof(char *));
+		if (NULL == *buffer)
+		{
+			FreeMem(buffer, i);
+		}		
+		
+		for (j = 0; j < string_len; ++j)
+		{
+			**(buffer) = tolower(**(env));
+			/*printf("%c",**(buffer));*/
+			++*buffer;
+			++*env;
+		}
+		**buffer = '\0';
+		*buffer = *buffer - string_len;
+/*		printf("\nprinting %s", *buffer);*/
+		++buffer;
+		++env;
+	}
+	*buffer = NULL;
+	
+	return orig_buffer;
+}
+
+char **FreeMem(char **buff, size_t n)
+{
+	char **orig_buff = buff;
+	size_t i = 0;
+	
+	for (i = 0; i< n; ++i)
+	{
+		printf("\n\n%lu\n\n",i);
+		free(*buff);
+		++buff;
+	}
+	free(orig_buff);
+	
+	return orig_buff;
 }

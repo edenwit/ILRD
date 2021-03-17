@@ -13,6 +13,8 @@ void WwpIf();
 void WwpSwitch();
 void WwpLut();
 
+void DoNothing();
+void PrintAT(int ch);
 
 int main()
 {
@@ -73,21 +75,32 @@ void WwpSwitch()
 void WwpLut()
 {
 	int ch = 0;
+	int i = 0;
+	void (* arr[256])(int);
+	for (i = 0; i< 255; ++i)
+	{
+		arr[i] = DoNothing;
+	}
+	arr['A'] = PrintAT;
+	arr['T'] = PrintAT;
+
 	system("stty -icanon -echo");
 	while (27 != ch)	
 	{
 		ch = toupper(getchar());
-	
-		switch(ch)
-		{
-			case 'A':
-				printf("A was pressed.\n");
-				break;
-			case 'T':
-				printf("T was pressed.\n");
-				break;
-		}
+		arr[ch](ch);
 	}
 	system("stty icanon echo");
+	return;
+}
+
+void DoNothing()
+{
+	return;
+}
+
+void PrintAT(int ch)
+{
+	printf("%c was pressed.\n",ch);
 	return;
 }

@@ -46,7 +46,7 @@ char *StrCpy(char *dest, const char *src)
 	return dest;
 }
 
-char *StrNCpy(char *dest, const char *src, size_t n)
+char *StrnCpy(char *dest, const char *src, size_t n)
 {
 	char *cur_dest = dest;
 	const char *final_dest = dest + n;
@@ -57,11 +57,6 @@ char *StrNCpy(char *dest, const char *src, size_t n)
 		*cur_dest = *src;
 		++src;
 		++cur_dest;
-	}
-	
-	if ('\0' == *src)
-	{
-		*cur_dest = '\0';
 	}
 	
 	while (final_dest != cur_dest)
@@ -123,7 +118,7 @@ char *StrDup(const char *s)
     }
     *new_str = '\0';
     
-    free(new_str - (length - 1));
+    /*free(new_str - (length - 1));*/
     
     return new_str - (length - 1) ;
 }
@@ -182,13 +177,13 @@ char *StrStr(const char *haystack, const char *needle)
 		p1 = temp_hay;
 		p2 = (char *)needle;
  
-		while ('\0' != *p1 && '\0' != *p2 && 0 != (*p1 - *p2))
+		while ('\0' != *p1 && '\0' != *p2 && 0 == (*p1 - *p2))
 		{
 			++p1;
 			++p2;
 		}
  
-		if ('\0' != *p2)
+		if ('\0' == *p2)
 		{
 			return temp_hay;
 		}
@@ -202,9 +197,10 @@ size_t StrSpn(const char *s, const char *accept)
 {
 	char *start_s = (char *)s;
 	
-	assert (NULL != s && NULL != accept);
+	assert (NULL != s);
+	assert (NULL != s);
 	
-	while ('\0' != *s && StrChr(accept, *s) != NULL)
+	while ('\0' != *s && NULL != StrChr(accept, *s))
 	{
 		++s;
 	}
