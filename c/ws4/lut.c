@@ -1,33 +1,11 @@
 /* developer: Eden Wittenberg
-    status: ---
-    date: 17.03.2021
-    description: print directly to screen by if\else methods
+    status: Approved by Nir
+    date: 18.03.2021
+    description: print directly to screen by if\else / switch / lut methods
     
 */
 
-#include <stdio.h> /* printf */
-#include <stdlib.h>  /* system */
-#include <ctype.h> /* toupper */
-
-void WwpIf();
-void WwpSwitch();
-void WwpLut();
-
-void DoNothing();
-void PrintAT(int ch);
-
-int main()
-{
-	printf("Presses with IF / ELSE:\n");
-	WwpIf();
-	
-	printf("\nPresses with SWITCH / CASE:\n");
-	WwpSwitch();	
-
-	printf("\nPresses with LOOKUP TABLE:\n");
-	WwpLut();
-	return 0;	
-}
+#include "lut.h" /* StrLen, StrCmp */
 
 void WwpIf()
 {
@@ -47,6 +25,7 @@ void WwpIf()
 		}
 	}
 	system("stty icanon echo");
+	
 	return;
 }
 
@@ -69,15 +48,17 @@ void WwpSwitch()
 		}
 	}
 	system("stty icanon echo");
+	
 	return;
 }
 
 void WwpLut()
 {
 	int ch = 0;
-	int i = 0;
+	size_t i = 0;
 	void (* arr[256])(int);
-	for (i = 0; i< 255; ++i)
+	size_t n = sizeof(arr) / sizeof(arr[0]);
+	for (i = 0; i < n; ++i)
 	{
 		arr[i] = DoNothing;
 	}
@@ -85,6 +66,7 @@ void WwpLut()
 	arr['T'] = PrintAT;
 
 	system("stty -icanon -echo");
+	
 	while (27 != ch)	
 	{
 		ch = toupper(getchar());
