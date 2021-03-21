@@ -11,8 +11,4 @@ void WwpSwitch();
 
 void WwpLut();
 
-void DoNothing();
-
-void PrintAT(int ch);
-
 #endif /* __LUT_H__ */

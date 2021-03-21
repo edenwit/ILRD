@@ -6,22 +6,28 @@
 */
 
 #include "lut.h" /* StrLen, StrCmp */
+#define ESC 27
+#define SIZE 256
+
+static void DoNothing();
+static void PrintA();
+static void PrintT();
 
 void WwpIf()
 {
-	int ch = 0;
+	unsigned char ch = 0;
 	system("stty -icanon -echo");
-	while (27 != ch)	
+	while(EOF != ch && ESC != ch)
 	{
 		ch = toupper(getchar());
 	
 		if('A' == ch)
 		{
-			printf("A was pressed.\n");
+			printf("A pressed.\n");
 		}
 		else if('T' == ch)
 		{
-			printf("T was pressed.\n");
+			printf("T pressed.\n");
 		}
 	}
 	system("stty icanon echo");
@@ -31,20 +37,26 @@ void WwpIf()
 
 void WwpSwitch()
 {
-	int ch = 0;
+	unsigned char ch = 0;
 	system("stty -icanon -echo");
-	while (27 != ch)	
+	while(EOF != ch && ESC != ch)
 	{
-		ch = toupper(getchar());
-	
 		switch(ch)
 		{
 			case 'A':
-				printf("A was pressed.\n");
+			{
+				printf("A pressed.\n");
 				break;
+			}
 			case 'T':
-				printf("T was pressed.\n");
+			{
+				printf("T pressed.\n");
 				break;
+			}
+			default:
+			{
+				break;
+			}
 		}
 	}
 	system("stty icanon echo");
@@ -54,35 +66,43 @@ void WwpSwitch()
 
 void WwpLut()
 {
-	int ch = 0;
+	unsigned char ch = 0;
 	size_t i = 0;
-	void (* arr[256])(int);
+	static void (* arr[SIZE])() = {NULL};
 	size_t n = sizeof(arr) / sizeof(arr[0]);
 	for (i = 0; i < n; ++i)
 	{
 		arr[i] = DoNothing;
 	}
-	arr['A'] = PrintAT;
-	arr['T'] = PrintAT;
+	
+	arr['A'] = PrintA;
+	arr['T'] = PrintT;
 
 	system("stty -icanon -echo");
 	
-	while (27 != ch)	
+	while(EOF != ch && ESC != ch)
 	{
 		ch = toupper(getchar());
+
 		arr[ch](ch);
 	}
 	system("stty icanon echo");
 	return;
 }
 
-void DoNothing()
+static void DoNothing()
 {
 	return;
 }
 
-void PrintAT(int ch)
+static void PrintA()
 {
-	printf("%c was pressed.\n",ch);
+	printf("A pressed.\n");
+	return;
+}
+
+static void PrintT()
+{
+	printf("T pressed.\n");
 	return;
 }
