@@ -234,7 +234,7 @@ static void ByteMirrorNoLoopTest()
 
 static void IsBit2And6OnTest()
 {
-	const int input1_arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 68, -1};
+	const int input1_arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 68, 255};
 	const int exp_res_arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0};
 	size_t arr_size = sizeof(input1_arr) / sizeof(input1_arr[0]);
 	size_t i = 0;
@@ -262,8 +262,8 @@ static void IsBit2And6OnTest()
 
 static void IsBit2Or6OnTest()
 {
-	const int input1_arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 68, -1};
-	const int exp_res_arr[] = {0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0};
+	const int input1_arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 68, 255};
+	const int exp_res_arr[] = {0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1};
 	size_t arr_size = sizeof(input1_arr) / sizeof(input1_arr[0]);
 	size_t i = 0;
 	int res = 0; 
@@ -405,7 +405,7 @@ static void  CountBitsLoopTest()
 static void  CountBitsNoLoopTest()
 {
 	const int input1_arr[] = {8, 3, 16000, 154648, 16, 2147483647, 255, 64213, 100, 1, 0};
-	const int exp_res_arr[] = {1, 2, 6, 7, 1, 31, 8, 11, 3, 1, 0};
+	const int exp_res_arr[] = {1, 2, 6, 6, 1, 16, 8, 11, 3, 1, 0};
 	size_t arr_size = sizeof(input1_arr) / sizeof(input1_arr[0]);
 	size_t i = 0;
 	int res = 0; 
@@ -432,16 +432,13 @@ static void  CountBitsNoLoopTest()
 
 static void  PrintFloatBitsTest()
 {
-	float input1_arr[] = {0.1, 14.0, -3.22222, 44561.111, 125.5465, 60.0, 71.3, 0.0, 14.3};
-	size_t arr_size = sizeof(input1_arr) / sizeof(input1_arr[0]);
-	size_t i = 0;
+	float input_f = 0.0;
 		
 	printf("\n\n-----------PrintFloatBits-------------: \n\n");
-	
-	for (i = 0; i < arr_size; ++i)
-	{
-		PrintFloatBits(input1_arr[i]);
-	}
+	printf("Please enter a float value: \n");
+	scanf("%f", &input_f);
+		
+	PrintFloatBits(input_f);
 	
 	return;	
 }

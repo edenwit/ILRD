@@ -8,3 +8,5 @@ alias gc9='gcc -std=c99 -pedantic-errors -Wall -Wextra -DNDEBUG -03'
 # Valgrind alias
 alias vlg='valgrind --leak-check=yes --track-origins=yes'
 
+#Added on worksheet 7
+alias gd_c='gcc -ansi -pedantic-errors -Wall -Wextra -g -c'

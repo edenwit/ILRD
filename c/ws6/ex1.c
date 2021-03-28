@@ -1,11 +1,13 @@
+
 #include <stdio.h> /* printf */
 
-#ifndef __EX1_H__
-#define __EX1_H__
+#include "ex1.h"
 
 #define BYTE_SIZE 8
 #define CHAR_VALUES 256
-#define INT_BYTE_SIZE (sizeof(int))
+#define BITS_IN_BYTE (sizeof(int))
+
+static unsigned int *LutCountBits();
 
 /* approved by Avital */
 long Pow2(unsigned int x, unsigned int y)
@@ -31,7 +33,8 @@ int IsPow2Loop(unsigned int n)
 	return 0;
 }
 
-int IsPow2NoLoop(int n)
+/* approved by Avital */
+int IsPow2NoLoop(unsigned int n)
 {
     return (n & (n - 1)) == 0;
 }
@@ -51,6 +54,7 @@ int Add1(int n)
     return n;
 }
 
+/* approved by Avital */
 void PrintThreeOn(unsigned int nums[], size_t length)
 {
 	static const int count_to_get = 3;
@@ -115,39 +119,19 @@ unsigned char ByteMirrorNoLoop(unsigned char byte)
 	return lut[byte];
 }
 
+/* Approved by Ohad */
 int IsBit2And6On(unsigned char byte)
 {
-	unsigned char cur_byte = byte; 
-
-	cur_byte = cur_byte >> 2;
-	if (cur_byte & 1)
-	{
-		cur_byte = cur_byte >> 4;
-		if (cur_byte & 1)
-		{
-			return 1;
-		}
-	}
-	return 0;	
+	return ((byte & (1 << 2)) && (byte & (1 << 6)));
 }
 
+/* Approved by Ohad */
 int IsBit2Or6On(unsigned char byte)
 {
-	unsigned char cur_byte = byte; 
-
-	cur_byte = cur_byte >> 2;
-	if (cur_byte & 1)
-	{
-		return 1;
-	}
-	cur_byte = cur_byte >> 4;
-	if (cur_byte & 1)
-	{
-		return 1;
-	}
-	return 0;	
+	return ((byte & (1 << 2)) || (byte & (1 << 6)));
 }
 
+/* Approved by Shelly && Ohad */
 unsigned char Swap3And5(unsigned char byte)
 {
 	/* x gets 0 if same, 1 if not */
@@ -158,11 +142,14 @@ unsigned char Swap3And5(unsigned char byte)
     return (byte ^ x);
 }
 
+
+/* Approved by Ohad */
 unsigned int DivideBy16(unsigned int num)
 {
 	return ((num >> 4) << 4);
 }
 
+/* Approved by Shelly */
 void Swap(unsigned int *x, unsigned int *y)
 {
 	*x = *x ^ *y;
@@ -170,69 +157,55 @@ void Swap(unsigned int *x, unsigned int *y)
     *x = *x ^ *y;
 }
 
+/* Approved by Shelly && Ohad */
 unsigned int CountBitsLoop(int num)
 {
-	size_t counter = 0;
+	unsigned int counter = 0;
 	size_t i = 0;
 	
-	for (i = 0; i < BYTE_SIZE * INT_BYTE_SIZE; ++i)
+	for (i = 0; i < BYTE_SIZE * BITS_IN_BYTE; ++i)
 	{
-		if(1 & num)
+		if (1 & num)
 		{
 			++counter;
 		}
 		num = num >> 1; 
 	}
+	
 	return counter;
 }
 
+/* Approved by Ohad */
 unsigned int CountBitsNoLoop(int num)
 {
-	unsigned char lut[CHAR_VALUES] = {0};
-	size_t i = 0;
 	int  mask = (CHAR_VALUES - 1);
 	unsigned int counter = 0;
-	int num_and_mask = num & mask;
+
+	counter = counter + LutCountBits()[num & mask];
+	num = num >> 8;
+	counter = counter + LutCountBits()[num & mask];
+	num = num >> 8;
+	counter = counter + LutCountBits()[num & mask];
+	num = num >> 8;
+	counter = counter + LutCountBits()[num & mask];
 	
-	for (i = 0; i < CHAR_VALUES; ++i)
-	{
-		lut[i] = CountBitsLoop(i);
-	}
-	
-	counter = counter + lut[num_and_mask];
-	mask = mask << 8;
-	num_and_mask = num & mask;
-	num_and_mask = num_and_mask >> 8;
-	counter = counter + lut[num_and_mask];
-	mask = mask << 8;
-	num_and_mask = num & mask;
-	num_and_mask = num_and_mask >> 16;
-	counter = counter + lut[num_and_mask];
-	mask = mask << 8;
-	num_and_mask = num & mask;
-	num_and_mask = num_and_mask >> 24;
-	counter = counter + lut[num_and_mask];
-	
-	return counter;	
+	return counter;
 }
 
+/* Approved by Ohad */
 void PrintFloatBits(float f)
 {	
-    int *int_p = NULL;
-    int i = BYTE_SIZE * INT_BYTE_SIZE -1;
-    int bit = 0;
+    int *int_p = (int *) &f;
+    int i = 0;
+    unsigned int bit = 0;
     
-    int_p = (int *) &f;
-    printf("%f -\t", f);
+    printf("%f \t", f);
 
-    for (; i >= 0; --i)
+    for (i = BYTE_SIZE * BITS_IN_BYTE -1; i >= 0; --i)
     {
 		bit = *int_p & (1 << i);
-		if(0 != bit)
-		{
-			bit = 1;
-		}
-		printf("%d", bit);
+
+		printf("%u", bit >> i);
 		
 		if ((31 == i) || (23 == i))
 		{
@@ -242,7 +215,25 @@ void PrintFloatBits(float f)
 	printf("\n");
 }
 
-#endif /*__EX1_H__*/
+/* Approved by Shelly */
+static unsigned int *LutCountBits()
+{
+    static unsigned int arr_byte[CHAR_VALUES] = {0}; 
+    static int init = 0;
+    size_t i = 0;
+
+    if (!init)
+    {
+        for (i = 0; i < CHAR_VALUES; ++i)
+        {
+            arr_byte[i] = CountBitsLoop(i);
+        }
+
+        init = 1;
+    }
+
+    return arr_byte;
+}
 
 
 
