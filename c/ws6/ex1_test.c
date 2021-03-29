@@ -168,7 +168,7 @@ static void Add1Test()
 
 static void PrintThreeOnTest()
 {
-	unsigned int input1_arr[] = {0, 14, 3, 4, 5, 6, 7, 8, 50, 10};
+	unsigned int input1_arr[] = {0, 236, 3, 4, 15, 191, 7, 39, 50, 63};
 	size_t arr_size = sizeof(input1_arr) / sizeof(input1_arr[0]);
 	
 	printf("\n\n-----------PrintThreeOn-------------: \n\n");

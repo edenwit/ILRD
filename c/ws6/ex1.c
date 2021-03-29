@@ -12,7 +12,7 @@ static unsigned int *LutCountBits();
 /* approved by Avital */
 long Pow2(unsigned int x, unsigned int y)
 {
-	return (long)(x << y);
+	return ((long)x << y);
 }
 
 /* approved by Avital */
@@ -67,7 +67,7 @@ void PrintThreeOn(unsigned int nums[], size_t length)
 		counter = 0;
 		cur_num = nums[i];
 
-		while (counter < count_to_get && 0 != cur_num)
+		while (counter <= count_to_get && 0 != cur_num)
 		{
 			if (cur_num & 1)
 			{

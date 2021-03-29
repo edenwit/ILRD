@@ -34,7 +34,7 @@ void Log(const char *file_name)
 {
 	char str[STR_MAX] = {'\0'};
 	status_type finished = SUCCESS;
-	static const struct str_ops struct_arr[STRUCT_SIZE] = 
+	static const struct str_ops struct_arr[] = 
 	{
 		{"-remove", CompareWholeStr, RemoveFile},
 		{"-count", CompareWholeStr, CountRows},
@@ -45,11 +45,11 @@ void Log(const char *file_name)
 
 	assert(file_name);
 
-	printf("Enter string (up to %d characters):\n", STR_MAX);
+	printf("Enter string (up to %d characters):\n", STR_MAX - 1);
 	
 	while (EXIT != finished)
 	{
-		fgets(str, STR_MAX, stdin); 
+		fgets(str, STR_MAX - 1, stdin); 
 		finished = ChainOfResponsibility(str, file_name, struct_arr);		
 	}
 }
