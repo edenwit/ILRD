@@ -1,3 +1,5 @@
+#include "ilrd_strings.h" /* StrLen, StrCmp */
+
 char *StrCpy(char *dest, const char *src)
 {
 	char *cur_dest = dest;

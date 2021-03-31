@@ -1,3 +1,5 @@
+#include "ilrd_strings.h" /* StrLen, StrCmp */
+
 int StrCaseCmp(const char *s1, const char *s2)
 {
 	assert (NULL != s1 && NULL != s2);

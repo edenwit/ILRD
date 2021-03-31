@@ -1,3 +1,5 @@
+#include "ilrd_strings.h" /* StrLen, StrCmp */
+
 size_t StrLen(const char *s)
 {
 	size_t i = 0;

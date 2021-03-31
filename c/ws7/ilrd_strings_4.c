@@ -1,3 +1,5 @@
+#include "ilrd_strings.h" /* StrLen, StrCmp */
+
 
 char *StrCat(char *dest, const char *src)
 {	
