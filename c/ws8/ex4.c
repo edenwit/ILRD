@@ -1,2 +1,2 @@
-#define SIZEOF_TYPE(type) ((char *)(&type + 1) - (char*)(&type))
+#define SIZEOF_TYPE(X) ((size_t)(&(X)+1)-(size_t)(&(X))) 
 

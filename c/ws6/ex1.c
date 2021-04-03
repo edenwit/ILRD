@@ -62,6 +62,8 @@ void PrintThreeOn(unsigned int nums[], size_t length)
 	int counter = 0;
 	size_t i = 0;
 		
+	assert(nums);
+		
 	for (i = 0; i < length; ++i)
 	{
 		counter = 0;
