@@ -1,29 +1,36 @@
 #include <stdio.h> 
+#include <assert.h>
 #include <limits.h>
+
 #include "ex1.h"
 
 #define WORD_SIZE (sizeof(size_t))
 
-void *MemSet(void *s, int c, size_t n)
+static void *MemcpyRev(void *dest, const void *src, size_t n);
+
+/* Approved by Maor */
+void *Memset(void *s, int c, size_t n)
 {
-	unsigned char *temp_s = (unsigned char *)s;
+	unsigned char *temp_s = NULL;
 	size_t i = 0;
 	unsigned char char_c = (CHAR_MAX & c);
 	size_t mask = 0;
 	
+	assert(s);
+	
+	temp_s = (unsigned char *)s;
+
 	for (i = 0; i < WORD_SIZE; ++i)
 	{
-			mask <<= 8;
-			mask = mask | char_c;
+		mask <<= 8;
+		mask = mask | char_c;
 	}
 	
-	printf("res of mod: %ld\n",(size_t)temp_s % WORD_SIZE);
-	while (0 != ((size_t)temp_s % WORD_SIZE))
+	while ((0 != ((size_t)temp_s % WORD_SIZE)) && (0 < n))
 	{
 		*temp_s = char_c;
 		++temp_s;
 		n -= 1;
-		printf("1 loop n left: %ld\n", n);
 	}
 
 	while (n > WORD_SIZE)
@@ -31,7 +38,6 @@ void *MemSet(void *s, int c, size_t n)
 		*(size_t *)temp_s = mask;
 		temp_s += WORD_SIZE;
 		n -= WORD_SIZE;
-		printf("2 loop n left: %ld\n", n);
 	}
 
 	while (0 < n)
@@ -39,7 +45,104 @@ void *MemSet(void *s, int c, size_t n)
 		*temp_s = char_c;
 		++temp_s;
 		n -= 1;
-		printf("3 loop n left: %ld\n", n);
 	}
+	
 	return s;
+}
+
+/* Approved by Maor */
+void *Memcpy(void *dest, const void *src, size_t n)
+{
+	unsigned char  *temp_src = NULL;
+	unsigned char *temp_dest = NULL;
+	
+	assert(dest);
+	assert(src);
+	
+	temp_src = (unsigned char *)src;
+	temp_dest = (unsigned char *)dest;
+	
+	while ((0 != ((size_t)temp_dest % WORD_SIZE)) && (0 < n))
+	{
+		*temp_dest = *temp_src;
+		++temp_dest;
+		++temp_src;
+		n -= 1;
+	}
+
+	while (n > WORD_SIZE)
+	{
+		*(size_t *)temp_dest = *(size_t *)temp_src;
+		temp_dest += WORD_SIZE;
+		temp_src += WORD_SIZE;
+		n -= WORD_SIZE;
+	}
+
+	while (0 < n)
+	{
+		*temp_dest = *temp_src;
+		++temp_dest;
+		++temp_src;
+		n -= 1;
+	}
+	
+	return dest;
+}
+
+void *Memmove(void *dest, const void *src, size_t n)
+{
+
+	assert(dest);
+	assert(src);
+	
+	if ((size_t)dest == (size_t)src)
+	{
+		return dest;
+	}
+	else if (0 < ((size_t)src - (size_t)dest))
+	{
+		return Memcpy(dest, src, n);
+	}
+	else
+	{
+		return MemcpyRev((char *)dest + n, (char *)src + n, n);
+	}
+}
+
+static void *MemcpyRev(void *dest, const void *src, size_t n)
+{
+	unsigned char  *temp_src = NULL;
+	unsigned char *temp_dest = NULL;
+	
+	assert(dest);
+	assert(src);
+	
+	temp_src = (unsigned char *)src + n;
+	temp_dest = (unsigned char *)dest + n;
+	
+	while ((0 != ((size_t)temp_dest % WORD_SIZE)) && (0 < n))
+	{
+		--temp_dest;
+		--temp_src;
+		*temp_dest = *temp_src;
+		n -= 1;
+	}
+
+	while (n > WORD_SIZE)
+	{
+		temp_dest -= WORD_SIZE;
+		temp_src -= WORD_SIZE;
+		*(size_t *)temp_dest = *(size_t *)temp_src;
+		n -= WORD_SIZE;
+	}
+
+	while (0 < n)
+	{
+		--temp_dest;
+		--temp_src;
+		*temp_dest = *temp_src;
+		n -= 1;
+	}
+	
+	return dest;
 }

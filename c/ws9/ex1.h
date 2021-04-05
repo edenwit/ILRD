@@ -1,3 +1,7 @@
-#include <stdio.h>
+#include <stddef.h>
 
-void *MemSet(void *s, int c, size_t n);
+void *Memset(void *s, int c, size_t n);
+
+void *Memcpy(void *dest, const void *src, size_t n);
+
+void *Memmove(void *dest, const void *src, size_t n);

@@ -1,43 +1,86 @@
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "ex1.h"
 
-/*static void printArr(char *arr, size_t arr_size);*/
-
-static void TestMemSet();
+static void TestMemset();
+static void TestMemcpy();
+static void TestMemmove();
 
 int main()
 {
-	TestMemSet();
+	TestMemset();
+	TestMemcpy();
+	TestMemmove();
 	
 	return 0;
 }
 
-static void TestMemSet()
+/* Approved by Maor */
+
+static void TestMemset()
 {
-	char str[] = "testing the str and expacting good things\n";
-	char *p_char = str;
-	size_t str_size = strlen(str);
-	int c_to_pass = 'c';
-	
-	printf("str size: %ld\n", str_size);
-	printf("%s\n", p_char);
-	p_char = MemSet(p_char, c_to_pass, 3);
-	printf("%s\n", p_char);
-	
-	return;
+    char str_test[] = "abcdefghi test this code";
+    char str_comp[] = "abcdefghi test this code";
+    int nums_test[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int nums_comp[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int c = 'c';
+
+    if (0 != memcmp(Memset(str_test + 7, c, 5), memset(str_comp + 7, c, 5), 17))
+    {
+        printf("Memset Failed: with input abcdefghi test this code\n");
+    }
+    if (0 != memcmp(Memset(nums_test, c, 5), memset(nums_comp, c, 5), 9))
+    {
+        printf("Memset Failed: with input [1, 2, 3, 4, 5, 6, 7, 8, 9]\n");
+    }
+    
+    return;
 }
 
-/*static void printArr(char *arr, size_t arr_size)
-{
-	while (0 < arr_size)
-	{
-		printf("%c", (arr));
-		--arr_size;
-		++arr;
-	}
+/* Approved by Maor */
 
-	return;
+static void TestMemcpy()
+{
+    char str_test[] = "abcdefghi test this code";
+    char str_comp1[25] = {0};
+    char str_comp2[25] = {0};
+
+    int nums_test[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int nums_comp1[9] = {0};
+    int nums_comp2[9] = {0};
+        
+    if (0 != memcmp(Memcpy(str_comp1 + 1, str_test + 1, 25), memcpy(str_comp2 + 1, str_test + 1, 25), 25))
+    {
+        printf("Memcpy Failed: with input abcdefghi test this code\n");
+    }
+    if (0 != memcmp(Memcpy(nums_comp1, nums_test, 9), memcpy(nums_comp2, nums_test, 9), 9))
+    {
+        printf("Memcpy Failed: with input [1, 2, 3, 4, 5, 6, 7, 8, 9]\n");
+    }
+    
+    return;
 }
-*/
+
+static void TestMemmove()
+{
+    char str_test[] = "abcdefghi test this code";
+    char str_comp1[25] = {0};
+    char str_comp2[25] = {0};
+
+    int nums_test[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int nums_comp1[9] = {0};
+    int nums_comp2[9] = {0};
+        
+    if (0 != memcmp(Memmove(str_comp1, str_test, 25), memmove(str_comp2, str_test, 25), 25))
+    {
+        printf("Memmove Failed: with input abcdefghi test this code\n");
+    }
+    if (0 != memcmp(Memmove(nums_comp1, nums_test, 9), memmove(nums_comp2, nums_test, 9), 9))
+    {
+        printf("Memmove Failed: with input [1, 2, 3, 4, 5, 6, 7, 8, 9]\n");
+    }
+    
+    return;
+}
