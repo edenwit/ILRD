@@ -2,14 +2,14 @@
 #include <assert.h>
 #include <limits.h>
 
-#include "ex1.h"
+#include "ex.h"
 
 #define WORD_SIZE (sizeof(size_t))
 
 static void *MemcpyRev(void *dest, const void *src, size_t n);
 
 /* Approved by Maor */
-void *Memset(void *s, int c, size_t n)
+void *MemSet(void *s, int c, size_t n)
 {
 	unsigned char *temp_s = NULL;
 	size_t i = 0;
@@ -51,7 +51,7 @@ void *Memset(void *s, int c, size_t n)
 }
 
 /* Approved by Maor */
-void *Memcpy(void *dest, const void *src, size_t n)
+void *MemCpy(void *dest, const void *src, size_t n)
 {
 	unsigned char  *temp_src = NULL;
 	unsigned char *temp_dest = NULL;
@@ -89,7 +89,7 @@ void *Memcpy(void *dest, const void *src, size_t n)
 	return dest;
 }
 
-void *Memmove(void *dest, const void *src, size_t n)
+void *MemMove(void *dest, const void *src, size_t n)
 {
 
 	assert(dest);
@@ -99,13 +99,14 @@ void *Memmove(void *dest, const void *src, size_t n)
 	{
 		return dest;
 	}
-	else if (0 < ((size_t)src - (size_t)dest))
-	{
-		return Memcpy(dest, src, n);
+	else if ((size_t)src < (size_t)dest)
+	{	
+		return MemcpyRev(dest, src, n);
+
 	}
 	else
 	{
-		return MemcpyRev((char *)dest + n, (char *)src + n, n);
+		return MemCpy(dest, src, n);
 	}
 }
 
@@ -128,7 +129,7 @@ static void *MemcpyRev(void *dest, const void *src, size_t n)
 		n -= 1;
 	}
 
-	while (n > WORD_SIZE)
+	while (WORD_SIZE < n)
 	{
 		temp_dest -= WORD_SIZE;
 		temp_src -= WORD_SIZE;
