@@ -237,11 +237,3 @@ static unsigned int *LutCountBits()
     return arr_byte;
 }
 
-
-
-
-
-
-
-
-
