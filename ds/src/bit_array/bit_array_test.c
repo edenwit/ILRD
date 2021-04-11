@@ -322,9 +322,9 @@ static void TestMirrorLut()
 	
 	for (i = 0; i < arr_size; ++i)
 	{
-	    if (BitArrMirrorLut(nums_test[i]) != nums_exp[i])
+	    if (BitArrMirrorLUT(nums_test[i]) != nums_exp[i])
     	{
-     		printf("BitArrMirrorLut Failed: with attempt %ld: \nsend:   %lx - \nexp:    %lx - \nactual: %lx.\n", i, nums_test[i], nums_exp[i], BitArrMirrorLut(nums_test[i]));
+     		printf("BitArrMirrorLUT Failed: with attempt %ld: \nsend:   %lx - \nexp:    %lx - \nactual: %lx.\n", i, nums_test[i], nums_exp[i], BitArrMirrorLUT(nums_test[i]));
 	    }
 	}
 

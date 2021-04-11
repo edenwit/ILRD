@@ -21,6 +21,6 @@ size_t    BitArrCountOff		(bit_arr_t bit_array);
 char     *BitArrToString		(bit_arr_t bit_array, char *dest);
 
 size_t CountBitsNoLoop(bit_arr_t num);
-bit_arr_t BitArrMirrorLut(bit_arr_t bit_array);
+bit_arr_t BitArrMirrorLUT(bit_arr_t bit_array);
 
 #endif /*__BIT_ARR_H__*/

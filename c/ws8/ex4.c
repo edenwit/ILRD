@@ -1,2 +1,1 @@
-#define SIZEOF_TYPE(X) ((size_t)(&(X)+1)-(size_t)(&(X))) 
-
+#define SIZEOF_TYPE(T) (((size_t)((T*)(0)+1))

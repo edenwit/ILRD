@@ -7,10 +7,11 @@
 #define UNUSED(X) ((void) X)
 #define BITS_IN_ARR (sizeof(bit_arr_t) * CHAR_BIT)
 #define CHAR_VALUES 256
+#define NIBBLES_IN_ARR ((BITS_IN_ARR / CHAR_BIT) * 2)
+#define NIBBLE_SIZE 4
 
 static unsigned int *LutCountBits();
-static unsigned char ByteMirrorLoop(unsigned char byte);
-static void initMirrorLut(char *lut_arr);
+
 
 /*Approved by Eden girl  */
 bit_arr_t BitArrSetOn(bit_arr_t bit_array, size_t index)
@@ -176,9 +177,6 @@ size_t CountBitsNoLoop(bit_arr_t num)
 	return counter;
 }
 
-
-
-
 static unsigned int *LutCountBits()
 {
     static unsigned int arr_byte[CHAR_VALUES] = {0}; 
@@ -198,60 +196,19 @@ static unsigned int *LutCountBits()
     return arr_byte;
 }
 
-static unsigned char ByteMirrorLoop(unsigned char byte)
+bit_arr_t BitArrMirrorLUT(bit_arr_t bit_array)
 {
-	unsigned char mirror = 0;
-	size_t i = 0;
-	int right_bit = 0;
-	
-	for (i = 0; i < CHAR_BIT; ++i)
-	{
-		mirror = mirror << 1;
-		right_bit = byte & 1;
-		mirror = mirror | right_bit;
-		byte = byte >> 1; 
-	}
-	
-	return mirror;
-}
+    static const unsigned char LUT[16] = {0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15};
+    size_t result = 0;
+    size_t i = 0;
 
-bit_arr_t BitArrMirrorLut(bit_arr_t bit_array)
-{	
-	bit_arr_t mirror = 0;
-	unsigned char byte_mirror = 0;	
-	unsigned int mask = 0xFF;
-	size_t bytes = BITS_IN_ARR / CHAR_BIT;
-	static char mirror_lut[CHAR_BIT] = {0};
-	static int init = 0;
+    for (i = 0; i < NIBBLES_IN_ARR; ++i)
+    {
+        result = result << NIBBLE_SIZE;
+        result = result | LUT[(bit_array & 0xF)];
+        bit_array = bit_array >> NIBBLE_SIZE;
 
-	size_t i = 0;
+    }
 
-	int num_of_shifts = 0;
-
-	
-	if (!init)
-	{
-		initMirrorLut(mirror_lut);
-		init = 1;
-	}
-	
-	for (i = 0; i <  bytes; i++)
-	{
-		byte_mirror = mirror_lut[bit_array & mask];
-		num_of_shifts = (bytes-1-i)*(bytes);
-		mirror |= ((bit_arr_t)byte_mirror) << num_of_shifts;	
-		bit_array >>= CHAR_BIT;			
-	}
-	
-	return mirror;
-}
-
-static void initMirrorLut(char *lut_arr)
-{
-	size_t i = 0;
-	
-	for (i = 0; i < CHAR_BIT; i++)
-	{
-		lut_arr[i] = ByteMirrorLoop((unsigned char)i);
-	}
+    return result ; 
 }
