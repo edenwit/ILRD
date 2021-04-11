@@ -63,6 +63,7 @@ static void TestMemcpy()
     return;
 }
 
+/* Approved by Maor */
 static void TestMemmove()
 {
     char str_test1[] = "abcdefghi test this code";
