@@ -8,7 +8,7 @@
 #define DEC_DIGITS 10
 #define CHAR_VALUES 256
 
-#define IS_LITTLE_ENDIAN (*(uint16_t *)"\0\1" >> 8)
+
 
 /* approved by nir */
 char *ItoaBaseTil36       (int value, char *str, int base )

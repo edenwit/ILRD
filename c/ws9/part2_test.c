@@ -1,12 +1,7 @@
 #include <stdio.h> /* printf */
 #include <stdlib.h> /* malloc, strtol */
-#include <stdint.h> /* uint16_t */
 
 #include "part2.h"
-
-/* approved by eden girl */
-#define IS_LITTLE_ENDIAN (*(uint16_t *)"\0\1" >> 8)
-
 
 static void ItoaBaseTil36Test();	
 static void AtoITest();
