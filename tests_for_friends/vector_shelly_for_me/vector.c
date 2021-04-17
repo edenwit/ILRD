@@ -6,7 +6,7 @@
 
 enum STATUS {
     FAIL = 0,
-    SUCCESS = 1
+    SUCCESS
 };
 
 struct vector

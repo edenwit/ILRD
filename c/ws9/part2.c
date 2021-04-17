@@ -54,6 +54,49 @@ char *ItoaBaseTil36       (int value, char *str, int base )
 	return s_original;
 }
 
+char *ItoaBase10       (int value, char *str)
+{
+	int temp_num = value;
+	char *s_original = str;
+	int remain = 0;
+	size_t counter = 0;
+	
+	assert(str);
+		
+	if (0 == value)
+	{
+		*str = '0';
+		++str;
+		*str = '\0';
+		return s_original;
+	}
+	if (0 > value)
+	{
+		*str = '-';
+		++str;
+		value *= -1;
+	}
+	while (0 != temp_num)
+	{
+		temp_num /= 10;
+		++counter;
+	}
+	str += counter;
+	*str = '\0';
+	--str;
+
+	while (0 < counter)
+	{
+		remain = value % 10;
+        *str = remain + '0';
+        --str;
+		value = value / 10;
+		--counter;
+	}
+
+	return s_original;
+}
+
 int AtoiBase10(const char *s)
 {
     int to_num = 0;
