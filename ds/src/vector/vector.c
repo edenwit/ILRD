@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
 #include "vector.h"
+
 #define GROW_FACTOR 2
 
 enum STATUS {
@@ -16,6 +18,8 @@ struct vector
 	size_t capacity;
 
 };
+
+/* approved by shelly */
 
 vector_t *VectorCreate(size_t capacity)
 {
@@ -41,23 +45,29 @@ vector_t *VectorCreate(size_t capacity)
 
 }
 
+/* approved by shelly */
+
 void VectorDestroy(vector_t *vector)
 {
 	assert(vector);
 	assert(vector->arr);
+	
 	free(vector->arr); 
 	vector->arr = NULL;
+	
 	vector->capacity = 0;
 	vector->size = 0;
+	
 	free(vector);
 	
 	return;
 }
 
+/* approved by shelly */
+
 int VectorPushBack(vector_t *vector, void *data)
 {
 	assert(vector);
-	assert(data);
 	
 	if (vector->size == vector->capacity)
 	{
@@ -72,14 +82,16 @@ int VectorPushBack(vector_t *vector, void *data)
 	return SUCCESS;	
 }
 
+/* approved by shelly */
+
 int VectorReserve(vector_t *vector, size_t new_capacity)
 {
-	void **realloc_ptr = NULL;
+	void *realloc_ptr = NULL;
 	
 	assert(vector);
 	assert(vector->arr);
 
-	realloc_ptr = (void **)realloc(vector->arr ,new_capacity * sizeof(void*));	
+	realloc_ptr = (void *)realloc(vector->arr ,new_capacity * sizeof(void*));	
 	
 	if (NULL == realloc_ptr)
 	{
@@ -98,16 +110,26 @@ int VectorReserve(vector_t *vector, size_t new_capacity)
 	return SUCCESS;	
 }
 
+/* approved by shelly */
+
 void VectorPopBack(vector_t *vector)
 {
 	assert(vector);
 	assert(vector->arr);
-
-	VectorSetElem(vector, (vector->size - 1), NULL);
-	--vector->size; 	
+	assert(0 != vector->size);
 	
-	return;
+	VectorSetElem(vector, vector->size - 1, NULL);
+	--(vector->size);
+	
+	if (vector->size == (vector->capacity / (GROW_FACTOR * GROW_FACTOR)))
+	{
+		VectorReserve(vector, vector->capacity / GROW_FACTOR);
+	}
+
+	return ;
 }
+
+/* approved by shelly */
 
 size_t VectorSize(const vector_t *vector)
 {
@@ -116,12 +138,16 @@ size_t VectorSize(const vector_t *vector)
 	return vector->size;
 }
 
+/* approved by shelly */
+
 size_t VectorCapacity(const vector_t *vector)
 {
 	assert(vector);
 	
 	return vector->capacity;
 }
+
+/* approved by shelly */
 
 void *VectorGetElem (const vector_t *vector, size_t index)
 {
@@ -131,6 +157,8 @@ void *VectorGetElem (const vector_t *vector, size_t index)
 	
 	return vector->arr[index];
 }
+
+/* approved by shelly */
 
 void VectorSetElem(vector_t *vector, size_t index, void *data)
 {
@@ -143,14 +171,16 @@ void VectorSetElem(vector_t *vector, size_t index, void *data)
 	return;
 }
 
+/* approved by shelly */
+
 int VectorShrinkToFit(vector_t *vector)
 {
-	void ** realloc_ptr = NULL;
+	void *realloc_ptr = NULL;
 
 	assert(vector);
 	assert(vector->arr);
 	
-	realloc_ptr = (void **)realloc(vector->arr, vector->size * sizeof(void*));	
+	realloc_ptr = (void *)realloc(vector->arr, vector->size * sizeof(void*));	
 	
 	if (NULL == realloc_ptr)
 	{
@@ -162,3 +192,6 @@ int VectorShrinkToFit(vector_t *vector)
 	
 	return SUCCESS;		
 }
+
+
+
