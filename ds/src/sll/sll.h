@@ -1,45 +1,40 @@
-18.4.20 14:26 version_2
+/*19.4.20 13:55 version_7*/
+
 
 #ifndef __LINKED_LIST_H__
 #define __LINKED_LIST_H__
 
+#include <stddef.h> /*size_t*/
+
 typedef struct s_list s_list_t;
 typedef struct s_list_node *s_list_iter_t;
 
-/*
-struct s_list_node
-{
-	void *data;
-	s_list_iter_t next;
-};
+s_list_t *SLLCreate(void);                          /* O(1) */
+void SLLDestroy(s_list_t *list);                     /* O(n) */
 
-struct s_list
-{
-	s_list_iter_t head;
-	s_list_iter_t tail;
-};
-*/
+int SLLIsEmpty (const s_list_t *list);                 /* O(1) */
+size_t SLLCount(const s_list_t *list);                 /* O(n) */
+
+s_list_iter_t SLLBegin    (const s_list_t *list);     /* O(1) */
+s_list_iter_t SLLEnd    (const s_list_t *list);     /* O(1) */
+s_list_iter_t SLLNext    (const s_list_iter_t iter);    /* O(1) */
+
+int SLLIsSameIter(const s_list_iter_t iter1, const s_list_iter_t iter2); /* O(1) */
+
+void SLLSetData(s_list_iter_t iter, void *data);     /* O(1) */
+void *SLLGetData(const s_list_iter_t iter);         /* O(1) */
 
 
-s_list_t *SLLCreate(void);
-void SLLDestroy(s_list_t *list);
+s_list_iter_t SLLRemove(s_list_iter_t iter);                 /* O(1) */
+s_list_iter_t SLLInsert(s_list_iter_t where, void *data);     /* on success: O(1); on failure O(n) */
 
-int SLLIsEmpty (const s_list_t *list);
-size_t SLLCount(const s_list_t *list);
-
-s_list_iter_t SLLBegin(const s_list_t *list);
-s_list_iter_t SLLEnd(const s_list_t *list);
-s_list_iter_t SLLNext(const s_list_iter_t iter);
-
-void SLLSetData(s_list_iter_t iter, void *data);
-void *SLLGetData(const s_list_iter_t iter);
-
-s_list_iter_t SLLRemove(s_list_iter_t iter);
-int SLLInsert(s_list_iter_t where, void *data);
-int SLLIsSame(s_list_iter_t iter1, s_list_iter_t iter2);
--
-s_list_iter_t SLLFind(s_list_iter_t from, s_list_iter_t to, int (*match_func)(const void * data,void *param),void *param);
-int SLLForEach(s_list_iter_t from,s_list_iter_t to, int (*action_func)(void * data,void *param),void *param);
+s_list_iter_t SLLFind(    s_list_iter_t from, /*O(n)*/
+                        s_list_iter_t to,
+                        int (*match_func)(const void * data,void *param),    
+                        void *param);
+int SLLForEach(s_list_iter_t from, /*O(n)*/
+        s_list_iter_t to,
+        int (*action_func)(void * data,void *param),void *param);
 
 
 #endif /* __LINKED_LIST_H__ */
