@@ -36,5 +36,7 @@ int SLLForEach(s_list_iter_t from, /*O(n)*/
         s_list_iter_t to,
         int (*action_func)(void * data,void *param),void *param);
 
+void SLLAppend(s_list_t  *dest, s_list_t  *src);  /* O(1)*/
+
 
 #endif /* __LINKED_LIST_H__ */

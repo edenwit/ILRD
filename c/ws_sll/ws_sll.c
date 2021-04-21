@@ -1,42 +1,42 @@
+#include <stddef.h> /* NULL */
+#include <assert.h> /* assert */
 
-typedef struct node
-{
-	void *data;
-	struct node *next;
-	} node_t;
-};
+#include "ws_sll.h"
 
+/* Approved by Nir */
 node_t *Flip(node_t *head)
 {
-	node_t *prev = head;
-	node_t *cur = head;
-	node_t *next = NULL;
+	node_t *prev_node = NULL;
+	node_t *cur_node = head;
+	node_t *nextmp_node = head;
 	
 	assert(head);
 
-	while (NULL != cur->next)
+	while (NULL != nextmp_node)
 	{
-		cur = prev->next;
-		next = cur->next;
-		cur->next = prev;		
-		prev = cur;
+		cur_node = nextmp_node;
+		nextmp_node = cur_node->next;
+		cur_node->next = prev_node;		
+		prev_node = cur_node;
 	}
-	head->next = NULL;
 	
-	return cur;
+	return cur_node;
 }
 
+/* Approved by Nir */
 int HasLoop(const node_t *head)
 {
-	node_t step1 = head;
-	node_t step2 = head;
+	node_t *step1 = (node_t *)head;
+	node_t *step2 = (node_t *)head;
 	
 	assert(head);
 
-	while (NULL != step2->next && NULL != step2->next-next)
+	/* run until both meet if there's a loop in the list*/
+	while (NULL != step2->next && NULL != step2->next->next)
 	{
 		step1 = step1->next;
 		step2 = step2->next->next;
+		
 		if (step1 == step2)
 		{
 			return 1;
@@ -45,55 +45,61 @@ int HasLoop(const node_t *head)
 	return 0;
 }
 
+/* Approved by Maor */
 node_t *FindIntersection(node_t *head1, node_t *head2)
 {
-	node_t t_head1 = head1;
-	node_t t_head2 = head2;
+	node_t *tmp_head1 = head1;
+	node_t *tmp_head2 = head2;
 	
-	size_t count1 = 0;
-	size_t count2 = 0;
-	size_t i = 0;
+	size_t count1 = 1;
+	size_t count2 = 1;
 	
 	assert(head1);
 	assert(head2);
 	
-	while (NULL != t_head1)
+	while (NULL != tmp_head1->next)
 	{
 		++count1;
-		t_head1 = t_head1->next;
+		tmp_head1 = tmp_head1->next;
 	}
-	while (NULL != t_head2)
+	while (NULL != tmp_head2->next)
 	{
 		++count2;
-		t_head2 = t_head2->next;
+		tmp_head2 = tmp_head2->next;
 	}
 	
-	if (t_head2 == t_head1)
+	if (tmp_head2 == tmp_head1)
 	{
-		t_head1 = head1;
-		t_head2 = head2;
+		tmp_head1 = head1;
+		tmp_head2 = head2;
 		
 		if (count1 > count2)
 		{
-			for (i = 0; i < (count1 - count2); ++i)
+			while (count1 > count2)
 			{
-				t_head1 = t_head1->next;
+				tmp_head1 = tmp_head1->next;
+				--count1;
 			}	
 		}
 		else if (count2 > count1)
 		{
-			for (i = 0; i < (count2 - count1); ++i)
+			while (count2 > count1)
 			{
-				t_head2 = t_head2->next;
+				tmp_head2 = tmp_head2->next;
+				--count2;
 			}	
-		while (t_head1 != t_head2)
+		}	
+			
+		while (tmp_head1 != tmp_head2)
 			{
-				t_head1 = t_head1->next;
-				t_head2 = t_head2->next;
+				tmp_head1 = tmp_head1->next;
+				tmp_head2 = tmp_head2->next;
 			}
-			return t_head1;
-		}
+			
+			return tmp_head1;
+
 	}
 	
 	return NULL;	
 }
+

@@ -1,5 +1,5 @@
-#ifndef __WS_SLL_H__
-#define __WS_SLL_H__
+#ifndef __SLL_EX_H__
+#define __SLL_EX_H__
 
 typedef struct node
 {
@@ -14,4 +14,4 @@ int HasLoop(const node_t *head);
 
 node_t *FindIntersection(node_t *head1, node_t *head2);
 
-#endif /* __WS_SLL_H__ */
+#endif /* __SLL_EX_H__ */

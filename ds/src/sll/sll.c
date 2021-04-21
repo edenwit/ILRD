@@ -188,7 +188,6 @@ s_list_iter_t SLLInsert(s_list_iter_t where, void *data)
 		return where;
 	}
 
-	if (NULL == SLLNext(where))
 	{
 		where_data->tail = node;
 	}
@@ -246,4 +245,31 @@ static int Add1(void * data, void *param)
 	return 0;
 }
 
+void SLLAppend(s_list_t  *dest, s_list_t  *src)  /* O(1)*/
+{
+	s_list_iter_t node = NULL;
+	
+	assert(src);	
+	assert(dest);	
+	
+	if (SLLIsEmpty(src))
+	{
+		return;
+	}
+	node = SLLEnd(dest);
+	SLLSetData(node,SLLGetData(SLLBegin((const s_list_t *)src)));
+	node->next = SLLBegin((const s_list_t *)src)->next;
+	
+	dest->tail = src->tail;
+	
+	node = SLLBegin((const s_list_t *)src);
+	node->next = NULL;
+	SLLSetData(node,src);	
+	src->tail = node;
+	
+	node = SLLEnd((const s_list_t *)dest);
 
+	SLLSetData(node,dest);	
+	
+	return;
+}
