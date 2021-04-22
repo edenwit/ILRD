@@ -3,11 +3,13 @@
 
 #include "queue.h"
 
-#define TIMES_TO_LOOP 6
+#define TIMES_TO_LOOP 30
 
 int main()
 {
-	int arr[] = {1, 2, 3, 4, 5, 6, 10000};
+	int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+	11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 10000};
 	
 	size_t i = 0;
 	void *data = NULL;
@@ -22,17 +24,17 @@ int main()
 
 	for (i = 0; i < TIMES_TO_LOOP; ++i)
 	{
-		if (QueueEnqueue(queue, (void *)(arr + i)))
+		if (QueueEnqueue(queue, (arr + i)))
 		{
-			printf ("Insersion queue1 #%ld failed!\n", i + 1);	
+			printf ("Insersion queue 1 #%ld, failed!\n", i + 1);	
 		}	
 	}
 	
 	for (i = 0; i < TIMES_TO_LOOP / 2; ++i)
 	{
-		if (QueueEnqueue(queue2, (void *)(arr + i)))
+		if (QueueEnqueue(queue2, (arr + i)))
 		{
-			printf ("Insersion queue2 #%ld failed!\n", i + 1);	
+			printf ("Insersion queue 2 #%ld, failed!\n", i + 1);	
 		}
 	}
 	

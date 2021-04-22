@@ -1,8 +1,8 @@
 #include <stdio.h> /* printf */
+#include <string.h> /* strlen */
+#include <assert.h> /* assert */
 
 #include "../ds/src/stack/stack.h"
-
-#define CAPACITY 100
 
 void CheckBalancedParentheses(char *s);
 void TestCheckBalancedParentheses();
@@ -16,8 +16,13 @@ int main()
 
 void CheckBalancedParentheses(char *s)
 {
-	stack_t *stack = StackCreate(CAPACITY);
+	
+	stack_t *stack = NULL;
 	char stack_peek = '\0';
+	
+	assert(s);
+
+	stack = StackCreate(strlen(s));
 	
 	while('\0' != *s)
 	{
@@ -96,7 +101,7 @@ void TestCheckBalancedParentheses()
 	printf("String '%s' balance check: \t\t ", str);
 	CheckBalancedParentheses(str);
 		
-	str = "{[(})]";
+	str = "))))))))))))";
 	printf("String '%s' balance check: \t\t ", str);
 	CheckBalancedParentheses(str);
 
