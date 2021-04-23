@@ -1,4 +1,4 @@
-#include "../sll/sll.h"
+#include "sll.h"
 #include "queue.h"
 
 #include <stddef.h> /* size_t */
