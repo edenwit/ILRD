@@ -1,23 +1,13 @@
 #include <stdio.h> /* printf */
 #include <sys/types.h>
 #include <string.h> /* strlen */
-#include "../../include/circular_buffer.h"
+#include "circular_buffer.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define CAPACITY (size_t)30
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define OFFSETOF(s, f) ((size_t)&(((s *)0)->f))
+
 
 static void CBTest();
-
-struct offset_of_test_struct
-{
-	size_t read_index;
-	size_t current_size;
-	size_t capacity;
-	char arr[1];
-};
-
 
 int main()
 {
@@ -36,11 +26,6 @@ static void CBTest()
 	char str3[CAPACITY] = {"the sentance starts like this"};	
 	char str4[CAPACITY] = {"|                           |"};	
 	
-	/* test offsetof */
-	if (OFFSETOF(struct offset_of_test_struct, arr) != offsetof(struct offset_of_test_struct, arr))
-	{
-		printf("offset of circular_buffer failed! actual: %ld, expected: %ld\n", OFFSETOF(struct offset_of_test_struct, arr), offsetof(struct offset_of_test_struct, arr));
-	}
 	/* test IsEmpty */	
 	if (!CBufferIsEmpty(circular_buffer))
 	{
