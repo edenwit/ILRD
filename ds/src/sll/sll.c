@@ -205,7 +205,7 @@ s_list_iter_t SLLInsert(s_list_iter_t where, void *data)
 /* approved by Ohad */
 s_list_iter_t SLLFind(s_list_iter_t from, 
 					  s_list_iter_t to,
-					  int (*match_func)(const void * data,void *param),
+					  int (*match_func)(const void * data, void *param),
 					  void *param)
 {
 	assert(from);
