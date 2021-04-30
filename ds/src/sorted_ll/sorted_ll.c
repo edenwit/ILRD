@@ -26,7 +26,7 @@ static d_list_iter_t ToDListIter(sorted_list_iter_t iter);
 static sorted_list_iter_t ToSortedIter(d_list_iter_t iter_dll, sorted_list_t *list);
 
 static int IsBigger(const void *data, const void * finder); /*data is what the user gives*/
-static int FindMatchInt(const void * data, const void *param);
+
 
 /* O(1) */
 sorted_list_t *    SortedLLCreate    (int (*cmp_func)(const void *data1, const void *data2))
@@ -187,7 +187,7 @@ sorted_list_iter_t SortedLLFind      (sorted_list_iter_t from, sorted_list_iter_
 	finder.param = data;
 	finder.cmp_func = list->cmp_func;
 
-	return ToSortedIter(DLLFind(ToDListIter(from),ToDListIter(to), IsBigger, &finder ),list);
+	return ToSortedIter(DLLFind(ToDListIter(from), ToDListIter(to), IsBigger, &finder), list);
 
 } 
 
@@ -218,9 +218,34 @@ int                SortedLLForEach   (sorted_list_iter_t from,
     return DLLForEach(ToDListIter(from), ToDListIter(to), action_func, param);
 }
 
-/* O(n + m) */				           
-void 			   SortedLLMerge	 (sorted_list_t *dest_list, sorted_list_t *src_list);
+/* O(n + m) */	
+		           
+void SortedLLMerge(sorted_list_t *dest_list, sorted_list_t *src_list)
+{
+    sorted_list_iter_t where = SortedLLBegin(dest_list);
+    sorted_list_iter_t to = {0};
 
+    assert(dest_list);
+    assert(src_list);
+
+    while(!SortedLLIsEmpty(src_list))
+    {
+        where = SortedLLFind(where, SortedLLEnd(dest_list), 
+                                SortedLLGetData(SortedLLBegin(src_list)), dest_list);
+
+        if(SortedLLIsSameIter(where, SortedLLEnd(dest_list)))
+        {
+            DLLSplice(ToDListIter(where), ToDListIter(SortedLLBegin(src_list)), ToDListIter(SortedLLEnd(src_list)));
+            return;
+        }
+
+        to = SortedLLFind(SortedLLBegin(src_list), SortedLLEnd(src_list), 
+                                SortedLLGetData(where), src_list);
+        DLLSplice(ToDListIter(where), ToDListIter(SortedLLBegin(src_list)), ToDListIter(to));
+    }
+
+    return;
+}
 
 static d_list_iter_t ToDListIter(sorted_list_iter_t iter)
 {
@@ -239,13 +264,13 @@ static d_list_iter_t ToDListIter(sorted_list_iter_t iter)
 
 static sorted_list_iter_t ToSortedIter(d_list_iter_t iter_dll, sorted_list_t *list)
 {
-    sorted_list_iter_t iter;
+    sorted_list_iter_t iter = {0};
 
     assert(NULL != iter_dll);
     assert(NULL != list);
 
     #ifdef NDEBUG
-
+    UNUSED(iter);
     UNUSED(list);
     return ((sorted_list_iter_t)iter_dll);
 
@@ -265,7 +290,3 @@ static int IsBigger(const void *data, const void * finder) /*data is what the us
 	return (0 < finder_ptr->cmp_func(data, finder_ptr->param));
 }
 
-static int FindMatchInt(const void * data, const void *param)
-{
-	return (*(int *)data == *(int *)param);
-}

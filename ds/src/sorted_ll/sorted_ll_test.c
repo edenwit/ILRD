@@ -9,6 +9,7 @@
 static void sorted_ll_test();
 int Cmp_Num(const void *cur, const void *par);
 static int PrintInt(void *data,void *param);
+static int FindMatchInt(const void * data, const void *param);
 
 int main()
 {
@@ -21,17 +22,23 @@ static void sorted_ll_test()
 {
 	int arr[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 	11, 12, 13, 14, 15, 16, 49, 18, 19, 20,
-	21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 10000};
+	21, 22, 23, 24, 25, 26, 27, 28, 6, 5, 5};
+
+	/*int arr2[] = {10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000, 10000000};*/
+	int arr2[] = {415613, 415613, 415613, 415613, 415613, 415613, 415613, 415613, 415613};
+	int dum_num = 11111541;
 	/*
 	int num_ten = 10;
-	int dum_num = 541;
 	size_t counter = 0;
 	size_t status = 0;	
 	void *data = NULL;
-*/
+	*/
+
 	sorted_list_iter_t iter1 = {0};
+	sorted_list_iter_t iter2 = {0};	
 	size_t i = 0;
 	sorted_list_t *sorted_list = SortedLLCreate(Cmp_Num);
+	sorted_list_t *sorted_list2 = SortedLLCreate(Cmp_Num);	
 	
 	if (!SortedLLIsEmpty(sorted_list))
 	{
@@ -42,18 +49,47 @@ static void sorted_ll_test()
 	{
 		printf("Test failed at SotedLLSize!\n");
 	}
-	for (i = 0; i < TIMES_TO_LOOP; ++i)
+	for (i = 0; i < 0; ++i)
 	{
 		iter1 = SortedLLInsert(sorted_list, (arr + i));
 	}
-	if (30 != SortedLLSize(sorted_list))
+	iter1 = SortedLLInsert(sorted_list, &dum_num);
+	
+	iter2 = SortedLLFindIf(SortedLLBegin(sorted_list), SortedLLEnd(sorted_list), FindMatchInt, (const void *)&dum_num);
+	
+	if (!SortedLLIsSameIter(iter1, iter2))
 	{
-		printf("Test failed at SotedLLSize!\n");
+		printf("findif fail test didnt go to end!\n");	
+	}
+
+	for (i = 0; i < 9; ++i)
+	{
+		iter1 = SortedLLInsert(sorted_list2, (arr2 + i));
+	}
+
+	if (TIMES_TO_LOOP + 1 != SortedLLSize(sorted_list))
+	{
+		printf("Test failed at SotedLLSize! actual: %ld.\n", SortedLLSize(sorted_list));
 	}	
 
 	SortedLLForEach(SortedLLBegin(sorted_list), SortedLLEnd(sorted_list), PrintInt, NULL);
+	printf("\n");
+	SortedLLForEach(SortedLLBegin(sorted_list2), SortedLLEnd(sorted_list2), PrintInt, NULL);	
+	printf("\n");	
+	printf("list1 Num Of members before splice: %ld\n", SortedLLSize(sorted_list));
+	printf("list2 Num Of members before splice: %ld\n", SortedLLSize(sorted_list2));
+	SortedLLMerge(sorted_list, sorted_list2);
+	printf("list1 Num Of members before splice: %ld\n", SortedLLSize(sorted_list));
+	printf("list2 Num Of members before splice: %ld\n", SortedLLSize(sorted_list2));
+	SortedLLForEach(SortedLLBegin(sorted_list), SortedLLEnd(sorted_list), PrintInt, NULL);
+	printf("\n");
+	SortedLLForEach(SortedLLBegin(sorted_list2), SortedLLEnd(sorted_list2), PrintInt, NULL);	
+	printf("\n");		
 	
+	
+		
 	SortedLLDestroy(sorted_list);
+	SortedLLDestroy(sorted_list2);
 	
 	return;
 }
@@ -71,4 +107,11 @@ static int PrintInt(void *data,void *param)
     printf("%d ", *(int *)data);
 
     return 0; 
+}
+
+
+
+static int FindMatchInt(const void * data, const void *param)
+{
+	return (*(int *)data == *(int *)param);
 }
