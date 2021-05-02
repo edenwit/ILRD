@@ -134,7 +134,7 @@ static void RotateLeftTest()
 
 	for (i = 0; i < arr_size; ++i)
 	{
-		if (RotateLeft(input1_arr[i], input2_arr[i]) == exp_res_arr[i])
+		if (RotateLeft(input1_arr[i], input2_arr[i]) != exp_res_arr[i])
 		{
 			printf("RotateLeft Test #%ld failed. tested: %x, with n %d, actual: %d,\t expected: %d.\n", i + 1, input1_arr[i], input2_arr[i], RotateLeft(input1_arr[i], input2_arr[i]), exp_res_arr[i]);
 		}
