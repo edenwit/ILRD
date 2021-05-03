@@ -133,7 +133,7 @@ sorted_list_iter_t SortedLLPrev	     (const sorted_list_iter_t iter)
 
 	*((d_list_iter_t *)&(temp_iter)) = DLLPrev(ToDListIter(iter));
 	
-	return (iter);	
+	return (temp_iter);	
 }
 /* O(1) */
 int 			   SortedLLIsSameIter(const sorted_list_iter_t iter1, const sorted_list_iter_t iter2)

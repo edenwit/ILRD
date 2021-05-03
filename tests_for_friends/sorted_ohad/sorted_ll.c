@@ -15,21 +15,17 @@ static d_list_iter_t ToDListIter(sorted_list_iter_t iter);
 static sorted_list_iter_t ToSortedIter(d_list_iter_t iter_dll,
 									   sorted_list_t *list);
 
-typedef struct compare compare_t;   
-
 struct sorted_list
 {
 	d_list_t *sorted_ll;
 	int (*cmp_func)(const void *data, const void *param);
 };
 
-struct compare
+typedef struct compare
 {
 	const void *param; 
 	int (*cmp_func)(const void *data, const void *param);
-};
-
-static compare_t compare_struct;
+}compare_t;
 
 sorted_list_t *SortedLLCreate(int (*cmp_func)(const void *data1, const void *data2))
 {
@@ -51,8 +47,6 @@ sorted_list_t *SortedLLCreate(int (*cmp_func)(const void *data1, const void *dat
 	
 	Sorted_list->cmp_func = cmp_func; 
 	
-	compare_struct.cmp_func = cmp_func; /* init compare struct */
-
 	return Sorted_list;
 }
 
@@ -166,18 +160,20 @@ sorted_list_iter_t SortedLLRemove(sorted_list_iter_t iter)
 sorted_list_iter_t SortedLLInsert(sorted_list_t *list, void *data)
 {
 	sorted_list_iter_t temp_iter = {NULL};
+	compare_t compare_struct = {NULL};
+	
+	assert(NULL != list);
+	assert(NULL != list->cmp_func);
 	
 	compare_struct.param = data;
-	 
-	assert(NULL != list);
+	compare_struct.cmp_func = list->cmp_func;
 	
 	temp_iter = SortedLLFindIf(SortedLLBegin(list), 
 							   SortedLLEnd(list), 
 							   IsBigger, 
 							   &compare_struct);
 	
-	temp_iter = ToSortedIter(DLLInsert(ToDListIter(temp_iter), data),
-							(sorted_list_t *)list);
+	temp_iter = ToSortedIter(DLLInsert(ToDListIter(temp_iter), data), list);
 	
 	return (temp_iter);
 }
@@ -188,27 +184,31 @@ sorted_list_iter_t SortedLLFind(sorted_list_iter_t from,
 								sorted_list_t *list)
 {
 	sorted_list_iter_t temp_iter = from;
-	
-	compare_struct.param = data;
+	compare_t compare_struct = {NULL};
 	
 	assert(from.sorted_list == to.sorted_list);
 	assert(from.sorted_list == list);
+	
 	assert(NULL != from.d_iter);
-	assert(NULL != from.sorted_list);
 	assert(NULL != to.d_iter);
+	
+	assert(NULL != from.sorted_list);
 	assert(NULL != to.sorted_list);
+	
+	assert(NULL != list->cmp_func);
 		
+	compare_struct.param = data;
+	compare_struct.cmp_func = list->cmp_func;
+	
 	*((d_list_iter_t *)&(temp_iter)) = DLLFind(ToDListIter(from), 
 									           ToDListIter(to),
 									           BiggerOrEqual,
 									           &compare_struct);
 									            
-	if (!SortedLLIsSameIter(temp_iter, to))
+	if ((!SortedLLIsSameIter(temp_iter, to)) && 
+		(0 == list->cmp_func(SortedLLGetData(temp_iter), data)))
 	{
-		if (0 == list->cmp_func(SortedLLGetData(temp_iter), data))
-		{
-			return (temp_iter); 
-		}
+		return (temp_iter); 
 	}
 	
 	return (to);	
@@ -224,9 +224,11 @@ sorted_list_iter_t SortedLLFindIf(sorted_list_iter_t from,
 	
 	assert(from.sorted_list == to.sorted_list);	
 	assert(NULL != match_func);
+
 	assert(NULL != from.d_iter);
-	assert(NULL != from.sorted_list);
 	assert(NULL != to.d_iter);
+
+	assert(NULL != from.sorted_list);
 	assert(NULL != to.sorted_list);	
 	
 	*((d_list_iter_t *)&(temp_iter)) = DLLFind(ToDListIter(from), 
@@ -274,10 +276,14 @@ void SortedLLMerge(sorted_list_t *dest_list, sorted_list_t *src_list)
 {
 	sorted_list_iter_t where_dest = SortedLLBegin(dest_list);
 	sorted_list_iter_t to_src = {NULL};
+	compare_t compare_struct = {NULL};
    
 	assert(NULL != dest_list);
 	assert(NULL != src_list);
+	assert(NULL != dest_list->cmp_func);
 	assert(dest_list != src_list);
+	
+	compare_struct.cmp_func = dest_list->cmp_func;
 	
 	while (!SortedLLIsEmpty(src_list))  
 	{
