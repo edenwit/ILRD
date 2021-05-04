@@ -3,6 +3,7 @@
 #include <stdlib.h> /* malloc */
 
 #include "priority_queue.h"
+#include "sorted_ll.h"
 /*
 typedef struct pq pq_t;
 */
@@ -12,7 +13,7 @@ struct pq
 	sorted_list_t *p_queue;
 };
 
-pq_t 	  *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
+pq_t *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 {
 	pq_t *priority_queue = NULL;
 
@@ -37,7 +38,7 @@ pq_t 	  *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 	return (priority_queue);	
 }
 
-void       PQueueDestroy(pq_t *p_queue)			         	            		/* O(n) */	
+void PQueueDestroy(pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);	
@@ -50,44 +51,47 @@ void       PQueueDestroy(pq_t *p_queue)			         	            		/* O(n) */
 	
 	return;	
 }
-size_t     PQueueSize   (const pq_t *p_queue) /* O(n) */ 
+size_t PQueueSize(const pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);	
 
-	return SortedLLSize(p_queue->p_queue);
+	return (SortedLLSize(p_queue->p_queue));
 }      			        			
-int        PQueueIsEmpty(const pq_t *p_queue)
+int PQueueIsEmpty(const pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);	
 
 	return (SortedLLIsEmpty(p_queue->p_queue));
-}  	   			        			/* O(1) */
+}  	   	
 
-int        PQueueEnqueue(pq_t *p_queue, void *data)
+int PQueueEnqueue(pq_t *p_queue, void *data)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);
 	
-	return (!SortedLLIsSameIter(SortedLLInsert(p_queue->p_queue, data),SortedLLEnd(p_queue->p_queue)));		
+	return (	SortedLLIsSameIter(	SortedLLInsert(p_queue->p_queue, data),
+									SortedLLEnd(p_queue->p_queue))			);		
 }   	 				    	  
-void      *PQueueDequeue(pq_t *p_queue)
+void *PQueueDequeue(pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);
+	assert(!PQueueIsEmpty(p_queue));
 	
 	return (SortedLLPopFront(p_queue->p_queue));
-}		    		 	   				    /* O(1) */
+}		    		 	   				    
 void      *PQueuePeek   (const pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);
-	
+	assert(!PQueueIsEmpty(p_queue));
+
 	return (SortedLLGetData(SortedLLBegin(p_queue->p_queue)));
-}		      	    		    /* O(1) */
+}		      	    		  
   
-void 	   PQueueClear  (pq_t *p_queue)
+void PQueueClear(pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->p_queue);
@@ -95,11 +99,15 @@ void 	   PQueueClear  (pq_t *p_queue)
 	while (!PQueueIsEmpty(p_queue))
 	{
 		PQueueDequeue(p_queue);
-	}	
-}					            			/* O(n) */
-void 	  *PQueueErase  (pq_t *p_queue, 
-						 int (*is_match_func)(const void *data, const void *param),
-						 void *param)
+	}
+	
+	return ;
+}
+
+
+void *PQueueErase(	pq_t *p_queue, 
+					int (*is_match_func)(const void *data, const void *param),
+					void *param													)
 {
 	sorted_list_iter_t iter = {0};
 	void *data = NULL;
@@ -107,21 +115,23 @@ void 	  *PQueueErase  (pq_t *p_queue,
 	assert(p_queue);
 	assert(p_queue->p_queue);
 	assert(is_match_func);
+	assert(!PQueueIsEmpty(p_queue));
 	
-	iter = SortedLLFindIf(SortedLLBegin(p_queue->p_queue), SortedLLEnd(p_queue->p_queue), is_match_func, param);	
+	iter = SortedLLFindIf(	SortedLLBegin(p_queue->p_queue), 
+							SortedLLEnd(p_queue->p_queue), 
+							is_match_func, 
+							param);	
+							
 	data = SortedLLGetData(iter);
 	
-	if (SortedIsSameIter(SortedLLEnd(p_queue->p_queue), iter))
+	if (SortedLLIsSameIter(SortedLLEnd(p_queue->p_queue), iter))
 	{
 		return NULL;
 	}
 
 	SortedLLRemove(iter);
 		
-	return data;
-	
-	
-	
-	
+	return (data);
 }			     					  
+
 
