@@ -10,6 +10,7 @@
 typedef struct scheduler scheduler_t
 {
 	p_queue *pq;
+	int run_status; /* 0 - off, 1 - on*/
 };
 
 scheduler_t *SchedulerCreate	(void); 						 	 /* time complexity:  O(1) */
