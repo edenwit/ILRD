@@ -117,25 +117,25 @@ int SchedulerIsEmpty	(const scheduler_t *scheduler)
 /* 0- success, 1- fail, 2- action_function_fail, 3- stopped*/
 int SchedulerRun(scheduler_t *scheduler)
 {
-	time_t ttime = (time_t)-1; 
+	time_t current_time = (time_t)-1; 
 	task_t *current_task = NULL;
-	int status = 0;
-	int run_status = 0;
+	int status = 0;	
 	
 	assert(scheduler);
 	assert(scheduler->pq);
 	
 	while ((1 == scheduler->run_status) && (!SchedulerIsEmpty(scheduler)))
 	{
-		current_task = PQueueDequeue(scheduler->pq);
-		
-		ttime = time(NULL);
-		
-		if ((time_t)-1 == ttime)
+		current_time = time(NULL);
+
+		if ((time_t)-1 == current_time)
 		{
 			return (1);
 		}
-		remain = TaskGetExecutionTime(current_task) - ttime;
+
+		current_task = PQueueDequeue(scheduler->pq);
+		
+		remain = TaskGetExecutionTime(current_task) - current_time;
 		
 		while (0 != remain)
 		{
@@ -150,33 +150,34 @@ int SchedulerRun(scheduler_t *scheduler)
 			case 0:
 			{
 				TaskDestroy(current_task);
-				
 				break;
 			}
 			case 1:
 			{
 				TaskDestroy(current_task);
-				run_status = 2;
-				
+				return (2);
+			}
+			case 2:
+			{
+				TaskUpdateExecutionTime(current_task);
+				if (NULL == PQueueEnqueue(scheduler->pq, (void *)current_task))
+				{
+					return (1);
+				}
+									
 				break;
 			}
-			
-		
 		}
-		{
-			return (2);
-		}
-		
-		if (2 == TaskExecute(current_task))
-		{
-			
-		}
-
-		
-		
 	}
+	if (0 == scheduler->run_status)
+	{
+		return (3);
+	}
+	
+	return (0);
+	
 }
-void    	 SchedulerStop		(scheduler_t *scheduler)
+void SchedulerStop(scheduler_t *scheduler)
 {
 	assert(scheduler);
 	
