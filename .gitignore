@@ -11,7 +11,7 @@
 !/projects
 !/quizzes
 !/system_programming
-
+!makefile
 */tests_for_friends
 
 !.myFunc
