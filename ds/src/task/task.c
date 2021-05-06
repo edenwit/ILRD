@@ -1,7 +1,7 @@
-#include "task.h"
-#include "uid.h"
+#include <stdlib.h> /* malloc */
+#include <assert.h> /* assert */
 
-typedef struct task task_t;
+#include "../task/task.h"
 
 struct task
 {
@@ -16,7 +16,7 @@ task_t *TaskCreate(int (*action_func)(void *param),
 					size_t interval_in_sec,
 					void *param)
 {
-	uid_t uid = UidCreate();
+	ilrd_uid_t uid = UidCreate();
 	
 	task_t *task = (task_t *)malloc(sizeof(task_t));
 	
@@ -27,8 +27,8 @@ task_t *TaskCreate(int (*action_func)(void *param),
 	
 	task->uid = uid;
 	task->action_func = action_func;
-	task->interval_in_sec = interval_in_sec;
-	task->execution_time = time() + interval_in_sec;
+	task->interval = interval_in_sec;
+	task->execution_time = time(NULL) + interval_in_sec;
 	task->param = param;	
 	
 	return (task);						
@@ -42,7 +42,7 @@ void TaskDestroy(task_t *task)
 	return;
 }
 
-uid_t TaskGetUid(const task_t *task)
+ilrd_uid_t TaskGetUid(const task_t *task)
 {
 	assert(task);
 	
@@ -53,7 +53,7 @@ void TaskUpdateExecutionTime(task_t *task)
 {
 	assert(task);
 	
-	task->execute_time += task->interval_in_sec;
+	task->execution_time += task->interval;
 	
 	return;	
 }

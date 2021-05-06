@@ -4,16 +4,6 @@
 #include "uid.h"
 
 #define MAX_SIZE_T (~(size_t)0)
-/*
-
-typedef struct unique_id
-{
-	size_t count;
-	pid_t process_ID;
-	time_t time_stamp;
-} ilrd_uid_t;
-
-*/
 
 /* Approved by eden girl */
 ilrd_uid_t UidCreate(void)
