@@ -1,8 +1,9 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
-typedef struct task task_t;
+#include "../uid/uid.h"
 
+typedef struct task task_t;
 
 task_t *TaskCreate(int (*action_func)(void *param), 
 					size_t interval_in_sec, /* void (*cleanup_func)(void *param), */

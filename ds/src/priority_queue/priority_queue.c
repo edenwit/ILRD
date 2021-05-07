@@ -3,7 +3,7 @@
 #include <stdlib.h> /* malloc */
 
 #include "priority_queue.h"
-#include "../../ds/src/sorted_ll/sorted_ll.h"
+#include "../sorted_ll/sorted_ll.h"
 /*
 typedef struct pq pq_t;
 */

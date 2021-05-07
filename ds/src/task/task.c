@@ -1,5 +1,6 @@
 #include <stdlib.h> /* malloc */
 #include <assert.h> /* assert */
+#include <time.h> 		/* time_t */
 
 #include "../task/task.h"
 
@@ -37,12 +38,12 @@ task_t *TaskCreate(int (*action_func)(void *param),
 	
 	task = (task_t *)malloc(sizeof(task_t));
 	
-	if (NULL != task)
+	if (NULL == task)
 	{
 		return (NULL);
 	}
 	
-	task->execution_time = ttime + interval_in_sec);
+	task->execution_time = (ttime + interval_in_sec);
 	task->uid = uid;
 	task->action_func = action_func;
 	task->interval = interval_in_sec;
@@ -57,7 +58,7 @@ void TaskDestroy(task_t *task)
 	
 	task->param = NULL;
 	task->action_func = NULL;
-	task->execute_time = (time_t)-1;
+	task->execution_time = (time_t)-1;
 	task->uid = GetBadUid();
 	task->interval = 0;
 	

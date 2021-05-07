@@ -1,28 +1,35 @@
 #include <time.h> 		/* struct tm */
 #include <stddef.h> 	/* size_t */
+#include <stdlib.h>
+#include <assert.h>
+#include <unistd.h>
 
-/*#include "uid.h"*/ 
-#include "task.h"
-#include "priority_queue.h" 
+#include "scheduler.h"
+#include "../task/task.h"
 
-/*
-typedef struct scheduler scheduler_t
+/*typedef struct scheduler scheduler_t;*/
+
+struct scheduler
 {
-	p_queue *pq;
-	int run_status; 0 - off, 1 - on
+	int is_run; 
+	pq_t *pq;
+	task_t *current_task;
 };
-*/
+
+/*static int IsBigger(const void *task1, const void *task2);*/
+int CmpExeTime(const void *cur, const void *par);
+static int IsMatch(const void *data, const void *param);
 
 scheduler_t *SchedulerCreate	(void)
 {
-	scheduler_t *scheduler = (scheduler_t)malloc(sizeof(scheduler_t));
+	scheduler_t *scheduler = (scheduler_t *)malloc(sizeof(scheduler_t));
 	
 	if (NULL == scheduler)
 	{
 		return (NULL);
 	}
 	
-	scheduler->pq = PQCreate(Cmp_Num);
+	scheduler->pq = PQueueCreate(CmpExeTime);
 	
 	if (NULL == scheduler->pq)
 	{
@@ -31,7 +38,8 @@ scheduler_t *SchedulerCreate	(void)
 		return (NULL);	
 	}
 	
-	scheduler->run_status = 0;
+	scheduler->is_run = 0;
+	scheduler->current_task = NULL;
 	
 	return (scheduler);
 }
@@ -64,7 +72,7 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 		return GetBadUid();
 	}
 	
-	if (!PQueueEnqueue(scheduler->pq, (void *)task))
+	if (1 == PQueueEnqueue(scheduler->pq, (void *)task))
 	{
 		TaskDestroy(task);
 	
@@ -73,24 +81,31 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 	
 	return TaskGetUid(task);	
 }
-																	  *	periodical and run each x
+/*																	  *	periodical and run each x
 																	  *	seconds, or a single 
 																	  * instance to be executed
 																	  * in x seconds. time complexity: O(n) 
 																	  */	   
-int 		 SchedulerRemove	(scheduler_t *scheduler,            
-								ilrd_uid_t task)
+int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 {
 	void *task = NULL;
 
 	assert(scheduler);
 	assert(scheduler->pq);	
 
-	data = PQueueErase(scheduler->pq);
+	task = PQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
 	
-	if (NULL == data)
+	if (NULL == task)
 	{
 		return (1);
+	}
+	
+	if (UidIsSame(TaskGetUid(scheduler->current_task), task_id))
+	{
+		TaskDestroy(scheduler->current_task);	
+		scheduler->current_task = NULL;
+		
+		return (0);	
 	}
 	
 	TaskDestroy(task);
@@ -98,7 +113,7 @@ int 		 SchedulerRemove	(scheduler_t *scheduler,
 	return (0);
 }
 
-size_t 	 	 SchedulerSize		(const scheduler_t *scheduler) 	 /* time complexity: O(n) */
+size_t SchedulerSize(const scheduler_t *scheduler) 	 /* time complexity: O(n) */
 {
 	assert(scheduler);
 	assert(scheduler->pq);
@@ -106,7 +121,7 @@ size_t 	 	 SchedulerSize		(const scheduler_t *scheduler) 	 /* time complexity: O
 	return (PQueueSize(scheduler->pq));	
 }
 
-int SchedulerIsEmpty	(const scheduler_t *scheduler)
+int SchedulerIsEmpty(const scheduler_t *scheduler)
 {
 	assert(scheduler);
 	assert(scheduler->pq);
@@ -118,24 +133,26 @@ int SchedulerIsEmpty	(const scheduler_t *scheduler)
 int SchedulerRun(scheduler_t *scheduler)
 {
 	time_t current_time = (time_t)-1; 
-	task_t *current_task = NULL;
 	int status = 0;	
+	int remain = 0;
 	
 	assert(scheduler);
 	assert(scheduler->pq);
 	
-	while ((1 == scheduler->run_status) && (!SchedulerIsEmpty(scheduler)))
+	scheduler->is_run = 1;
+	
+	while ((1 == scheduler->is_run) && (!SchedulerIsEmpty(scheduler)))
 	{
 		current_time = time(NULL);
 
 		if ((time_t)-1 == current_time)
 		{
-			return (1);
+			return (1); /* fail */
 		}
 
-		current_task = PQueueDequeue(scheduler->pq);
+		scheduler->current_task = PQueueDequeue(scheduler->pq);
 		
-		remain = TaskGetExecutionTime(current_task) - current_time;
+		remain = TaskGetExecutionTime(scheduler->current_task) - (unsigned int)current_time;
 		
 		while (0 != remain)
 		{
@@ -143,68 +160,94 @@ int SchedulerRun(scheduler_t *scheduler)
 		}
 		
 		/* 0- success, 1- fail, 2- repeat*/
-		status = TaskExecute(current_task);
-		
+		status = TaskExecute(scheduler->current_task);
+		printf("status: %d\n", status);
 		switch (status)
 		{
 			case 0:
 			{
-				TaskDestroy(current_task);
+				TaskDestroy(scheduler->current_task);
 				break;
 			}
 			case 1:
 			{
-				TaskDestroy(current_task);
-				return (2);
+				TaskDestroy(scheduler->current_task);
+				
+				SchedulerStop(scheduler);
+				return (2); /* fail action function */
 			}
 			case 2:
 			{
-				TaskUpdateExecutionTime(current_task);
-				if (NULL == PQueueEnqueue(scheduler->pq, (void *)current_task))
+				printf("pick me!\n");
+				if (1 == TaskUpdateExecutionTime(scheduler->current_task))
 				{
-					return (1);
+					TaskDestroy(scheduler->current_task);
+					SchedulerStop(scheduler);	
+
+					return (1); /* fail */			
 				}
-									
+				
+				if (1 == PQueueEnqueue(scheduler->pq, (void *)scheduler->current_task))
+				{
+					TaskDestroy(scheduler->current_task);
+					SchedulerStop(scheduler);		
+								
+					return (1); /* fail */
+				}				
+				break;
+			}
+			default:
+			{
 				break;
 			}
 		}
 	}
-	if (0 == scheduler->run_status)
+	if (0 == scheduler->is_run)
 	{
-		return (3);
+		SchedulerStop(scheduler);
+		return (3); /* stop */
 	}
+	SchedulerStop(scheduler);	
 	
-	return (0);
+	return (0); /* success */
 	
 }
+
 void SchedulerStop(scheduler_t *scheduler)
 {
 	assert(scheduler);
 	
-	scheduler->run_status = 0;
+	scheduler->is_run = 0;
 	
 	return;	
 }
 
-void 		 SchedulerClear		(scheduler_t *scheduler)
+void SchedulerClear(scheduler_t *scheduler)
 {
 	assert(scheduler);
 	assert(scheduler->pq);
 	
-	while (!PQueueIsEmpty(scheduler))
+	while (!SchedulerIsEmpty(scheduler))
 	{
 		TaskDestroy(PQueueDequeue(scheduler->pq));
 	}
 	
 	return;
 }
-static int IsBigger(const void *task1, const void *task2) /*data is what the user gives*/
+
+int CmpExeTime(const void *cur, const void *par)
+{
+	return (*(time_t*)cur - *(time_t*)par);
+}
+/*
+static int IsBigger(const void *task1, const void *task2)
 {
 	return (TaskGetExecutionTime((task_t)task1) > TaskGetExecutionTime((task_t)task2));
 }
-
-int Cmp_Num(const void *cur, const void *par)
+}*/
+static int IsMatch(const void *data, const void *param)
 {
-	return (*(int*)cur - *(int*)par);
+    return (UidIsSame(TaskGetUid((task_t *)data), (*(ilrd_uid_t *)&param)));
 }
+
 
