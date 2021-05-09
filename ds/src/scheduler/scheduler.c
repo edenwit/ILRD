@@ -7,6 +7,14 @@
 #include "scheduler.h"
 #include "../task/task.h"
 
+#define RUN_SUCCESS 			0
+#define RUN_FAILURE				1
+#define RUN_ACTION_FUNC_FAILURE 2
+#define RUN_STOP    			3
+
+#define ACTION_FUNC_SUCCESS		0
+#define ACTION_FUNC_FAILURE		1
+#define ACTION_FUNC_REPEAT		2
 /*typedef struct scheduler scheduler_t;*/
 
 struct scheduler
@@ -50,7 +58,9 @@ void  SchedulerDestroy(scheduler_t *scheduler)
 	assert(scheduler->pq);
 	
 	SchedulerClear(scheduler);
+	
 	PQueueDestroy(scheduler->pq);
+	
 	free(scheduler);	
 	
 	return;	
@@ -64,6 +74,7 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 	
 	assert(scheduler);
 	assert(scheduler->pq);
+	assert(action_func);
 	
 	task = TaskCreate(action_func, interval_in_sec, param);
 
@@ -110,8 +121,7 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 	}
 	
 	
-	TaskDestroy(task);
-	task = NULL;	
+	TaskDestroy(task);	
 	
 	return (0);
 }
@@ -150,7 +160,7 @@ int SchedulerRun(scheduler_t *scheduler)
 		if ((time_t)-1 == current_time)
 		{
 			SchedulerStop(scheduler);
-			return (1); /* fail */
+			return (RUN_FAILURE); /* fail */
 		}
 
 		scheduler->current_task = PQueueDequeue(scheduler->pq);
@@ -166,7 +176,7 @@ int SchedulerRun(scheduler_t *scheduler)
 
 		switch (TaskExecute(scheduler->current_task))
 		{
-			case 0:
+			case ACTION_FUNC_SUCCESS:
 			{
 				if (NULL != scheduler->current_task)
 				{
@@ -176,16 +186,16 @@ int SchedulerRun(scheduler_t *scheduler)
 
 				break;
 			}
-			case 1:
+			case ACTION_FUNC_FAILURE:
 			{
 				
 				TaskDestroy(scheduler->current_task);
 				scheduler->current_task = NULL;
 				
 				SchedulerStop(scheduler);
-				return (2); /* fail action function */
+				return (RUN_ACTION_FUNC_FAILURE); /* fail action function */
 			}
-			case 2:
+			case ACTION_FUNC_REPEAT:
 			{
 				if (NULL == scheduler->current_task)
 				{
@@ -198,7 +208,7 @@ int SchedulerRun(scheduler_t *scheduler)
 					scheduler->current_task = NULL;					
 					SchedulerStop(scheduler);	
 
-					return (1); /* fail */			
+					return (RUN_FAILURE); /* fail */			
 				}
 				
 				if (1 == PQueueEnqueue(scheduler->pq, (void *)scheduler->current_task))
@@ -207,7 +217,7 @@ int SchedulerRun(scheduler_t *scheduler)
 					scheduler->current_task = NULL;					
 					SchedulerStop(scheduler);		
 								
-					return (1); /* fail */
+					return (RUN_FAILURE); /* fail */
 				}				
 				break;
 			}
@@ -219,11 +229,11 @@ int SchedulerRun(scheduler_t *scheduler)
 	}
 	if (0 == scheduler->is_run)
 	{
-		return (3); /* stop */
+		return (RUN_STOP); /* stop */
 	}
 	SchedulerStop(scheduler);	
 	
-	return (0); /* success */
+	return (RUN_SUCCESS); /* success */
 	
 }
 
@@ -246,6 +256,7 @@ void SchedulerClear(scheduler_t *scheduler)
 	{
 		TaskDestroy(PQueueDequeue(scheduler->pq));
 	}
+	
 	scheduler->current_task = NULL;						
 	
 	return;
