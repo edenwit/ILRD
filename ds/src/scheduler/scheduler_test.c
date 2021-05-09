@@ -20,7 +20,7 @@ int CommitSuicide(void *scheduler);
 typedef struct sched_and_uid
 {
 	scheduler_t *scheduler;
-	ilrd_uid_t *uid;
+	ilrd_uid_t uid;
 }suicide_kit;
 
 int main()
@@ -35,7 +35,7 @@ static void SchedulerTest()
 
 	suicide_kit sui = {0};
 	size_t interval = 2;
-	size_t interval2 = 10;	
+	size_t interval2 = 20;	
 	size_t interval3 = 1;
 	size_t interval4 = 8;		
 	ilrd_uid_t uid = {0};
@@ -115,7 +115,7 @@ static void SchedulerTest()
 	}
 	
 	
-	uid = SchedulerAdd(scheduler_test, AddPrintCatToScheduler, interval4 - 1, (void *)scheduler_test);
+	uid = SchedulerAdd(scheduler_test, AddPrintCatToScheduler, 0, (void *)scheduler_test);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{
@@ -123,15 +123,15 @@ static void SchedulerTest()
 			PrintUid(uid);
 			PrintUid(GetBadUid());				
 	}	
-/*	
+	
 	sui.scheduler = scheduler_test;
-	sui.uid = &uid;
 
-	uid = SchedulerAdd(scheduler_test, CommitSuicide, interval, (void *)&sui);
+	sui.uid = SchedulerAdd(scheduler_test, CommitSuicide, interval4, (void *)&sui);
 
+	/*
 	printf("sui.uid:\n");
-	PrintUid(*(ilrd_uid_t *)sui.uid);	
-	*/
+	PrintUid(*(ilrd_uid_t *)sui.uid);	*/
+	
 	if (UidIsSame(uid, GetBadUid()))
 	{
 			printf("GetBadUid failed! pair checked: \n");
@@ -149,7 +149,7 @@ static void SchedulerTest()
 	{
 		printf("SchedulerSize Failed. Supposed to have 2 tasks, has %ld.\n", SchedulerSize(scheduler_test));			
 	}
-	
+/*	
 	uid = SchedulerAdd(scheduler_test, ActionPrint, interval, (void *)&repeat2);
 	
 	if (UidIsSame(uid, GetBadUid()))
@@ -201,7 +201,7 @@ static void SchedulerTest()
 	}	
 				
 	SchedulerDestroy(scheduler_test);
-	
+	*/
 	return;
 }
 
@@ -222,16 +222,12 @@ int ActionPrint2(void *param)
 int CommitSuicide(void *sui)
 {
 	int status = 0;
-	suicide_kit *su_kit = (suicide_kit *)sui;
-	/*printf("SUICIDE TRYING TO KILL:\n");
-	PrintUid(*(ilrd_uid_t *)su_kit->uid);	
-	*/status = SchedulerRemove(su_kit->scheduler, *(ilrd_uid_t *)su_kit->uid);
-	/*printf("Status: %d\n", status);
-	*/
-	return status;
+	/*suicide_kit su_kit = (suicide_kit *)sui;*/
+	printf("Im dying!\n");
+	status = SchedulerRemove((((suicide_kit *)sui)->scheduler), (((suicide_kit *)sui)->uid));
 	
+	return status;	
 }
-
 
 int StopTheRun(void *scheduler)
 {

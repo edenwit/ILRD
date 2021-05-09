@@ -19,7 +19,6 @@ struct scheduler
 /*static int IsBigger(const void *task1, const void *task2);*/
 int CmpExeTime(const void *cur, const void *par);
 static int IsMatch(const void *data, const void *param);
-static void PrintUid2(ilrd_uid_t uid);
 
 scheduler_t *SchedulerCreate	(void)
 {
@@ -90,19 +89,11 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 																	  */	   
 int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 {
-	void *task = NULL;
+	task_t *task = NULL;
 
 	assert(scheduler);
 	assert(scheduler->pq);	
 
-	task = PQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
-	
-	if (NULL == task)
-	{
-		printf("bad\n");
-		return (1);
-	}
-	
 	if ((NULL != scheduler->current_task) && (UidIsSame(TaskGetUid(scheduler->current_task), task_id)))
 	{
 		TaskDestroy(scheduler->current_task);	
@@ -111,8 +102,16 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 		return (0);	
 	}
 	
+	task = (task_t *)PQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
+	
+	if (NULL == task)
+	{
+		return (1);
+	}
+	
+	
 	TaskDestroy(task);
-	scheduler->current_task = NULL;	
+	task = NULL;	
 	
 	return (0);
 }
@@ -137,7 +136,6 @@ int SchedulerIsEmpty(const scheduler_t *scheduler)
 int SchedulerRun(scheduler_t *scheduler)
 {
 	time_t current_time = (time_t)-1; 
-	int status = 0;	
 	int remain = 0;
 	
 	assert(scheduler);
@@ -157,17 +155,16 @@ int SchedulerRun(scheduler_t *scheduler)
 
 		scheduler->current_task = PQueueDequeue(scheduler->pq);
 		
-		remain = TaskGetExecutionTime(scheduler->current_task) - (unsigned int)current_time;
+		remain = TaskGetExecutionTime(scheduler->current_task) - current_time;
 		
 		while (0 < remain)
 		{
-			remain = sleep(remain);
+			remain = sleep((unsigned int)remain);
 		}
 		
 		/* 0- success, 1- fail, 2- repeat*/
-		status = TaskExecute(scheduler->current_task);
 
-		switch (status)
+		switch (TaskExecute(scheduler->current_task))
 		{
 			case 0:
 			{
@@ -193,7 +190,8 @@ int SchedulerRun(scheduler_t *scheduler)
 				if (NULL == scheduler->current_task)
 				{
 					break;
-				}			
+				}
+							
 				if (1 == TaskUpdateExecutionTime(scheduler->current_task))
 				{
 					TaskDestroy(scheduler->current_task);
@@ -266,11 +264,4 @@ static int IsBigger(const void *task1, const void *task2)
 static int IsMatch(const void *data, const void *param)
 {
     return (UidIsSame(TaskGetUid((task_t *)data), (*(ilrd_uid_t *)param)));
-}
-
-static void PrintUid2(ilrd_uid_t uid)
-{
-	printf("Uid:\ncount:%ld\nprocess_id: %d\ntime_stamp: %ld\n", uid.count, uid.process_ID, uid.time_stamp);
-	
-	return;
 }
