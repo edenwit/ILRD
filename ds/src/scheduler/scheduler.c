@@ -19,6 +19,7 @@ struct scheduler
 /*static int IsBigger(const void *task1, const void *task2);*/
 int CmpExeTime(const void *cur, const void *par);
 static int IsMatch(const void *data, const void *param);
+static void PrintUid2(ilrd_uid_t uid);
 
 scheduler_t *SchedulerCreate	(void)
 {
@@ -75,6 +76,7 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 	if (1 == PQueueEnqueue(scheduler->pq, (void *)task))
 	{
 		TaskDestroy(task);
+		scheduler->current_task = NULL;					
 	
 		return GetBadUid();		
 	}
@@ -97,10 +99,11 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 	
 	if (NULL == task)
 	{
+		printf("bad\n");
 		return (1);
 	}
 	
-	if (UidIsSame(TaskGetUid(scheduler->current_task), task_id))
+	if ((NULL != scheduler->current_task) && (UidIsSame(TaskGetUid(scheduler->current_task), task_id)))
 	{
 		TaskDestroy(scheduler->current_task);	
 		scheduler->current_task = NULL;
@@ -109,6 +112,7 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 	}
 	
 	TaskDestroy(task);
+	scheduler->current_task = NULL;	
 	
 	return (0);
 }
@@ -147,6 +151,7 @@ int SchedulerRun(scheduler_t *scheduler)
 
 		if ((time_t)-1 == current_time)
 		{
+			SchedulerStop(scheduler);
 			return (1); /* fail */
 		}
 
@@ -154,34 +159,45 @@ int SchedulerRun(scheduler_t *scheduler)
 		
 		remain = TaskGetExecutionTime(scheduler->current_task) - (unsigned int)current_time;
 		
-		while (0 != remain)
+		while (0 < remain)
 		{
 			remain = sleep(remain);
 		}
 		
 		/* 0- success, 1- fail, 2- repeat*/
 		status = TaskExecute(scheduler->current_task);
-		printf("status: %d\n", status);
+
 		switch (status)
 		{
 			case 0:
 			{
-				TaskDestroy(scheduler->current_task);
+				if (NULL != scheduler->current_task)
+				{
+					TaskDestroy(scheduler->current_task);
+					scheduler->current_task = NULL;
+				}
+
 				break;
 			}
 			case 1:
 			{
+				
 				TaskDestroy(scheduler->current_task);
+				scheduler->current_task = NULL;
 				
 				SchedulerStop(scheduler);
 				return (2); /* fail action function */
 			}
 			case 2:
 			{
-				printf("pick me!\n");
+				if (NULL == scheduler->current_task)
+				{
+					break;
+				}			
 				if (1 == TaskUpdateExecutionTime(scheduler->current_task))
 				{
 					TaskDestroy(scheduler->current_task);
+					scheduler->current_task = NULL;					
 					SchedulerStop(scheduler);	
 
 					return (1); /* fail */			
@@ -190,6 +206,7 @@ int SchedulerRun(scheduler_t *scheduler)
 				if (1 == PQueueEnqueue(scheduler->pq, (void *)scheduler->current_task))
 				{
 					TaskDestroy(scheduler->current_task);
+					scheduler->current_task = NULL;					
 					SchedulerStop(scheduler);		
 								
 					return (1); /* fail */
@@ -204,7 +221,6 @@ int SchedulerRun(scheduler_t *scheduler)
 	}
 	if (0 == scheduler->is_run)
 	{
-		SchedulerStop(scheduler);
 		return (3); /* stop */
 	}
 	SchedulerStop(scheduler);	
@@ -216,6 +232,7 @@ int SchedulerRun(scheduler_t *scheduler)
 void SchedulerStop(scheduler_t *scheduler)
 {
 	assert(scheduler);
+	assert(scheduler->pq);
 	
 	scheduler->is_run = 0;
 	
@@ -231,13 +248,14 @@ void SchedulerClear(scheduler_t *scheduler)
 	{
 		TaskDestroy(PQueueDequeue(scheduler->pq));
 	}
+	scheduler->current_task = NULL;						
 	
 	return;
 }
 
-int CmpExeTime(const void *cur, const void *par)
+int CmpExeTime(const void *data1, const void *data2)
 {
-	return (*(time_t*)cur - *(time_t*)par);
+	return (TaskGetExecutionTime((task_t *)data1) - TaskGetExecutionTime((task_t *)data2));
 }
 /*
 static int IsBigger(const void *task1, const void *task2)
@@ -247,7 +265,12 @@ static int IsBigger(const void *task1, const void *task2)
 }*/
 static int IsMatch(const void *data, const void *param)
 {
-    return (UidIsSame(TaskGetUid((task_t *)data), (*(ilrd_uid_t *)&param)));
+    return (UidIsSame(TaskGetUid((task_t *)data), (*(ilrd_uid_t *)param)));
 }
 
-
+static void PrintUid2(ilrd_uid_t uid)
+{
+	printf("Uid:\ncount:%ld\nprocess_id: %d\ntime_stamp: %ld\n", uid.count, uid.process_ID, uid.time_stamp);
+	
+	return;
+}
