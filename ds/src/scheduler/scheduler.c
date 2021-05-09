@@ -113,7 +113,7 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 		return (0);	
 	}
 	
-	task = (task_t *)PQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
+	task = PQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
 	
 	if (NULL == task)
 	{
