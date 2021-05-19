@@ -43,9 +43,37 @@ static void FSATests()
 			printf("Struct size: %ld, block size: %ld, num of blocks: %ld. Suggested: %ld\n", sizeof(size_t), block_size[i], num_of_blocks[i], 				FSASuggestSize(num_of_blocks[i], block_size[i]));
 		}
 	}
+	fsa = FSAInit((void *)huge_block, 100, 90);
+
+	if (NULL != fsa)
+	{
+		printf("FSAInit failed! line %d.\n", __LINE__);
+		free_blocks = FSACountFree(fsa);
+		
+		if (0 != free_blocks)
+		{
+		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", free_blocks, FSACountFree(fsa));	
+		}
+			
+	}
+	
+
+	fsa = FSAInit((void *)huge_block, 100, block_exm);
+
+	if (NULL == fsa)
+	{
+		printf("FSAInit failed! line %d.\n", __LINE__);
+	}
+	
+	free_blocks = FSACountFree(fsa);
+	
+	if (1 != free_blocks)
+	{
+		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", free_blocks, FSACountFree(fsa));	
+	}
 	
 	fsa = FSAInit((void *)huge_block, HUGU_BLOCK, block_exm);
-
+	
 	if (NULL == fsa)
 	{
 		printf("FSAInit failed! line %d.\n", __LINE__);
@@ -55,6 +83,8 @@ static void FSATests()
 	
 	free_blocks = FSACountFree(fsa);
 
+
+
 	if (free_blocks != ((HUGU_BLOCK - 8) / (block_exm + 6)))
 	{
 		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", free_blocks, ((HUGU_BLOCK - 8) / block_exm));	
@@ -62,38 +92,38 @@ static void FSATests()
 	
 	aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr);		
 	aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr);		
 		aloc_ptr2 = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr2);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr2);		
 		aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc2 address: %p.\n", aloc_ptr);		
+	printf("Alloc2 address: %p.\n", (void *)aloc_ptr);		
 		aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc address to free: %p.\n", aloc_ptr);		
+	printf("Alloc address to free: %p.\n", (void *)aloc_ptr);		
 		aloc_ptr_to_free = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr_to_free);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr_to_free);		
 		aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr);		
 		
 		aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr);		
 		aloc_ptr = FSAAlloc(fsa);
 	
-	printf("Alloc address: %p.\n", aloc_ptr);		
+	printf("Alloc address: %p.\n", (void *)aloc_ptr);		
 				
 	free_blocks = FSACountFree(fsa);
 
 	if (0 != free_blocks)
 	{
-		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", 0, free_blocks);	
+		printf("FSACountFree fail! exp: %d, actual: %ld.\n", 0, free_blocks);	
 	}
 
 	FSAFree(fsa, aloc_ptr_to_free);
@@ -102,7 +132,7 @@ static void FSATests()
 	
 	if (1 != free_blocks)	
 	{
-		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", 1, free_blocks);	
+		printf("FSACountFree fail! exp: %d, actual: %ld.\n", 1, free_blocks);	
 	}			
 	
 	aloc_ptr = FSAAlloc(fsa);
@@ -116,7 +146,7 @@ static void FSATests()
 
 	if (0 != free_blocks)
 	{
-		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", 0, free_blocks);	
+		printf("FSACountFree fail! exp: %d, actual: %ld.\n", 0, free_blocks);	
 	}
 		
 	FSAFree(fsa, aloc_ptr2);
@@ -125,7 +155,7 @@ static void FSATests()
 	
 	if (1 != free_blocks)
 	{
-		printf("FSACountFree fail! exp: %ld, actual: %ld.\n", 1, free_blocks);	
+		printf("FSACountFree fail! exp: %d, actual: %ld.\n", 1, free_blocks);	
 	}
 		
 	aloc_ptr = FSAAlloc(fsa);
@@ -135,108 +165,7 @@ static void FSATests()
 		printf("FSAFree failed.\n");
 	}
 	
-	
 	free(huge_block);
 	
 	return;
 }
-
-/*
-fsa_t *FSAInit(void *mem_pool, size_t pool_size, size_t inner_block_size)
-{
-	fsa_t *fsa_head = NULL;
-	size_t counter = 0;
-	size_t round_up_struct_size = RoundUpToWordSize(sizeof(fsa_t));
-	size_t num_of_possible_blocks = 0;
-	
-	assert(mem_pool);
-	
-	inner_block_size = RoundUpToWordSize(inner_block_size);
-
-	while (0 != ((*(size_t *)&mem_pool) % WORD_SIZE))
-	{
-		mem_pool = (size_t *)mem_pool + 1;
-		--pool_size;		
-	}
-	
-	fsa_head = ((fsa_t *)mem_pool);
-	
-	if (pool_size < (inner_block_size + round_up_struct_size))
-	{
-		return NULL;
-	}
-	
-	(*(size_t *)&mem_pool) = round_up_struct_size;
-	mem_pool = (size_t *)mem_pool + round_up_struct_size;
-	num_of_possible_blocks = pool_size / inner_block_size;
-	
-	while ((num_of_possible_blocks - 1) > 0)
-	{
-		++counter;
-		(*(size_t *)&mem_pool) = inner_block_size * counter;
-		mem_pool = (size_t *)mem_pool + inner_block_size;
-		--num_of_possible_blocks;
-	}
-	
-	(*(size_t *)&mem_pool) = 0;
-	
-	return (fsa_head);
-}
-
-void *FSAAlloc(fsa_t *fsa)
-{
-	size_t *temp = NULL;
-	
-	assert(fsa);	
-	
-	if (0 == *(size_t *)&fsa)
-	{
-		return (NULL);
-	}
-	
-	temp = (size_t *)fsa;
-	*(size_t *)&fsa = *(size_t *)&temp;
-	
-	return (temp); 
-}
-
-void FSAFree(fsa_t *fsa, void *mem_block)
-{
-	assert(fsa);	
-	assert(mem_block);
-	
-	mem_block = (size_t *)fsa;
-	fsa = (fsa_t *)mem_block;
-	
-	return;
-}
-
-size_t FSASuggestSize(size_t num_of_blocks, size_t block_size)
-{
-	return ((RoundUpToWordSize(block_size) * num_of_blocks) + RoundUpToWordSize(sizeof(fsa_t)));
-}
-
-size_t FSACountFree(const fsa_t *fsa)
-{
-	size_t counter = 0;
-	fsa_block_header_t *fsa_ptr = NULL;
-	
-	assert(fsa);
-	
-	if (0 == *(size_t *)&fsa)
-	{
-		return (0);
-	}
-	
-	fsa_ptr = (fsa_block_header_t *)fsa;
-	
-	while (0 != *(size_t *)&fsa_ptr)
-	{
-		fsa_ptr += *(size_t *)&fsa_ptr;
-		++counter;
-	}
-	
-	return (counter);
-}
-
-*/
