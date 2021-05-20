@@ -1,119 +1,206 @@
 #include <assert.h> /* assert */
-#include "fsa.h"
+#include "vsa.h"
 
 #define WORD_SIZE (sizeof(size_t))
 
+static void VSADefragment(vsa_t *vsa);
 static size_t RoundUpToWordSize(size_t num);
+static size_t RoundDownToWordSize(size_t num);
+static size_t AbsoluteValue(long num);
 
-struct fsa
+struct vsa
 {
-	size_t next_free;
+	size_t pool_size;
 };
 
-typedef struct fsa_block_header
+typedef struct vsa_chunk_header
 {
-	size_t next_free;
-} fsa_block_header_t;
+	long int chunk_size;
+} vsa_block_header_t;
 
-fsa_t *FSAInit(void *mem_pool, size_t pool_size, size_t inner_block_size)
+vsa_t *VSAInit(void *mem_pool, size_t pool_size)
 {
-	fsa_t *fsa_head = NULL;
-	size_t counter = 0;
-	size_t round_up_struct_size = RoundUpToWordSize(sizeof(fsa_t));
-	size_t num_of_possible_blocks = 0;
+	vsa_t *vsa_head = NULL;
 	size_t align_diff = 0;
+	size_t round_up_struct_size = RoundUpToWordSize(sizeof(vsa_t));
 	
 	assert(mem_pool);
 	
-	inner_block_size = RoundUpToWordSize(inner_block_size);		/* round up block size to word size multiple */
 	align_diff = ((size_t)mem_pool % WORD_SIZE); 				/* how many bytes are missing for alignment */
 	mem_pool = (char *)mem_pool + align_diff;					/* steps to take until alignment */
-	pool_size -= align_diff;									/* decrease alignment from available pool size */
-	fsa_head = ((fsa_t *)mem_pool);								/* point to beginning of pool */
+	pool_size -= align_diff;									/* decrease alignment from available pool size */	
+	vsa_head = ((vsa_t *)mem_pool);								/* point to beginning of pool */
 	
-	if (pool_size < (inner_block_size + round_up_struct_size))	/* check if there's enough space for atleast one block + struct */
-	{
-		return NULL;
-	}
-	
-	((fsa_t *)(mem_pool))->next_free = round_up_struct_size;	/* mark the next available block as the first block */
-	mem_pool = (char *)mem_pool + round_up_struct_size;			/* step to the first block */
-	num_of_possible_blocks = pool_size / inner_block_size;		/* calculate how many blocks can i have*/
-		
-	while ((num_of_possible_blocks - 1) > 0)
-	{
-		++counter;
-		/* mark the next available block as the next block */
-		((fsa_block_header_t *)(mem_pool))->next_free = (inner_block_size * counter) + round_up_struct_size; 
-
-		mem_pool = (char *)mem_pool + inner_block_size;  		/* step to the next block */
-		--num_of_possible_blocks;
-	}
-	
-	((fsa_block_header_t *)(mem_pool))->next_free = 0;			/* mark the end of available blocks */
-
-	return (fsa_head);
-}
-
-void *FSAAlloc(fsa_t *fsa)
-{
-	fsa_block_header_t *temp = NULL;
-	
-	assert(fsa);	
-	
-	if (0 == fsa->next_free)									/* check if there are free blocks */
+	if (pool_size < (round_up_struct_size + sizeof(vsa_block_header_t) + WORD_SIZE))/* check if there's enough space for atleast one block + struct */
 	{
 		return (NULL);
 	}
 	
-	temp = (fsa_block_header_t *)((char *)fsa + fsa->next_free);	/* save location of current block */
-	fsa->next_free = ((fsa_t *)temp)->next_free;					/* mark next free block as the one current block pointed to */
-
-	return (temp); 													/* return saved location of current block */
+	pool_size = RoundDownToWordSize(pool_size) - round_up_struct_size;
+	((vsa_t *)(mem_pool))->pool_size = pool_size;	/* write the pool_size left after alignments and struct size */
+	mem_pool = (char *)mem_pool + round_up_struct_size;			/* step to the first block */
+	((vsa_block_header_t *)(mem_pool))->chunk_size = pool_size - RoundUpToWordSize(sizeof(vsa_block_header_t));
+	
+	return vsa_head;		
 }
 
-void FSAFree(fsa_t *fsa, void *mem_block)
+void *VSAAlloc(vsa_t *vsa, size_t n_bytes)
 {
-	assert(fsa);	
-	assert(mem_block);
+	vsa_block_header_t *chunk_ptr = NULL;
+	size_t total_count = 0;	
+	size_t keep_size = 0;
+	size_t absolute_chunk_size = 0;
+	size_t round_up_struct_size = RoundUpToWordSize(sizeof(vsa_t));	
+	size_t chunk_srtuct_size = RoundUpToWordSize(sizeof(vsa_block_header_t));
 
-	((fsa_block_header_t *)mem_block)->next_free = fsa->next_free; /* the newly freed block points to the next free fsa pointed to */
-	fsa->next_free = (size_t)((char *)mem_block - (char *)fsa);		/* mark next free block as the one i just freed */
+	assert(vsa);
+	
+	n_bytes = RoundUpToWordSize(n_bytes);
+	
+	chunk_ptr = (vsa_block_header_t *)((char *)vsa + round_up_struct_size);
+
+	while ((total_count + n_bytes) < vsa->pool_size)
+	{
+		if (chunk_ptr->chunk_size >= (long)n_bytes)
+		{
+			keep_size = chunk_ptr->chunk_size;
+			chunk_ptr->chunk_size = n_bytes * (-1);
+			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + chunk_srtuct_size);						
+	
+			if (keep_size > n_bytes)
+			{
+
+				((vsa_block_header_t *)((char *)chunk_ptr + n_bytes))->chunk_size = (long)(keep_size - n_bytes - chunk_srtuct_size);
+
+			}
+
+			return (void *)chunk_ptr;
+		}
+
+		absolute_chunk_size = AbsoluteValue(chunk_ptr->chunk_size);
+		total_count = total_count + chunk_srtuct_size + absolute_chunk_size;		
+		chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + absolute_chunk_size + chunk_srtuct_size);		
+	}
+		
+	if ((n_bytes + chunk_srtuct_size) < VSALargestChunkAvailable(vsa))
+	{
+		total_count = 0;
+		chunk_ptr = (vsa_block_header_t *)((char *)vsa + round_up_struct_size);
+	
+		while ((total_count + n_bytes) < vsa->pool_size)
+		{
+			if (chunk_ptr->chunk_size >= (long)n_bytes)
+			{
+				keep_size = chunk_ptr->chunk_size;
+				chunk_ptr->chunk_size = n_bytes * (-1);
+				chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + chunk_srtuct_size);						
+				
+				if (keep_size > n_bytes)
+				{
+					((vsa_block_header_t *)((char *)chunk_ptr + n_bytes))->chunk_size = (long)(keep_size - n_bytes - chunk_srtuct_size);
+				}
+
+				return (void *)chunk_ptr;
+			}
+			
+			absolute_chunk_size = AbsoluteValue(chunk_ptr->chunk_size);
+			total_count += (chunk_srtuct_size + absolute_chunk_size);		
+			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + absolute_chunk_size + chunk_srtuct_size);		
+		}
+	}
+	
+	return (NULL);	
+}
+
+void VSAFree(void *mem_chunck)
+{
+	assert(mem_chunck);
+	
+	mem_chunck = (vsa_block_header_t *)((char *)mem_chunck - sizeof(vsa_block_header_t));	
+	
+	if ((((vsa_block_header_t *)(mem_chunck))->chunk_size) < 0)
+	{
+		(((vsa_block_header_t *)(mem_chunck))->chunk_size) *= (-1);
+	}
 	
 	return;
 }
 
-size_t FSASuggestSize(size_t num_of_blocks, size_t block_size)
+size_t VSALargestChunkAvailable(vsa_t *vsa) /* -> here we call VSADefragment */
 {
-	/* calculate size needed for all rounded sizes of struct and block size */
-	return ((RoundUpToWordSize(block_size) * num_of_blocks) + RoundUpToWordSize(sizeof(fsa_t)));
-}
-
-size_t FSACountFree(const fsa_t *fsa)
-{
-	size_t counter = 0;
-	fsa_block_header_t *fsa_ptr = NULL;
+	vsa_block_header_t *chunk_ptr = (vsa_block_header_t *)((char *)vsa + RoundUpToWordSize(sizeof(vsa_t)));
+	size_t max_chunk = 0;
+	size_t total_count = 0;
+	size_t chunk_srtuct_size = RoundUpToWordSize(sizeof(vsa_block_header_t));
+	size_t absolute_chunk_size = 0;
+	assert(vsa);
 	
-	assert(fsa);
-
-	fsa_ptr = (fsa_block_header_t *)fsa; /* point to head struct */
+	VSADefragment(vsa);
 	
-	while (0 != fsa_ptr->next_free)
+	while (total_count < vsa->pool_size)
 	{
-		++counter;
-		fsa_ptr = (fsa_block_header_t *)((char *)fsa + fsa_ptr->next_free); /* point to next block */
+		if (chunk_ptr->chunk_size > (long)max_chunk)
+		{
+			max_chunk = (size_t)chunk_ptr->chunk_size;
+		}
+		absolute_chunk_size = AbsoluteValue(chunk_ptr->chunk_size);
+		total_count += (chunk_srtuct_size + absolute_chunk_size);
+		chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + absolute_chunk_size + chunk_srtuct_size);		
 	}
 	
-	return (counter);
+	return (max_chunk);
 }
 
-/* gets a number and returns the closest round-up to word size */
-static size_t RoundUpToWordSize(size_t num)
+static void VSADefragment(vsa_t *vsa)
 {
-	while (0 != (num % WORD_SIZE))
-	{
-		++num;
-	}
+	vsa_block_header_t *chunk_ptr = (vsa_block_header_t *)((char *)vsa + RoundUpToWordSize(sizeof(vsa_t)));
+	vsa_block_header_t *saved_chunk_ptr = NULL;
+	size_t count = 0;
+	size_t total_count = 0;
+	size_t chunk_srtuct_size = RoundUpToWordSize(sizeof(vsa_block_header_t));
+	size_t absolute_chunk_size = 0;
+
+	assert(vsa);
 	
-	return (num);
+	while (total_count < vsa->pool_size)
+	{
+		if (0 > chunk_ptr->chunk_size)
+		{
+			absolute_chunk_size = AbsoluteValue(chunk_ptr->chunk_size);
+			total_count = total_count + chunk_srtuct_size + absolute_chunk_size;		
+			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + absolute_chunk_size + chunk_srtuct_size);
+		}	
+		
+		else
+		{
+			saved_chunk_ptr = chunk_ptr;
+			count = 0;
+			
+			while ((total_count < vsa->pool_size) && (0 < chunk_ptr->chunk_size))
+			{
+				count += (chunk_srtuct_size + chunk_ptr->chunk_size);
+				total_count += (chunk_srtuct_size + chunk_ptr->chunk_size);
+				chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + chunk_ptr->chunk_size + chunk_srtuct_size);
+			}
+			
+			saved_chunk_ptr->chunk_size = count - chunk_srtuct_size;
+		}
+	}
+		
+	return;
+}
+
+static size_t RoundUpToWordSize(size_t num) /* gets a number and returns the closest round-up to word size */
+{
+	return (num + ((WORD_SIZE - (num % WORD_SIZE)) % WORD_SIZE));
+}
+
+static size_t RoundDownToWordSize(size_t num)
+{
+	return (num - ((num % WORD_SIZE) % WORD_SIZE));
+}
+
+static size_t AbsoluteValue(long num)
+{
+	return ((0 > num) ? (num * (-1)) : (num));
 }
