@@ -35,12 +35,13 @@ static void VSATests()
 		return;
 	}
 
-	vsa = VSAInit((void *)huge_block, HUGH_BLOCK);
+	vsa = VSAInit((void *)(huge_block + 1), HUGH_BLOCK -1);
 
 	if (NULL == vsa)
 	{
 		printf("VSAInit failed! line %d.\n", __LINE__);
 	}	
+
 
 	printf("Alloc address: \t\t%p\nHead struct address: \t%p\nFirst chunk address: \t%p\nPool size given: \t%ld\nPool size written: \t%ld\nChunk size written: \t%ld\n",
 	 (void *)huge_block, (void *)vsa, (void *)((char *)vsa + 8), (size_t)HUGH_BLOCK, *(size_t *)(vsa), *(size_t *)((char *)vsa + 8));
