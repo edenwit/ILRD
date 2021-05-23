@@ -201,7 +201,7 @@ static void *Alloc(vsa_t *vsa, size_t n_bytes)
 				 (chunk_ptr->chunk_size == (long)(n_bytes)))
 		{
 			/* make space occupied */
-			chunk_ptr->chunk_size *= (-1); 		
+			chunk_ptr->chunk_size *= /*n_bytes*/ (-1); 		
 			/* step to next chunk head */						
 			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + BLOCK_T_SIZE);
 			
