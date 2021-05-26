@@ -1,7 +1,7 @@
-
 #include <stddef.h> /* size_t */
 #include <assert.h> 
 #include <stdlib.h> /* malloc */
+
 
 
 #include "sorts.h"
@@ -10,7 +10,8 @@
 #define MAX2(a, b)  ((a) > (b) ? (a) : (b))
 #define MIN2(a, b)  ((a) < (b) ? (a) : (b))
 
-static void swap(int *x, int *y);
+static void Swap(int *x, int *y);
+static int GetDigit(int num, int n);
 
 void InsertionSort(int arr[], size_t size)
 {
@@ -73,7 +74,7 @@ void SelectionSort(int arr[], size_t size)
             ++p2;
         }
         
-        swap(saved_p, p1);
+        Swap(saved_p, p1);
         ++p1;
 	}
 	
@@ -106,7 +107,7 @@ void BubbleSort(int arr[], size_t size)
     		if (*p1 > *p2)
     		{
     			run_again = 1;
-    			swap(p1, p2);
+    			Swap(p1, p2);
     		}
     		++p1;
     		++p2;    		
@@ -141,7 +142,7 @@ int CountSort(int arr[], size_t size)
    	
    	if (NULL == count_arr)
    	{
-   		return (0);
+   		return (1);
    	}
 
    	res_arr = (int *)calloc((size), sizeof(int));
@@ -150,7 +151,7 @@ int CountSort(int arr[], size_t size)
    	{
    		free(count_arr);
    		
-   		return (0);
+   		return (1);
    	}
 	
 	for (i = 0; i < size; ++i)
@@ -181,14 +182,93 @@ int CountSort(int arr[], size_t size)
 	free(count_arr);
 	free(res_arr);
 
-	return (1);
+	return (0);
 }
 
-int RadixDigitsSort(int arr[], size_t size, size_t n_digits);
+
+int CountSortByDigit(int arr[], size_t size, size_t digit_order)
+{
+	int count_arr[10] = {0};
+	int *res_arr = NULL;
+	size_t i = 0;
+	
+	assert(arr);
+	
+   	res_arr = (int *)calloc((size), sizeof(int));
+   	
+   	if (NULL == res_arr)
+   	{
+   		return (1);
+   	}
+
+	for (i = 0; i < size; ++i)
+	{
+		/*printf("From num %d taking digit %ld: %ld.\n", arr[i], digit_order, GetDigit(arr[i], digit_order));*/
+		++count_arr[GetDigit(arr[i], digit_order)];
+	}
+
+	for (i = 1; i < 10; ++i)
+	{
+		count_arr[i] += count_arr[i - 1];
+	}
+
+    for (i = size; i > 0; --i) 
+    {				    
+        res_arr[count_arr[GetDigit(arr[i - 1], digit_order)] - 1] = arr[i - 1];
+        --count_arr[GetDigit(arr[i - 1], digit_order)];
+    }
+
+    for (i = 0; i < size; ++i)
+    {
+		*(arr + i) = *(res_arr + i);   
+    }
+
+	free(res_arr);
+
+	return (0);
+}
+
+
+int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
+{
+	int *res_arr = NULL;
+	size_t i = 0;
+	
+	assert(arr);
+	
+   	res_arr = (int *)malloc((size) * sizeof(int));
+
+	if (NULL == res_arr)
+	{
+		return (1);
+	}
+	
+	for (i = 0; i < size; ++i)
+	{
+		res_arr[i] = arr[i];
+	}
+	
+	for (i = 1; i <= n_digits; ++i)
+	{
+		if (CountSortByDigit(res_arr, size, i))
+		{
+			return (1);
+		}		
+	}
+	
+	for (i = 0; i < size; ++i)
+	{
+		arr[i] = res_arr[i];
+	}	
+	
+	free(res_arr);
+	
+	return (0);
+}
 
 int RadixBitsSort(int arr[], size_t size, size_t n_bits);
 
-static void swap(int *x, int *y)
+static void Swap(int *x, int *y)
 {
     int tmp = *x;
     *x = *y;
@@ -197,4 +277,21 @@ static void swap(int *x, int *y)
     return;
 }
  
+static int GetDigit(int num, int n)
+{
+    size_t i = 0;
+	int sign = 1;
+	
+	if (0 > num)
+	{
+		sign = -1;
+	}
+	
+	for (i = 0; i < (n - 1); ++i)
+	{
+		num /= 10;
+	}
+	
+	return (num % 10) * sign;
+}
 

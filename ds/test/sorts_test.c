@@ -5,9 +5,9 @@
 #include <time.h>
 
 
-#define RANGE_FROM (-250)
+#define RANGE_FROM (0)
 #define RANGE_TO   (250)
-#define ARR_SIZE (500)
+#define ARR_SIZE (100)
 
 static int cmpfunc(const void * a, const void * b);
 static void PrintIntArr(int * arr, size_t arr_size);
@@ -23,102 +23,12 @@ int main()
 	clock_t start_time = 0;
 	clock_t time_duration = 0;
 	
-	for (i = 0; i < ARR_SIZE; ++i)
-	{
-		arr[i] = (rand() % (RANGE_TO - RANGE_FROM + 1)) + RANGE_FROM;
-	}
-	
-	CopyArr(res_arr, arr, ARR_SIZE);
-	CopyArr(exp_arr, arr, ARR_SIZE);
-
-	printf("Testing Sorts with array size %d:\n", ARR_SIZE);
-
-	start_time = clock();		
-	CountSort(res_arr, ARR_SIZE);
-	time_duration = clock() - start_time;	
-		
-	qsort(exp_arr, ARR_SIZE, sizeof(int), cmpfunc);
-
-	if (CompareArrs(res_arr, exp_arr, ARR_SIZE))
-	{
-		printf("CountSort Comparing failed!.\n");
-		PrintIntArr(arr, ARR_SIZE);				
-		PrintIntArr(res_arr, ARR_SIZE);
-		PrintIntArr(exp_arr, ARR_SIZE);
-	}
-	else
-	{
-		printf("CountSort Time:     %ld\n", time_duration);
-	}
-	
-	CopyArr(res_arr, arr, ARR_SIZE);
-	CopyArr(exp_arr, arr, ARR_SIZE);
-
-	start_time = clock();				
-	BubbleSort(res_arr, ARR_SIZE);
-	time_duration = clock() - start_time;	
-	
-	qsort(exp_arr, ARR_SIZE, sizeof(int), cmpfunc);
-
-	if (CompareArrs(res_arr, exp_arr, ARR_SIZE))
-	{
-		printf("BubbleSort Comparing failed!.\n");
-		PrintIntArr(arr, ARR_SIZE);				
-		PrintIntArr(res_arr, ARR_SIZE);
-		PrintIntArr(exp_arr, ARR_SIZE);
-	}
-	else
-	{
-		printf("BubbleSort Time:    %ld\n", time_duration);
-	}
-	
-	CopyArr(res_arr, arr, ARR_SIZE);
-	CopyArr(exp_arr, arr, ARR_SIZE);
-
-	start_time = clock();				
-	InsertionSort(res_arr, ARR_SIZE);
-	time_duration = clock() - start_time;
-		
-	qsort(exp_arr, ARR_SIZE, sizeof(int), cmpfunc);
-
-	if (CompareArrs(res_arr, exp_arr, ARR_SIZE))
-	{
-		printf("InsertionSort Comparing failed!.\n");
-		PrintIntArr(arr, ARR_SIZE);				
-		PrintIntArr(res_arr, ARR_SIZE);
-		PrintIntArr(exp_arr, ARR_SIZE);
-	}
-	else
-	{
-		printf("InsertionSort Time: %ld\n", time_duration);
-	}
-		
-	CopyArr(res_arr, arr, ARR_SIZE);
-	CopyArr(exp_arr, arr, ARR_SIZE);
-		
-	start_time = clock();				
-	SelectionSort(res_arr, ARR_SIZE);
-	time_duration = clock() - start_time;
-		
-	qsort(exp_arr, ARR_SIZE, sizeof(int), cmpfunc);
-
-	if (CompareArrs(res_arr, exp_arr, ARR_SIZE))
-	{
-		printf("SelectionSort Comparing failed!.\n");
-		PrintIntArr(arr, ARR_SIZE);				
-		PrintIntArr(res_arr, ARR_SIZE);
-		PrintIntArr(exp_arr, ARR_SIZE);
-	}
-	else
-	{
-		printf("SelectionSort Time: %ld\n", time_duration);
-	}	
 	/* sorted array */
 	for (i = 0; i < ARR_SIZE; ++i)
 	{
 		arr[i] = (rand() % (RANGE_TO - RANGE_FROM + 1)) + RANGE_FROM;
 	}
-	
+/*	
 	CopyArr(res_arr, arr, ARR_SIZE);
 	CopyArr(exp_arr, arr, ARR_SIZE);
 
@@ -204,6 +114,27 @@ int main()
 	{
 		printf("SelectionSort Time: %ld\n", time_duration);
 	}	
+*/	
+	CopyArr(res_arr, arr, ARR_SIZE);
+	CopyArr(exp_arr, arr, ARR_SIZE);
+		
+	start_time = clock();
+	RadixDigitsSort(res_arr, ARR_SIZE, 3);
+	time_duration = clock() - start_time;
+		
+	qsort(exp_arr, ARR_SIZE, sizeof(int), cmpfunc);
+
+	if (CompareArrs(res_arr, exp_arr, ARR_SIZE))
+	{
+		printf("RadixDigitsSort Comparing failed!.\n");
+		PrintIntArr(arr, ARR_SIZE);				
+		PrintIntArr(res_arr, ARR_SIZE);
+		PrintIntArr(exp_arr, ARR_SIZE);
+	}
+	else
+	{
+		printf("RadixDigitsSort Time: %ld\n", time_duration);
+	}
 	
 	return (0);
 }

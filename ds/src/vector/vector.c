@@ -16,7 +16,6 @@ struct vector
 	void **arr;
 	size_t size;
 	size_t capacity;
-
 };
 
 /* approved by shelly */
