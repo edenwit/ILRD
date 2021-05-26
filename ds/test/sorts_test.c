@@ -13,6 +13,8 @@ static int cmpfunc(const void * a, const void * b);
 static void PrintIntArr(int * arr, size_t arr_size);
 static int CompareArrs(int * arr1, int *arr2, size_t arr_size);
 static void CopyArr(int * dest, int *src, size_t arr_size);
+static unsigned int GetLeftMostBit(int num);
+
 
 int main()
 {
@@ -28,7 +30,7 @@ int main()
 	{
 		arr[i] = (rand() % (RANGE_TO - RANGE_FROM + 1)) + RANGE_FROM;
 	}
-/*	
+
 	CopyArr(res_arr, arr, ARR_SIZE);
 	CopyArr(exp_arr, arr, ARR_SIZE);
 
@@ -114,7 +116,7 @@ int main()
 	{
 		printf("SelectionSort Time: %ld\n", time_duration);
 	}	
-*/	
+
 	CopyArr(res_arr, arr, ARR_SIZE);
 	CopyArr(exp_arr, arr, ARR_SIZE);
 		
@@ -135,6 +137,29 @@ int main()
 	{
 		printf("RadixDigitsSort Time: %ld\n", time_duration);
 	}
+	
+	CopyArr(res_arr, arr, ARR_SIZE);
+	CopyArr(exp_arr, arr, ARR_SIZE);
+		
+	start_time = clock();
+	RadixBitsSort(res_arr, ARR_SIZE, 8);
+/*	printf("leftmost bit: %ld\n", GetLeftMostBit((int)RANGE_TO));*/
+	time_duration = clock() - start_time;
+		
+	qsort(exp_arr, ARR_SIZE, sizeof(int), cmpfunc);
+
+	if (CompareArrs(res_arr, exp_arr, ARR_SIZE))
+	{
+		printf("RadixBitsSort Comparing failed!.\n");
+		PrintIntArr(arr, ARR_SIZE);				
+		PrintIntArr(res_arr, ARR_SIZE);
+		PrintIntArr(exp_arr, ARR_SIZE);
+	}
+	else
+	{
+		printf("RadixBitsSort Time: %ld\n", time_duration);
+	}
+	
 	
 	return (0);
 }
@@ -193,4 +218,19 @@ static int cmpfunc(const void * a, const void * b)
    return ( *(int *)a - *(int *)b );
 }
 
-
+static unsigned int GetLeftMostBit(int num)
+{
+	size_t max_left = 0;
+	size_t i = 0;
+	
+	for (i = 0; i < 31; ++i)
+	{
+		if (num & 1)
+		{
+			max_left = i + 1;
+			num >>= 1;
+		}
+	}
+	
+	return (max_left);
+}

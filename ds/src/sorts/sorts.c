@@ -1,9 +1,6 @@
 #include <stddef.h> /* size_t */
 #include <assert.h> 
 #include <stdlib.h> /* malloc */
-
-
-
 #include "sorts.h"
 
 
@@ -12,6 +9,10 @@
 
 static void Swap(int *x, int *y);
 static int GetDigit(int num, int n);
+int CountSortByDigit(int arr[], size_t size, size_t digit_order);
+static int GetBit(int num, int n);
+int CountSortByBit(int arr[], size_t size, size_t bit_order);
+
 
 void InsertionSort(int arr[], size_t size)
 {
@@ -229,6 +230,46 @@ int CountSortByDigit(int arr[], size_t size, size_t digit_order)
 }
 
 
+int CountSortByBit(int arr[], size_t size, size_t bit_order)
+{
+	int count_arr[2] = {0};
+	int *res_arr = NULL;
+	size_t i = 0;
+	
+	assert(arr);
+	
+   	res_arr = (int *)calloc((size), sizeof(int));
+   	
+   	if (NULL == res_arr)
+   	{
+   		return (1);
+   	}
+
+	for (i = 0; i < size; ++i)
+	{
+		/*printf("From num %d taking digit %ld: %ld.\n", arr[i], digit_order, GetDigit(arr[i], digit_order));*/
+		++count_arr[GetBit(arr[i], bit_order)];
+	}
+
+	count_arr[1] += count_arr[0];
+
+    for (i = size; i > 0; --i) 
+    {				    
+        res_arr[count_arr[GetBit(arr[i - 1], bit_order)] - 1] = arr[i - 1];
+        --count_arr[GetBit(arr[i - 1], bit_order)];
+    }
+
+    for (i = 0; i < size; ++i)
+    {
+		*(arr + i) = *(res_arr + i);   
+    }
+
+	free(res_arr);
+
+	return (0);
+}
+
+
 int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 {
 	int *res_arr = NULL;
@@ -266,7 +307,42 @@ int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 	return (0);
 }
 
-int RadixBitsSort(int arr[], size_t size, size_t n_bits);
+int RadixBitsSort(int arr[], size_t size, size_t n_bits)
+{
+	int *res_arr = NULL;
+	size_t i = 0;
+	
+	assert(arr);
+	
+   	res_arr = (int *)malloc((size) * sizeof(int));
+
+	if (NULL == res_arr)
+	{
+		return (1);
+	}
+	
+	for (i = 0; i < size; ++i)
+	{
+		res_arr[i] = arr[i];
+	}
+	
+	for (i = 1; i <= n_bits; ++i)
+	{
+		if (CountSortByBit(res_arr, size, i))
+		{
+			return (1);
+		}		
+	}
+	
+	for (i = 0; i < size; ++i)
+	{
+		arr[i] = res_arr[i];
+	}	
+	
+	free(res_arr);
+	
+	return (0);
+}
 
 static void Swap(int *x, int *y)
 {
@@ -295,3 +371,7 @@ static int GetDigit(int num, int n)
 	return (num % 10) * sign;
 }
 
+static int GetBit(int num, int n)
+{
+	return ((num <<= (n - 1)) & 1);
+}
