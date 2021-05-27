@@ -1,20 +1,67 @@
+/*  Developer: Eden Wittenberg;									*
+ *  Status: done;												*
+ *  Date Of Creation: 26.05.21;									*
+ *  Date Of Approval:											*
+ *  Approved By: ;												*
+ *  Description: Sorts							;				*/
+
+
 #include <stddef.h> /* size_t */
-#include <assert.h> 
+#include <assert.h>  /* assert */
 #include <stdlib.h> /* malloc */
-#include "sorts.h"
+#include "sorts.h" /* qsort */
+#include <string.h> /* memcpy */
 
 #define DEC_BASE (10)
 #define BIN_BASE (2)
 #define MAX2(a, b)  ((a) > (b) ? (a) : (b))
 #define MIN2(a, b)  ((a) < (b) ? (a) : (b))
+#define UNUSED(X) (void)(X)
 
 static void Swap(int *x, int *y);
-static int GetDigit(int num, int n);
-int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base);
-static int GetBit(int num, int n);
-int CountSortByBit(int arr[], size_t size, size_t bit_order);
 
+static int GenericCountSort(int arr[], size_t size, size_t range, size_t base, int min, int (*index_func)(int num, size_t base));
 
+static int IndexForCount(int num, size_t base);
+static int IndexForRadixDigit(int num, size_t base);
+static int IndexForRadixBit(int num, size_t base);
+
+void BubbleSort(int arr[], size_t size)
+{
+    int *p1 = NULL;
+    int *p2 = NULL;
+    int run_again = 1;
+    size_t i = 0;
+    
+    assert(arr);
+       
+    if (2 > size)
+    {
+    	return;
+    }
+    
+    while (1 == run_again)
+    {
+    	run_again = 0;
+    	
+   		p1 = arr;
+   		p2 = p1 + 1;
+    	
+    	for (i = 0; i < (size - 1); ++i)
+    	{  		
+    		if (*p1 > *p2)
+    		{
+    			run_again = 1;
+    			Swap(p1, p2);
+    		}
+    		
+    		++p1;
+    		++p2;    		
+    	} 
+	}
+	
+    return;
+}
 
 void InsertionSort(int arr[], size_t size)
 {
@@ -52,7 +99,6 @@ void SelectionSort(int arr[], size_t size)
     int *p1 = arr;
     int *p2 = NULL;
     int *saved_p = NULL;
-    int min = 0;
     
     assert(arr);
        
@@ -64,14 +110,12 @@ void SelectionSort(int arr[], size_t size)
     while (p1 < (arr + size))
     {
    		p2 = p1 + 1;
-    	min = *p1;
 		saved_p = p1;
 
 		while ((p2 < (arr + size))) 
 		{
-            if (*p2 < min)
+            if (*p2 < *saved_p)
             {
-            	min = *p2;
             	saved_p = p2;
             }
             ++p2;
@@ -84,112 +128,7 @@ void SelectionSort(int arr[], size_t size)
     return;
 }
 
-void BubbleSort(int arr[], size_t size)
-{
-    int *p1 = NULL;
-    int *p2 = NULL;
-    int run_again = 1;
-    size_t i = 0;
-    
-    assert(arr);
-       
-    if (2 > size)
-    {
-    	return;
-    }
-    
-    while (1 == run_again)
-    {
-    	run_again = 0;
-    	
-   		p1 = arr;
-   		p2 = p1 + 1;
-    	
-    	for (i = 0; i < (size - 1); ++i)
-    	{  		
-    		if (*p1 > *p2)
-    		{
-    			run_again = 1;
-    			Swap(p1, p2);
-    		}
-    		++p1;
-    		++p2;    		
-    	} 
-	}
-	
-    return;
-}
-
-
-int CountSort(int arr[], size_t size)
-{
-	int *count_arr = NULL;
-	int *res_arr = NULL;
-	int mini = arr[0];
-	int maxi = arr[0];
-	size_t i = 0;
-	size_t count_arr_size = 0;
-	
-	assert(arr);
-	
-    for (i = 0; i < size; ++i)
-    {  		
-		mini = MIN2(mini, *(arr + i));
-		maxi = MAX2(maxi, *(arr + i));    		
-   	} 
-   	
- 	
-   	count_arr_size = maxi - mini + 1;
-   	
-   	count_arr = (int *)calloc((count_arr_size), sizeof(int));
-   	
-   	if (NULL == count_arr)
-   	{
-   		return (1);
-   	}
-
-   	res_arr = (int *)calloc((size), sizeof(int));
-   	
-   	if (NULL == res_arr)
-   	{
-   		free(count_arr);
-   		
-   		return (1);
-   	}
-	
-	for (i = 0; i < size; ++i)
-	{
-
-		++count_arr[arr[i] - mini];
-
-	}
-	
-
-	for (i = 1; i < count_arr_size; ++i)
-	{
-		count_arr[i] += count_arr[i - 1];
-	}
-
-
-    for (i = size; i > 0; --i) 
-    {
-        res_arr[count_arr[arr[i - 1] - mini] - 1] = arr[i - 1];
-        count_arr[arr[i - 1] - mini] -= 1;
-    }
-
-    for (i = 0; i < size; ++i)
-    {
-		*(arr + i) = *(res_arr + i);   
-    }
-
-	free(count_arr);
-	free(res_arr);
-
-	return (0);
-}
-
-
-int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base)
+static int GenericCountSort(int arr[], size_t size, size_t range, size_t base, int min, int (*index_func)(int num, size_t base))
 {
 	int *count_arr = NULL;
 	int *res_arr = NULL;
@@ -198,14 +137,14 @@ int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base)
 	
 	assert(arr);
 
-   	count_arr = (int *)calloc((base), sizeof(int));
+   	count_arr = (int *)calloc((range), sizeof(int));
    	
    	if (NULL == count_arr)
    	{
    		return (1);
    	}
 	
-   	res_arr = (int *)calloc((size), sizeof(int));
+   	res_arr = (int *)malloc((size) * sizeof(int));
    	
    	if (NULL == res_arr)
    	{
@@ -216,26 +155,22 @@ int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base)
 
 	for (i = 0; i < size; ++i)
 	{
-		/*printf("From num %d taking digit %ld: %ld.\n", arr[i], digit_order, GetDigit(arr[i], digit_order));*/
-		++count_arr[(arr[i] / expo) % base];
+		++count_arr[index_func(arr[i], base) - min];
 	}
 
-	for (i = 1; i < base; ++i)
+	for (i = 1; i < range; ++i)
 	{
 		count_arr[i] += count_arr[i - 1];
 	}
 
     for (i = size; i > 0; --i) 
     {				    
-    	digit = (arr[i - 1] / expo) % base;
-        res_arr[count_arr[digit] - 1] = arr[i - 1];
-        --count_arr[digit];
+    	digit = index_func(arr[i - 1], base);
+        res_arr[count_arr[digit - min] - 1] = arr[i - 1];
+        --count_arr[digit - min];
     }
 
-    for (i = 0; i < size; ++i)
-    {
-		*(arr + i) = *(res_arr + i);   
-    }
+    memcpy(arr, res_arr, size * sizeof(int)); 		  
     
 	free(count_arr);
 	free(res_arr);
@@ -243,79 +178,55 @@ int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base)
 	return (0);
 }
 
-
-int CountSortByBit(int arr[], size_t size, size_t bit_order)
+int CountSort(int arr[], size_t size)
 {
-	int count_arr[2] = {0};
-	int *res_arr = NULL;
+	int min = arr[0];
+	int max = arr[0];
 	size_t i = 0;
+	size_t range = 0;
 	
 	assert(arr);
-	
-   	res_arr = (int *)calloc((size), sizeof(int));
-   	
-   	if (NULL == res_arr)
-   	{
-   		return (1);
-   	}
-
-	for (i = 0; i < size; ++i)
-	{
-		/*printf("From num %d taking digit %ld: %ld.\n", arr[i], digit_order, GetDigit(arr[i], digit_order));*/
-		++count_arr[GetBit(arr[i], bit_order)];
-	}
-
-	count_arr[1] += count_arr[0];
-
-    for (i = size; i > 0; --i) 
-    {				    
-        res_arr[count_arr[GetBit(arr[i - 1], bit_order)] - 1] = arr[i - 1];
-        --count_arr[GetBit(arr[i - 1], bit_order)];
-    }
-
+		
     for (i = 0; i < size; ++i)
-    {
-		*(arr + i) = *(res_arr + i);   
-    }
-
-	free(res_arr);
-
-	return (0);
+    {  		
+		min = MIN2(min, *(arr + i));
+		max = MAX2(max, *(arr + i));    		
+   	} 
+ 
+ 	range = (max - min + 1);
+ 
+ 	return (GenericCountSort(arr, size, range, 1, min, IndexForCount));
 }
 
 int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 {
 	int *res_arr = NULL;
+	size_t base = 1;
 	size_t i = 0;
-
+			
 	assert(arr);
-	
+
    	res_arr = (int *)malloc((size) * sizeof(int));
 
 	if (NULL == res_arr)
 	{
 		return (1);
 	}
-	
-	for (i = 0; i < size; ++i)
-	{
-		res_arr[i] = arr[i];
-	}
-	
+	/* allocate copy arr, if fails do not damage original */	
+    memcpy(res_arr, arr, size * sizeof(int)); 		
+    
 	for (i = 1; i <= n_digits; ++i)
-	{
-		
-		if (CountSortByDigit(res_arr, size, ((i - 1) * DEC_BASE), DEC_BASE))
-		{
-			return (1);
-		}		
-	}
-	
-	for (i = 0; i < size; ++i)
-	{
-		arr[i] = res_arr[i];
-	}	
-	
+    {  		
+  		if (GenericCountSort(res_arr, size, DEC_BASE, base, 0, IndexForRadixDigit))
+  		{
+  			return (1);
+  		}
+  		
+  		base *= DEC_BASE;	
+   	} 
+ 	/* copy back to original arr */	
+    memcpy(arr, res_arr, size * sizeof(int)); 		
+    
 	free(res_arr);
 	
 	return (0);
@@ -323,36 +234,32 @@ int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 
 int RadixBitsSort(int arr[], size_t size, size_t n_bits)
 {
-	int *res_arr = NULL;
 	size_t i = 0;
-	
+	int *res_arr = NULL;
+		
 	assert(arr);
-	
+
    	res_arr = (int *)malloc((size) * sizeof(int));
 
 	if (NULL == res_arr)
 	{
 		return (1);
 	}
-	
-	for (i = 0; i < size; ++i)
-	{
-		res_arr[i] = arr[i];
-	}
-	
-	for (i = 1; i <= n_bits; ++i)
-	{
-		if (CountSortByBit(res_arr, size, i))
-		{
-			return (1);
-		}		
-	}
-	
-	for (i = 0; i < size; ++i)
-	{
-		arr[i] = res_arr[i];
-	}	
-	
+		
+	/* allocate copy arr, if fails do not damage original */	
+    memcpy(res_arr, arr, size * sizeof(int)); 		
+		
+	for (i = 0; i < n_bits; ++i)
+    {  	
+  		if (GenericCountSort(res_arr, size, BIN_BASE, i, 0, IndexForRadixBit))
+  		{
+  			return (1);
+  		}
+   	} 
+ 	
+	/* copy back to original arr */
+    memcpy(arr, res_arr, size * sizeof(int));
+    
 	free(res_arr);
 	
 	return (0);
@@ -366,26 +273,20 @@ static void Swap(int *x, int *y)
     
     return;
 }
- 
-static int GetDigit(int num, int n)
+
+static int IndexForCount(int num, size_t base)
 {
-    size_t i = 0;
-	int sign = 1;
-	
-	if (0 > num)
-	{
-		sign = -1;
-	}
-	
-	for (i = 0; i < (n - 1); ++i)
-	{
-		num /= 10;
-	}
-	
-	return (num % 10) * sign;
+	UNUSED(base);
+
+	return (num);
 }
 
-static int GetBit(int num, int n)
+static int IndexForRadixDigit(int num, size_t base)
 {
-	return ((num >> (n - 1)) & 1);
+	return ((num / base) % DEC_BASE);
+}
+
+static int IndexForRadixBit(int num, size_t base)
+{
+	return ((num >> base) & 1);
 }
