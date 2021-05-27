@@ -3,15 +3,17 @@
 #include <stdlib.h> /* malloc */
 #include "sorts.h"
 
-
+#define DEC_BASE (10)
+#define BIN_BASE (2)
 #define MAX2(a, b)  ((a) > (b) ? (a) : (b))
 #define MIN2(a, b)  ((a) < (b) ? (a) : (b))
 
 static void Swap(int *x, int *y);
 static int GetDigit(int num, int n);
-int CountSortByDigit(int arr[], size_t size, size_t digit_order);
+int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base);
 static int GetBit(int num, int n);
 int CountSortByBit(int arr[], size_t size, size_t bit_order);
+
 
 
 void InsertionSort(int arr[], size_t size)
@@ -187,43 +189,55 @@ int CountSort(int arr[], size_t size)
 }
 
 
-int CountSortByDigit(int arr[], size_t size, size_t digit_order)
+int CountSortByDigit(int arr[], size_t size, size_t expo, size_t base)
 {
-	int count_arr[10] = {0};
+	int *count_arr = NULL;
 	int *res_arr = NULL;
 	size_t i = 0;
+	size_t digit = 0;
 	
 	assert(arr);
+
+   	count_arr = (int *)calloc((base), sizeof(int));
+   	
+   	if (NULL == count_arr)
+   	{
+   		return (1);
+   	}
 	
    	res_arr = (int *)calloc((size), sizeof(int));
    	
    	if (NULL == res_arr)
    	{
+   		free(count_arr);
+   		
    		return (1);
    	}
 
 	for (i = 0; i < size; ++i)
 	{
 		/*printf("From num %d taking digit %ld: %ld.\n", arr[i], digit_order, GetDigit(arr[i], digit_order));*/
-		++count_arr[GetDigit(arr[i], digit_order)];
+		++count_arr[(arr[i] / expo) % base];
 	}
 
-	for (i = 1; i < 10; ++i)
+	for (i = 1; i < base; ++i)
 	{
 		count_arr[i] += count_arr[i - 1];
 	}
 
     for (i = size; i > 0; --i) 
     {				    
-        res_arr[count_arr[GetDigit(arr[i - 1], digit_order)] - 1] = arr[i - 1];
-        --count_arr[GetDigit(arr[i - 1], digit_order)];
+    	digit = (arr[i - 1] / expo) % base;
+        res_arr[count_arr[digit] - 1] = arr[i - 1];
+        --count_arr[digit];
     }
 
     for (i = 0; i < size; ++i)
     {
 		*(arr + i) = *(res_arr + i);   
     }
-
+    
+	free(count_arr);
 	free(res_arr);
 
 	return (0);
@@ -269,12 +283,11 @@ int CountSortByBit(int arr[], size_t size, size_t bit_order)
 	return (0);
 }
 
-
 int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 {
 	int *res_arr = NULL;
 	size_t i = 0;
-	
+
 	assert(arr);
 	
    	res_arr = (int *)malloc((size) * sizeof(int));
@@ -291,7 +304,8 @@ int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 	
 	for (i = 1; i <= n_digits; ++i)
 	{
-		if (CountSortByDigit(res_arr, size, i))
+		
+		if (CountSortByDigit(res_arr, size, ((i - 1) * DEC_BASE), DEC_BASE))
 		{
 			return (1);
 		}		
@@ -373,5 +387,5 @@ static int GetDigit(int num, int n)
 
 static int GetBit(int num, int n)
 {
-	return ((num <<= (n - 1)) & 1);
+	return ((num >> (n - 1)) & 1);
 }
