@@ -7,6 +7,7 @@
 
 #include <assert.h> /* assert */
 #include "vsa.h"
+#include <stdlib.h> /* labs */
 
 #define WORD_SIZE (sizeof(size_t))
 #define VSA_T_SIZE (sizeof(vsa_t))
@@ -60,7 +61,6 @@ vsa_t *VSAInit(void *mem_pool, size_t pool_size)
 	
 	return (vsa_head);		
 }
-
 void *VSAAlloc(vsa_t *vsa, size_t n_bytes)
 {
 	void * alloced_ptr = NULL;
@@ -83,6 +83,53 @@ void *VSAAlloc(vsa_t *vsa, size_t n_bytes)
 	}	
 	/* return pointer to space if found, else return NULL */
 	return (alloced_ptr ? alloced_ptr : NULL);							
+}
+
+static void *Alloc(vsa_t *vsa, size_t n_bytes)
+{
+	vsa_block_header_t *chunk_ptr = NULL;
+	size_t total_count = 0;	
+	size_t keep_size = 0;
+	size_t absolute_chunk_size = 0;
+
+	assert(vsa);
+
+	/* point to first chunk head */
+	chunk_ptr = (vsa_block_header_t *)((char *)vsa + VSA_T_SIZE); 
+
+	while ((total_count + n_bytes) < vsa->pool_size)
+	{
+		if (chunk_ptr->chunk_size > (long)(n_bytes + BLOCK_T_SIZE))
+		{
+			keep_size = chunk_ptr->chunk_size;
+			/* make space occupied */
+			chunk_ptr->chunk_size = n_bytes * (-1);
+			/* step to next chunk head */								
+			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + BLOCK_T_SIZE);	
+			((vsa_block_header_t *)((char *)chunk_ptr + n_bytes))->chunk_size 
+				= (long)(keep_size - n_bytes - BLOCK_T_SIZE);
+						
+			return ((void *)chunk_ptr);
+		}
+		
+		else if ((chunk_ptr->chunk_size == (long)(n_bytes + BLOCK_T_SIZE)) ||
+				 (chunk_ptr->chunk_size == (long)(n_bytes)))
+		{
+			/* make space occupied */
+			chunk_ptr->chunk_size *= (-1); 		
+			/* step to next chunk head */						
+			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + BLOCK_T_SIZE);
+			
+			return ((void *)chunk_ptr);	
+		}
+
+		absolute_chunk_size = AbsoluteValue(chunk_ptr->chunk_size);
+		total_count = total_count + BLOCK_T_SIZE + absolute_chunk_size;		
+		chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr
+					 + absolute_chunk_size + BLOCK_T_SIZE);		
+	}
+	
+	return (NULL);
 }
 
 void VSAFree(void *mem_chunck)
@@ -170,52 +217,7 @@ static void VSADefragment(vsa_t *vsa)
 	return;
 }
 
-static void *Alloc(vsa_t *vsa, size_t n_bytes)
-{
-	vsa_block_header_t *chunk_ptr = NULL;
-	size_t total_count = 0;	
-	size_t keep_size = 0;
-	size_t absolute_chunk_size = 0;
 
-	assert(vsa);
-
-	/* point to first chunk head */
-	chunk_ptr = (vsa_block_header_t *)((char *)vsa + VSA_T_SIZE); 
-
-	while ((total_count + n_bytes) < vsa->pool_size)
-	{
-		if (chunk_ptr->chunk_size > (long)(n_bytes + BLOCK_T_SIZE))
-		{
-			keep_size = chunk_ptr->chunk_size;
-			/* make space occupied */
-			chunk_ptr->chunk_size = n_bytes * (-1);
-			/* step to next chunk head */								
-			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + BLOCK_T_SIZE);	
-			((vsa_block_header_t *)((char *)chunk_ptr + n_bytes))->chunk_size 
-				= (long)(keep_size - n_bytes - BLOCK_T_SIZE);
-						
-			return ((void *)chunk_ptr);
-		}
-		
-		else if ((chunk_ptr->chunk_size == (long)(n_bytes + BLOCK_T_SIZE)) ||
-				 (chunk_ptr->chunk_size == (long)(n_bytes)))
-		{
-			/* make space occupied */
-			chunk_ptr->chunk_size *= (-1); 		
-			/* step to next chunk head */						
-			chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr + BLOCK_T_SIZE);
-			
-			return ((void *)chunk_ptr);	
-		}
-
-		absolute_chunk_size = AbsoluteValue(chunk_ptr->chunk_size);
-		total_count = total_count + BLOCK_T_SIZE + absolute_chunk_size;		
-		chunk_ptr = (vsa_block_header_t *)((char *)chunk_ptr
-					 + absolute_chunk_size + BLOCK_T_SIZE);		
-	}
-	
-	return (NULL);
-}
 /* gets a number and returns the closest round-up to word size */
 static size_t RoundUpToWordSize(size_t num) 
 {

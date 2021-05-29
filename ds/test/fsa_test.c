@@ -2,7 +2,6 @@
 #include <stdlib.h> /* malloc */
 #include <stdio.h> /* printf */
 
-
 #define HUGU_BLOCK 500
 
 static void FSATests();
@@ -18,13 +17,13 @@ static void FSATests()
 {
 	fsa_t *fsa = NULL;
 	char *huge_block = (char *)malloc(sizeof(char) * HUGU_BLOCK);
-	size_t num_of_blocks[] =	{10, 20, 1, 5, 8, 9, 15, 0, 50};
-	size_t block_size[] =		{10, 20, 1, 5, 8, 9, 15, 0, 50};
+	size_t num_of_blocks[] =	{10, 20, 1, 5, 8, 9, 15, 30, 50};
+	size_t block_size[] =		{10, 20, 1, 5, 8, 9, 15, 30, 50};
 	size_t exp_res[] =			{168, 488, 16, 48, 72, 152, 248, 8, 2808};	
 	size_t arr_size = sizeof(num_of_blocks) / sizeof(num_of_blocks[0]);
 	size_t i = 0;
 	size_t free_blocks = 0;
-	size_t block_exm = 50;
+	size_t block_exm = 36;
 	size_t *aloc_ptr = NULL;
 	size_t *aloc_ptr2 = NULL;	
 	size_t *aloc_ptr_to_free = NULL;	

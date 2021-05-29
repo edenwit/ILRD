@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "../ds/include/sll.h"
+#include "../../ds/include/sll.h"
 
 static void HasLoopTest();
 static void FlipListTest();
@@ -27,6 +27,7 @@ int main()
 	return (0);
 }
 
+
 node_t *FlipList(node_t *head)
 {
 	node_t *prev_node = NULL;
@@ -45,6 +46,7 @@ node_t *FlipList(node_t *head)
 	
 	return cur_node;
 }
+
 
 static void FlipListTest()
 {
@@ -117,6 +119,7 @@ node_t * HasLoop(const node_t *head)
 	return (NULL);
 }
 
+
 static void HasLoopTest()
 {
 	int int_arr[] = {1, 5, 14, 64564, 85, 9, 15, 3, 40000, 0, -50, 900, 11, 5231};
@@ -187,6 +190,7 @@ void FixLoop(node_t *head)
 	
 	return;
 }
+
 	
 static void FixLoopTest()
 {

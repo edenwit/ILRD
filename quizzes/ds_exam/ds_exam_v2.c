@@ -7,9 +7,11 @@
 /* Question 1 */
 
 /*section 1 */
+
+/*fixed type names only */
 void *FSAAlloc(fsa_t *fsa)
 {
-	fsa_head_t *block_ptr = NULL;
+	fsa_block_header_t *block_ptr = NULL;
 	
 	assert(fsa);
 	
@@ -18,25 +20,80 @@ void *FSAAlloc(fsa_t *fsa)
 		return (NULL);
 	}
 	
-	block_ptr = (fsa_header_t *)(char *)fsa + fsa->next_free);
-	fsa->next_free = ((fsa *)block_ptr)->next_free;
+	block_ptr = (fsa_block_header_t *)((char *)fsa + fsa->next_free); /*fixed forgotten parentheses */
+	fsa->next_free = ((fsa_t *)block_ptr)->next_free;
 	
 	return (block_ptr);
 }
 
-void FsaFree(fsa_t *fsa, *void mem_block) /* wrong place for star */
+/*fixed type names only */
+void FSAFree(fsa_t *fsa, void *mem_block) /* wrong place for star fixed*/
 {
 	assert(fsa);
 	assert(mem_block);
 	
-	((fsa_header_t *)mem_block)->next_free = fsa->next_free;
-	fsa->next_free = (size_t)((char *)mem_block - (char *)fsa);
+	((fsa_block_header_t *)mem_block)->next_free = fsa->next_free; 
+	fsa->next_free = (size_t)((char *)(mem_block) - (char *)fsa); /*fixed forgotten parentheses */
+	
+	return; /* added return */
 }
 
-/*section 2 */
-#define BLOCK_SIZE (sizeof(vsa_chunk_t))
-#define VSA_T_SIZE (sizeof(vsa_t))
 
+/*section 2 */
+#define BLOCK_SIZE (sizeof(vsa_block_header_t))
+#define VSA_T_SIZE (sizeof(vsa_t))
+void *VSAAlloc(vsa_t *vsa, size_t n_bytes)/* fixed place of star */
+{
+	vsa_block_header_t *ptr = NULL;
+	size_t tot_count = 0;
+	size_t keep_size = 0;
+	
+	assert(vsa);
+	assert(0 < n_bytes);
+	
+	ptr = (vsa_block_header_t *)((char *)vsa + VSA_T_SIZE); /* fixed forgotten closing parentheses and pointer casting*/
+	
+	while (tot_count + n_bytes < vsa->pool_size)
+	{
+		if (ptr->chunk_size > (long)(n_bytes + BLOCK_SIZE)) /* forgot ending parentheses and long casting*/
+		{
+			keep_size = ptr->chunk_size;
+			ptr->chunk_size = n_bytes * (-1);
+			ptr = (vsa_block_header_t *)((char *)ptr + BLOCK_SIZE);  /* forgot opening parentheses */
+			((vsa_block_header_t *)((char *)ptr + n_bytes))->chunk_size /* wrote "next free" instead of "chunk_size" */
+			= (keep_size - n_bytes - BLOCK_SIZE); /* forgot opening parentheses */
+			
+			return (ptr);
+		}
+		
+		if ((ptr->chunk_size == (long)n_bytes) || /* long casting */
+		((ptr->chunk_size == (long)(n_bytes + BLOCK_SIZE)))) /* long casting */
+		{
+			ptr->chunk_size *= (-1); /* forgot to multiply original value */
+			ptr = (vsa_block_header_t *)((char *)ptr + BLOCK_SIZE); /* forgot ending parentheses, assigined to chunk value instead of pointer */
+			
+			return (ptr);
+		}
+		tot_count += labs(ptr->chunk_size) + BLOCK_SIZE; /* changed ABS to labs */
+		ptr = (vsa_block_header_t *)((char *)ptr + BLOCK_SIZE + labs(ptr->chunk_size)); /* forgot ending parentheses + star at casting, changed ABS to labs */
+	}
+	
+	return (NULL);
+}
+
+/*fixed type names */
+void VSAFree(void *mem_block)
+{
+	assert(mem_block);
+	
+	((vsa_block_header_t *)((char *)mem_block - BLOCK_SIZE))->chunk_size *= (-1); /* forgot closing parentheses */
+	
+	return;
+}
+
+/*section 3 */
+
+/*Replaced all impl with section 1 solution */
 void *VSAAlloc(*vsa_t vsa, size_t n_bytes)/* wrong place for star */
 {
 	vsa_chunk_t *ptr = NULL;
@@ -85,45 +142,13 @@ void VSAFree(void *mem_block)
 	return;
 }
 
-/*section 3 */
-void *FSAAllocAligned(fsa_t *fsa)
-{
-	fsa_header_t *ptr = NULL;
-	
-	assert(fsa);
-	
-	if (0 == fsa->next_free)
-	{
-		return (NULL);
-	}
-	
-	ptr = (fsa_header_t *)(char *)fsa + fsa->next_free; /* forgot parentheses */
-	
-	while (0 != (size_t)(ptr) % WORD_SIZE)
-	{
-		ptr = (char *)ptr + 1;
-	}
-	
-	fsa->next_free = ((fsa_t *)ptr)->next_free); /* unnecessary ending parentheses */
-	
-	return (ptr);
-}
-
-void FsaFree(fsa_t *fsa, *void mem_block) /* wrong place for star */
-{
-	assert(fsa);
-	assert(mem_block);
-	
-	((fsa_header_t *)mem_block)->next_free = fsa->next_free;
-	fsa->next_free = (size_t)((char *)mem_block - (char *)fsa);
-}
-
 /* Question 2 */
 
+/* works without fixes */
 node_t *Flip(node_t *head)
 {
 	node_t *prev = NULL;
-	node_t *prev = head;
+	node_t *cur = head;
 	node_t *next = head;
 	
 	assert(head);
@@ -131,7 +156,7 @@ node_t *Flip(node_t *head)
 	while (NULL != next)
 	{
 		cur = next;
-		next = cur_next;
+		next = cur->next;
 		cur->next = prev;
 		prev = cur;
 	}
@@ -144,6 +169,8 @@ node_t *Flip(node_t *head)
 /*section 1  - complexity question */
 
 /*section 2 */
+
+/* works without fixes */
 node_t *HasLoop(node_t *head)
 {
 	node_t *fast = head;
@@ -165,10 +192,11 @@ node_t *HasLoop(node_t *head)
 	return (NULL);
 }
 
+/* works without fixes */
 void FixLoop(node_t *head)
 {
 	node_t *looper = NULL;
-	node_t *walker = NULL;
+	node_t *walker = head;
 	
 	assert(head);
 	
@@ -192,11 +220,10 @@ void FixLoop(node_t *head)
 	
 	looper->next = NULL;
 		
-	/* may add return; */
+	return; /* added return; */
 }
 
 /*section 3 */
-
 node_t *FindIntersection(node_t *head1, node_t *head2)
 {
 	node_t *p1 = head1;
@@ -207,13 +234,13 @@ node_t *FindIntersection(node_t *head1, node_t *head2)
 	assert(head1);
 	assert(head2);
 	
-	while (NULL != p1)
+	while (NULL != p1->next) /* checked pointer instead of next alement */
 	{
 		++counter1;
 		p1 = p1->next;
 	}
 	
-	while (NULL != p2)
+	while (NULL != p2->next) /* checked pointer instead of next alement */
 	{
 		++counter2;
 		p2 = p2->next;
@@ -240,7 +267,7 @@ node_t *FindIntersection(node_t *head1, node_t *head2)
 	}
 	
 	while (p1 != p2)
-	{
+	{s
 		p1 = p1->next;
 		p2 = p2->next;
 	}
@@ -269,14 +296,15 @@ void OpenIntersection(node_t *head1, node_t *head2)
 	
 	head1->next = NULL;
 	
-	/* may add return; */
+	return ; /* added return; */
 }
 
 /* Question 4 */
 
-iter_t Remove(iter_t iter)
+/*fixed type names */
+s_list_iter_t SLLRemove(s_list_iter_t iter)
 {
-	iter_t tmp = iter_next;
+	s_list_iter_t tmp = iter->next;
 	
 	assert(iter);
 	
@@ -285,23 +313,23 @@ iter_t Remove(iter_t iter)
 	
 	if (NULL == iter->next)
 	{
-		((list_t *)(iter->data)->tail = iter /* forgot semi-colon */
+		((s_list_t *)(iter->data))->tail = iter; /* forgot semi-colon and closing parentheses */
 	}
 	
 	free(tmp);
 	
 	return (iter);
 }
-
 /* Question 5 */
 
-dll_iter Insert(dll_iter where, void *data)
+/*fixed type names */
+d_list_iter_t DLLInsert(d_list_iter_t where, void *data)
 {
-	dll_iter iter = NULL;
+	d_list_iter_t iter = NULL;
 	
 	assert(where);
 	
-	iter = (dll_iter)malloc(sizeof(node_t));
+	iter = (d_list_iter_t)malloc(sizeof(struct d_list_node)); /*\ added struct word */
 	
 	if (NULL == iter)
 	{
@@ -322,14 +350,22 @@ dll_iter Insert(dll_iter where, void *data)
 	return (iter);	
 }
 
-dll_iter Remove(dll_iter iter)
+/*fixed type names */
+d_list_iter_t DLLRemove(d_list_iter_t iter)
 {
-	dll_iter tmp = iter;
+
+	d_list_iter_t tmp = iter;
 	
 	assert(iter);
+
+	tmp = iter->next;
 	
 	iter->prev->next = iter->next;
-	iter->next->prev = iter->next;
+	iter->next->prev = iter->prev;  
+	
+	iter->next = NULL;	/*forgot do clean next val*/
+	iter->prev = NULL;	/*forgot do clean prev val*/
+	iter->data = NULL;  /*forgot do clean data*/
 	
 	free(iter);
 	
@@ -337,40 +373,43 @@ dll_iter Remove(dll_iter iter)
 }
 
 /* Question 6 */
+
 unsigned int FindMissingNumber(const int arr[], const size_t arr_size)
 {
 	unsigned int n_sum = 0;
 	unsigned int arr_sum = 0;
+	size_t i = 0;
 
     assert(NULL != arr);
 
-    for (i = 0; i < (n - 2); ++i)
+    for (i = 0; i < arr_size; ++i)
     {
         arr_sum += arr[i];
     }
 
-	n_sum = ((n * (n + 1)) / 2);
+	n_sum = (((arr_size + 1) * (arr_size + 2)) / 2);
 
     return (n_sum - arr_sum);
 }
 
 
 /* Question 7 */
-int IsInsideShape(int **bitmap, int width, int height, int point_x, int point_y)
+int IsInsideShape(int *bitmap, size_t rows, size_t colls, size_t point_x, size_t point_y)
 {
 	size_t i = 0;
 	size_t cross_count = 0;
+	size_t inner_count = 0;
 	
 	assert(bitmap);
 	
-	if (1 == bitmap[point_x][point_y])
+	if (1 == *(bitmap + (point_y * colls) + point_x))
 	{
 		return (0);
 	}
 	
-	for (i = 0; i < (point_x - 1); ++i)
+	for (i = 0; i < (point_x); ++i)
 	{
-		if (1 == bitmap[i][point_y] && 1 != bitmap[i + 1][point_y])
+		if (1 == *(bitmap + (point_y * colls) + i) && 1 != *(bitmap + (point_y * colls) + i + 1))
 		{
 			++cross_count;
 		}
@@ -382,13 +421,14 @@ int IsInsideShape(int **bitmap, int width, int height, int point_x, int point_y)
 	}
 	
 	cross_count = 0;
-	
-	for (i = point_x; i < (width - 1); ++i)
+
+	for (i = point_x + 1; i < colls ; ++i) 
 	{
-		if (1 == bitmap[i][point_y] && 1 != bitmap[i + 1][point_y])
+		if (1 == *(bitmap + (point_y * colls) + i) && 1 != *(bitmap + (point_y * colls) + i + 1))
 		{
 			++cross_count;
 		}
+		++inner_count;
 	}	
 
 	if (IsPair(cross_count))
@@ -398,9 +438,9 @@ int IsInsideShape(int **bitmap, int width, int height, int point_x, int point_y)
 	
 	cross_count = 0;
 	
-	for (i = 0; i < (point_y - 1); ++i)
+	for (i = 0; i < (point_y); ++i) 
 	{
-		if (1 == bitmap[point_x][i] && 1 != bitmap[point_x][i + 1])
+		if (1 == *(bitmap + point_x + (i * colls)) && 1 != *(bitmap + point_x + ((i + 1) * rows)))
 		{
 			++cross_count;
 		}
@@ -410,22 +450,23 @@ int IsInsideShape(int **bitmap, int width, int height, int point_x, int point_y)
 	{
 		return (0);
 	}	
-	
+
 	cross_count = 0;
 	
-	for (i = point_y; i < (height - 1); ++i)
+	for (i = point_y + 1; i < rows; ++i) 
 	{
-		if (1 == bitmap[point_x][i] && 1 != bitmap[point_x][i + 1])
+		if (1 == *(bitmap + (i * colls) + point_x) && 1 != *(bitmap + point_x + ((i + 1) * rows)))
 		{
 			++cross_count;
 		}
+		++inner_count;
 	}	
 
 	if (IsPair(cross_count))
 	{
 		return (0);
 	}	
-	
+
 	return (1);	
 }
 
@@ -446,13 +487,8 @@ int PushChar(struct Queue *q, char ch) /* should create typedef for struct Queue
 	{
 		return (1);
 	}
-	
-	loc = q->m_first_element - q->m_elements_in_q;
-	
-	if (0 > QSIZE)
-	{
-		loc += QSIZE;
-	}
+	/* changed direction of queueu to work with size_t values. */
+	loc = (q->m_first_element + q->m_elements_in_q) % QSIZE;
 	
 	q->m_queue[loc] = ch;
 	++q->m_elements_in_q;
@@ -465,21 +501,14 @@ char PopChar(struct Queue *q)
 	char tmp = '0';
 	
 	assert(q);
+	assert(0 < q->m_elements_in_q); /* changed check to assersion */
 	
-	if (0 == m_elements_in_q)
-	{
-		return ('\0');
-	}
+	tmp = q->m_queue[q->m_first_element];
 	
-	tmp = q->m_queue[m_first_element];
-	m_first_element = m_first_element - m_elements_in_q;
+	/* changed direction of queueu to work with size_t values. */	
+	q->m_first_element = (q->m_first_element + 1) % QSIZE;
 	
-	if (m_first_element < 0) /* order of expression not as conventions */
-	{
-		m_first_element += QSIZE;
-	}
-	
-	m_elements_in_q--; /* order of expression not as conventions */
+	--q->m_elements_in_q; /* order of expression not as conventions */
 	
 	return (tmp);
 }

@@ -120,10 +120,11 @@ void FsaFree(fsa_t *fsa, *void mem_block) /* wrong place for star */
 
 /* Question 2 */
 
+
 node_t *Flip(node_t *head)
 {
 	node_t *prev = NULL;
-	node_t *prev = head;
+	node_t *cur = head;
 	node_t *next = head;
 	
 	assert(head);
@@ -131,7 +132,7 @@ node_t *Flip(node_t *head)
 	while (NULL != next)
 	{
 		cur = next;
-		next = cur_next;
+		next = cur->next;
 		cur->next = prev;
 		prev = cur;
 	}
@@ -168,7 +169,7 @@ node_t *HasLoop(node_t *head)
 void FixLoop(node_t *head)
 {
 	node_t *looper = NULL;
-	node_t *walker = NULL;
+	node_t *walker = head;
 	
 	assert(head);
 	
@@ -276,7 +277,7 @@ void OpenIntersection(node_t *head1, node_t *head2)
 
 iter_t Remove(iter_t iter)
 {
-	iter_t tmp = iter_next;
+	iter_t tmp = iter->next;
 	
 	assert(iter);
 	
@@ -329,7 +330,7 @@ dll_iter Remove(dll_iter iter)
 	assert(iter);
 	
 	iter->prev->next = iter->next;
-	iter->next->prev = iter->next;
+	iter->next->prev = iter->prev;
 	
 	free(iter);
 	
@@ -370,7 +371,7 @@ int PushChar(struct Queue *q, char ch) /* should create typedef for struct Queue
 	
 	loc = q->m_first_element - q->m_elements_in_q;
 	
-	if (0 > QSIZE)
+	if (0 > loc)
 	{
 		loc += QSIZE;
 	}

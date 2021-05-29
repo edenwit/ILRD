@@ -70,7 +70,7 @@ void *FSAAlloc(fsa_t *fsa)
 	
 	assert(fsa);	
 	
-	if (0 == fsa->next_free)									/* check if there are free blocks */
+	if (0 == fsa->next_free)										/* check if there are free blocks */
 	{
 		return (NULL);
 	}
@@ -78,7 +78,7 @@ void *FSAAlloc(fsa_t *fsa)
 	temp = (fsa_block_header_t *)((char *)fsa + fsa->next_free);	/* save location of current block */
 	fsa->next_free = ((fsa_t *)temp)->next_free;					/* mark next free block as the one current block pointed to */
 
-	return ((void *)temp); 													/* return saved location of current block */
+	return ((void *)temp); 											/* return saved location of current block */
 }
 
 void FSAFree(fsa_t *fsa, void *mem_block)
@@ -91,6 +91,7 @@ void FSAFree(fsa_t *fsa, void *mem_block)
 	
 	return;
 }
+
 
 size_t FSASuggestSize(size_t num_of_blocks, size_t block_size)
 {

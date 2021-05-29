@@ -150,6 +150,7 @@ void *DLLGetData(d_list_iter_t iter)
 
 /* Approved by Maor */ 
 /* complexity time O(1) */     
+
 d_list_iter_t DLLRemove(d_list_iter_t iter)
 {
 	d_list_iter_t temp = NULL;
@@ -171,6 +172,7 @@ d_list_iter_t DLLRemove(d_list_iter_t iter)
 
 /* Approved by Maor */ 
 /* on success: O(1); */
+
 d_list_iter_t DLLInsert(d_list_iter_t where, void *data)
 {
 	d_list_iter_t node = NULL;

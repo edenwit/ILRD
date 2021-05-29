@@ -5,7 +5,6 @@
  *  Approved By: ;												*
  *  Description: Sorts							;				*/
 
-
 #include <stddef.h> /* size_t */
 #include <assert.h>  /* assert */
 #include <stdlib.h> /* malloc */
@@ -29,34 +28,26 @@ static int IndexForRadixBit(int num, size_t base);
 void BubbleSort(int arr[], size_t size)
 {
     int *p1 = NULL;
-    int *p2 = NULL;
     int run_again = 1;
-    size_t i = 0;
     
     assert(arr);
-       
-    if (2 > size)
-    {
-    	return;
-    }
-    
-    while (1 == run_again)
+	assert(0 < size);
+	       
+    while (0 != run_again)
     {
     	run_again = 0;
     	
    		p1 = arr;
-   		p2 = p1 + 1;
-    	
-    	for (i = 0; i < (size - 1); ++i)
+
+		while (p1 < (arr + size -1))    	
     	{  		
-    		if (*p1 > *p2)
+    		if (*p1 > *(p1 + 1))
     		{
-    			run_again = 1;
-    			Swap(p1, p2);
+    			++run_again;
+    			Swap(p1, (p1 + 1));
     		}
     		
-    		++p1;
-    		++p2;    		
+    		++p1;		
     	} 
 	}
 	
@@ -70,12 +61,8 @@ void InsertionSort(int arr[], size_t size)
     int value = 0;
     
     assert(arr);
-       
-    if (2 > size)
-    {
-    	return;
-    }
-    
+	assert(0 < size);
+	           
     while (p1 < (arr + size))
     {
    		p2 = p1 - 1;
@@ -98,30 +85,26 @@ void SelectionSort(int arr[], size_t size)
 {
     int *p1 = arr;
     int *p2 = NULL;
-    int *saved_p = NULL;
+    int *min_ptr = NULL;
     
     assert(arr);
-       
-    if (2 > size)
-    {
-    	return;
-    }
-    
-    while (p1 < (arr + size))
+	assert(0 < size);
+	
+    while (p1 < (arr + size - 1))
     {
    		p2 = p1 + 1;
-		saved_p = p1;
+		min_ptr = p1;
 
 		while ((p2 < (arr + size))) 
 		{
-            if (*p2 < *saved_p)
+            if (*p2 < *min_ptr)
             {
-            	saved_p = p2;
+            	min_ptr = p2;
             }
             ++p2;
         }
         
-        Swap(saved_p, p1);
+        Swap(min_ptr, p1);
         ++p1;
 	}
 	
@@ -133,10 +116,11 @@ static int GenericCountSort(int arr[], size_t size, size_t range, size_t base, i
 	int *count_arr = NULL;
 	int *res_arr = NULL;
 	size_t i = 0;
-	size_t digit = 0;
+	size_t loc = 0;
 	
 	assert(arr);
-
+	assert(0 < size);
+	
    	count_arr = (int *)calloc((range), sizeof(int));
    	
    	if (NULL == count_arr)
@@ -165,9 +149,9 @@ static int GenericCountSort(int arr[], size_t size, size_t range, size_t base, i
 
     for (i = size; i > 0; --i) 
     {				    
-    	digit = index_func(arr[i - 1], base);
-        res_arr[count_arr[digit - min] - 1] = arr[i - 1];
-        --count_arr[digit - min];
+    	loc = index_func(arr[i - 1], base) - min;
+        res_arr[count_arr[loc] - 1] = arr[i - 1];
+        --count_arr[loc];
     }
 
     memcpy(arr, res_arr, size * sizeof(int)); 		  
@@ -186,7 +170,8 @@ int CountSort(int arr[], size_t size)
 	size_t range = 0;
 	
 	assert(arr);
-		
+	assert(0 < size);
+			
     for (i = 0; i < size; ++i)
     {  		
 		min = MIN2(min, *(arr + i));
@@ -205,7 +190,8 @@ int RadixDigitsSort(int arr[], size_t size, size_t n_digits)
 	size_t i = 0;
 			
 	assert(arr);
-
+	assert(0 < size);
+	
    	res_arr = (int *)malloc((size) * sizeof(int));
 
 	if (NULL == res_arr)
@@ -238,6 +224,7 @@ int RadixBitsSort(int arr[], size_t size, size_t n_bits)
 	int *res_arr = NULL;
 		
 	assert(arr);
+	assert(0 < size);
 
    	res_arr = (int *)malloc((size) * sizeof(int));
 
@@ -265,9 +252,15 @@ int RadixBitsSort(int arr[], size_t size, size_t n_bits)
 	return (0);
 }
 
+
 static void Swap(int *x, int *y)
 {
-    int tmp = *x;
+    int tmp = 0;
+
+	assert(x);
+	assert(y); 
+ 
+	tmp = *x; 	
     *x = *y;
     *y = tmp;
     

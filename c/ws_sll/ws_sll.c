@@ -45,61 +45,53 @@ int HasLoop(const node_t *head)
 	return 0;
 }
 
-/* Approved by Maor */
 node_t *FindIntersection(node_t *head1, node_t *head2)
 {
-	node_t *tmp_head1 = head1;
-	node_t *tmp_head2 = head2;
-	
-	size_t count1 = 1;
-	size_t count2 = 1;
+	node_t *p1 = head1;
+	node_t *p2 = head2;
+	size_t counter1 = 0;
+	size_t counter2 = 0;
 	
 	assert(head1);
 	assert(head2);
 	
-	while (NULL != tmp_head1->next)
+	while (NULL != p1->next) /* checked pointer instead of next alement */
 	{
-		++count1;
-		tmp_head1 = tmp_head1->next;
-	}
-	while (NULL != tmp_head2->next)
-	{
-		++count2;
-		tmp_head2 = tmp_head2->next;
+		++counter1;
+		p1 = p1->next;
 	}
 	
-	if (tmp_head2 == tmp_head1)
+	while (NULL != p2->next) /* checked pointer instead of next alement */
 	{
-		tmp_head1 = head1;
-		tmp_head2 = head2;
-		
-		if (count1 > count2)
-		{
-			while (count1 > count2)
-			{
-				tmp_head1 = tmp_head1->next;
-				--count1;
-			}	
-		}
-		else if (count2 > count1)
-		{
-			while (count2 > count1)
-			{
-				tmp_head2 = tmp_head2->next;
-				--count2;
-			}	
-		}	
-			
-		while (tmp_head1 != tmp_head2)
-			{
-				tmp_head1 = tmp_head1->next;
-				tmp_head2 = tmp_head2->next;
-			}
-			
-			return tmp_head1;
-
+		++counter2;
+		p2 = p2->next;
 	}
 	
-	return NULL;	
+	if (p1 != p2)
+	{
+		return (NULL);
+	}
+	
+	p1 = head1;
+	p2 = head2;
+	
+	while (counter1 > counter2)
+	{
+		p1 = p1->next;
+		--counter1;
+	}
+	
+	while (counter2 > counter1)
+	{
+		p2 = p2->next;
+		--counter2;
+	}
+	
+	while (p1 != p2)
+	{
+		p1 = p1->next;
+		p2 = p2->next;
+	}
+	
+	return (p1);
 }
-

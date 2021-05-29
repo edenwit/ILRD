@@ -144,7 +144,6 @@ void *SLLGetData(const s_list_iter_t iter)
 	return iter->data;
 }
 
-
 /* approved by Shelly */
 s_list_iter_t SLLRemove(s_list_iter_t iter)
 {
