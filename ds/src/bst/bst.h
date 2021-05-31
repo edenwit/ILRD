@@ -11,26 +11,6 @@ typedef struct bst_node *bst_iter_t;
 typedef int (*cmp_func_ptr_t)(void *, void *, void *);
 typedef int (*act_tunc_ptr_t)(void *, void *);
 
-/* will be in c file  
-
-typedef struct bst
-{
-    struct bst_node *root;
-    int (*cmp_func)(const void *data1,const void *data2);
-
-};
-
-typedef struct bst_node
-{
-    void *data;
-    struct bst_node *left;
-    struct bst_node *right;
-    struct bst_node *parent;
-/*
-}bst_node_t;
-
-*/
-
 /* O(1) */
 bst_t *BstCreate(cmp_func_ptr_t, void *param);
 
