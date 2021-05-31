@@ -117,7 +117,80 @@ bst_iter_t BstInsert(bst_t *tree, void *data)
 }
 
 /* Avg - O(log n), worst - O(n) */
-void BstRemove(bst_iter_t iter);
+void BstRemove(bst_iter_t iter)
+{
+	bst_iter_t next_iter = NULL;
+	
+	assert(iter);
+
+	int is_left_child = IsLeftChild(iter);
+	
+	if (NULL == iter->left)
+	{
+		if (NULL == iter->right)
+		{
+			if (is_left_child)
+			{
+				iter->parent->left = NULL;
+			}
+			else
+			{
+				iter->parent->right = NULL;			
+			}
+		}
+		else
+		{
+			if (is_left_child)
+			{
+				iter->parent->left = iter->right;
+			}
+			else
+			{
+				iter->parent->right = iter->right;
+			}	
+			
+			iter->right->parent = iter;
+		}
+	}
+	else if (NULL == iter->right)
+	{
+		if (is_left_child)
+		{
+			iter->parent->left = iter->left;
+		}
+		else
+		{
+			iter->parent->right = iter->left;
+		}	
+			
+		iter->left->parent = iter;		
+	}
+	else
+	{
+		next_iter = BstNext(iter);
+		
+		if (is_left_child)
+		{
+			iter->parent->left = iter->right;
+		}
+		else
+		{
+			iter->parent->right = iter->right;
+		}	
+		
+		next_iter->left = iter-left;
+	}
+	
+	iter->left = NULL;
+	iter->right = NULL;
+	iter->parent = NULL;
+	iter->data = NULL;
+	
+	free(iter);
+	
+	
+	
+}
 
 /* O(1) */
 bst_iter_t BstBegin(bst_t *tree)
@@ -288,4 +361,11 @@ static bst_iter_t GenericFind(bst_t *tree, void *data)
 	}
 
     return (0 == cmp_res ? iter : parent_iter);
+}
+
+static IsLeftChild(bst_iter_t iter)
+{
+	assert(iter);
+	
+	return (iter->parent->left == iter);
 }
