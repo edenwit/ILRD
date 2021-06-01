@@ -15,7 +15,7 @@
 static int IsLeftChild(bst_iter_t iter);
 static int Add1(void *data, void *param);
 static bst_iter_t InnerFind(bst_t *tree, void *data, int *status);
-static void FixGrandParent(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_link);
+static void AssignToIter(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_link);
 
 typedef struct bst_node
 {
@@ -117,16 +117,7 @@ bst_iter_t BstInsert(bst_t *tree, void *data)
     node->right = NULL;
 
     iter = InnerFind(tree, data, &to_left);
-
-    if (to_left)
-    {
-        iter->left = node;
-    }
-    else
-    {
-        iter->right = node;
-    }
-
+    AssignToIter(iter, to_left, node);
     node->parent = iter;
 
     return (node);
@@ -144,24 +135,24 @@ void BstRemove(bst_iter_t iter)
     /* is leaf? */
     if ((NULL == iter->left) && NULL == iter->right)
     {
-        FixGrandParent(iter, is_left_child, NULL);
+        AssignToIter(iter->parent, is_left_child, NULL);
     }
     /* only left child? */
     else if (NULL == iter->right)
     {
-        FixGrandParent(iter, is_left_child, iter->left);
+        AssignToIter(iter->parent, is_left_child, iter->left);
         iter->left->parent = iter->parent;
     }
     /* only right child? */
     else if (NULL == iter->left)
     {
-        FixGrandParent(iter, is_left_child, iter->right);
+        AssignToIter(iter->parent, is_left_child, iter->right);
         iter->right->parent = iter->parent;
     }
     /* both children? */
     else
     {
-        FixGrandParent(iter, is_left_child, iter->right);
+        AssignToIter(iter->parent, is_left_child, iter->right);
 
         next_iter = BstNext(iter);
         next_iter->parent = iter->parent;
@@ -175,6 +166,8 @@ void BstRemove(bst_iter_t iter)
     iter->data = NULL;
 
     free(iter);
+
+    return;
 }
 
 bst_iter_t BstBegin(bst_t *tree)
@@ -204,9 +197,9 @@ bst_iter_t BstPrev(bst_iter_t iter)
 {
     assert(iter);
 
-    if (NULL != iter->left)
+    if (NULL == iter->left)
     {
-        while (iter != iter->parent->right)
+        while (NULL != iter->parent && iter->parent->right != iter)
         {
             iter = iter->parent;
         }
@@ -309,6 +302,7 @@ static bst_iter_t InnerFind(bst_t *tree, void *data, int *status)
         cmp_res = tree->cmp_func(data, BstGetData(iter), NULL);
 
         parent_iter = iter;
+        *status = 0;
 
         if (0 > cmp_res)
         {
@@ -318,11 +312,6 @@ static bst_iter_t InnerFind(bst_t *tree, void *data, int *status)
         else if (0 < cmp_res)
         {
             iter = iter->right;
-            *status = 0;
-        }
-        else
-        {
-            *status = 0;
         }
     }
 
@@ -345,17 +334,17 @@ static int IsLeftChild(bst_iter_t iter)
     return (iter->parent->left == iter);
 }
 
-static void FixGrandParent(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_link)
+static void AssignToIter(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_link)
 {
     assert(iter);
 
     if (is_left_child)
     {
-        iter->parent->left = iter_to_link;
+        iter->left = iter_to_link;
     }
     else
     {
-        iter->parent->right = iter_to_link;
+        iter->right = iter_to_link;
     }
 
     return;
