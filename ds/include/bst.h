@@ -1,4 +1,4 @@
-/* Version 2 - 30.05.2021 15:00 */
+/* Version 3 - 30.05.2021 17:35 */
 
 #ifndef _OL_102_BST_H_
 #define _OL_102_BST_H_
@@ -8,11 +8,31 @@
 typedef struct bst bst_t;
 typedef struct bst_node *bst_iter_t; 
 
-typedef int (*cmp_func_ptr_t)(void *, void *, void *);
-typedef int (*act_tunc_ptr_t)(void *, void *);
+typedef int (*cmp_func_t)(void *, void *, void *);
+typedef int (*act_func_t)(void *, void *);
+
+/*
+typedef struct bst_node bst_node_t;
+
+struct bst_node
+{
+    void *data;
+    bst_node_t *left;
+    bst_node_t *right;
+    bst_node_t *parent;
+
+};
+
+typedef struct bst
+{
+    cmp_func_t cmp_func;
+    void *param;
+    struct bst_node end_dummy;
+};*/
+
 
 /* O(1) */
-bst_t *BstCreate(cmp_func_ptr_t, void *param);
+bst_t *BstCreate(cmp_func_t func, void *param);
 
 /* O(n) - n numbert of nodes in tree */
 void BstDestroy(bst_t *tree);
@@ -29,10 +49,10 @@ bst_iter_t BstInsert(bst_t *tree, void *data);
 /* Avg - O(log n), worst - O(n) */
 void BstRemove(bst_iter_t iter);
 
-/* O(1) */
+/* O(log n) */
 bst_iter_t BstBegin(bst_t *tree);
 
-/* Avg - O(log n), worst - O(n) */
+/* O(1) */
 bst_iter_t BstEnd(bst_t *tree);
 
 /* Avg - O(log n), worst - O(n) */
@@ -51,6 +71,6 @@ void *BstGetData(bst_iter_t iter);
 bst_iter_t BstFind(bst_t *tree, void *data);
 
 /* O(n log n) */
-int BstForEach(bst_iter_t from, bst_iter_t to, act_tunc_ptr_t, void *param);
+int BstForEach(bst_iter_t from, bst_iter_t to, act_func_t func, void *param);
 
 #endif /* _OL_102_BST_H_ */
