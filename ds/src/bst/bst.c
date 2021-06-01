@@ -3,7 +3,7 @@
  *  Date Of Creation: 31.05.21;									*
  *  Date Of Approval:											*
  *  Approved By: ;												*
- *  Description: binary search tree;				*/
+ *  Description: binary search tree;			            	*/
 
 #include <stddef.h> /* size_t */
 #include <stdlib.h> /* malloc */
@@ -14,7 +14,8 @@
 
 static int IsLeftChild(bst_iter_t iter);
 static int Add1(void *data, void *param);
-static bst_iter_t GenericFind(bst_t *tree, void *data, int *status);
+static bst_iter_t InnerFind(bst_t *tree, void *data, int *status);
+static void FixGrandParent(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_link);
 
 typedef struct bst_node
 {
@@ -34,26 +35,26 @@ struct bst
 
 bst_t *BstCreate(cmp_func_t func, void *param)
 {
-    bst_t *bst = NULL;
+    bst_t *tree = NULL;
 
     assert(func);
 
-    bst = (bst_t *)malloc(sizeof(bst_t));
+    tree = (bst_t *)malloc(sizeof(bst_t));
 
-    if (NULL == bst)
+    if (NULL == tree)
     {
         return (NULL);
     }
 
-    bst->cmp_func = func;
-    bst->param = param;
+    tree->cmp_func = func;
+    tree->param = param;
 
-    bst->dummy.right = NULL;
-    bst->dummy.left = NULL;
-    bst->dummy.parent = NULL;
-    bst->dummy.data = NULL;
+    tree->dummy.right = NULL;
+    tree->dummy.left = NULL;
+    tree->dummy.parent = NULL;
+    tree->dummy.data = NULL;
 
-    return (bst);
+    return (tree);
 }
 
 void BstDestroy(bst_t *tree)
@@ -67,6 +68,11 @@ void BstDestroy(bst_t *tree)
 
     tree->cmp_func = NULL;
     tree->param = NULL;
+
+    tree->dummy.right = NULL;
+    tree->dummy.left = NULL;
+    tree->dummy.parent = NULL;
+    tree->dummy.data = NULL;
 
     free(tree);
 
@@ -95,8 +101,6 @@ bst_iter_t BstInsert(bst_t *tree, void *data)
 {
     bst_iter_t iter = NULL;
     bst_iter_t node = NULL;
-
-    /* 1 - left, 0- right */
     int to_left = 1;
 
     assert(tree);
@@ -112,15 +116,15 @@ bst_iter_t BstInsert(bst_t *tree, void *data)
     node->left = NULL;
     node->right = NULL;
 
-    iter = GenericFind(tree, data, &to_left);
+    iter = InnerFind(tree, data, &to_left);
 
     if (to_left)
     {
-            iter->left = node;
+        iter->left = node;
     }
     else
     {
-            iter->right = node;
+        iter->right = node;
     }
 
     node->parent = iter;
@@ -137,56 +141,29 @@ void BstRemove(bst_iter_t iter)
 
     is_left_child = IsLeftChild(iter);
 
+    /* is leaf? */
     if ((NULL == iter->left) && NULL == iter->right)
     {
-        if (is_left_child)
-        {
-            iter->parent->left = NULL;
-        }
-        else
-        {
-               iter->parent->right = NULL;
-        }
+        FixGrandParent(iter, is_left_child, NULL);
     }
+    /* only left child? */
     else if (NULL == iter->right)
     {
-        if (is_left_child)
-        {
-            iter->parent->left = iter->left;
-        }
-        else
-        {
-            iter->parent->right = iter->left;
-        }
-
+        FixGrandParent(iter, is_left_child, iter->left);
         iter->left->parent = iter->parent;
     }
+    /* only right child? */
     else if (NULL == iter->left)
     {
-        if (is_left_child)
-        {
-            iter->parent->left = iter->right;
-        }
-        else
-        {
-            iter->parent->right = iter->right;
-        }
-
+        FixGrandParent(iter, is_left_child, iter->right);
         iter->right->parent = iter->parent;
     }
+    /* both children? */
     else
     {
+        FixGrandParent(iter, is_left_child, iter->right);
+
         next_iter = BstNext(iter);
-
-        if (is_left_child)
-        {
-            iter->parent->left = iter->right;
-        }
-        else
-        {
-            iter->parent->right = iter->right;
-        }
-
         next_iter->parent = iter->parent;
         next_iter->left = iter->left;
         iter->left->parent = next_iter;
@@ -216,7 +193,6 @@ bst_iter_t BstBegin(bst_t *tree)
     return (iter);
 }
 
-/* Avg - O(log n), worst - O(n) */
 bst_iter_t BstEnd(bst_t *tree)
 {
     assert(tree);
@@ -224,7 +200,6 @@ bst_iter_t BstEnd(bst_t *tree)
     return ((bst_iter_t)(&tree->dummy));
 }
 
-/* Avg - O(log n), worst - O(n) */
 bst_iter_t BstPrev(bst_iter_t iter)
 {
     assert(iter);
@@ -249,7 +224,6 @@ bst_iter_t BstPrev(bst_iter_t iter)
     return (iter);
 }
 
-/* Avg - O(log n), worst - O(n) */
 bst_iter_t BstNext(bst_iter_t iter)
 {
     assert(iter);
@@ -274,7 +248,6 @@ bst_iter_t BstNext(bst_iter_t iter)
     return (iter);
 }
 
-/* O(1) */
 int BstIterIsEqual(const bst_iter_t iter1, const bst_iter_t iter2)
 {
     assert(iter1);
@@ -283,7 +256,6 @@ int BstIterIsEqual(const bst_iter_t iter1, const bst_iter_t iter2)
     return (iter1 == iter2);
 }
 
-/* O(1) */
 void *BstGetData(bst_iter_t iter)
 {
     assert(iter);
@@ -291,27 +263,17 @@ void *BstGetData(bst_iter_t iter)
     return (iter->data);
 }
 
-/* Avg - O(log n), worst - O(n) */
 bst_iter_t BstFind(bst_t *tree, void *data)
 {
     bst_iter_t iter = NULL;
-    int found = 1;
+    int find = 1;
 
     assert(tree);
 
-    iter = GenericFind(tree, data, &found);
+    iter = InnerFind(tree, data, &find);
 
-    if (0 == found)
-    {
-        return (iter);
-    }
-
-    return (BstEnd(tree));
+    return ((0 == find) ? iter : BstEnd(tree));
 }
-
-/* O(n log n) */
-
-/*BstForEach(BstBegin((bst_t *)tree), BstEnd((bst_t *)tree), Add1, (void *)&counter);*/
 
 int BstForEach(bst_iter_t from, bst_iter_t to, act_func_t action_func, void *param)
 {
@@ -330,18 +292,9 @@ int BstForEach(bst_iter_t from, bst_iter_t to, act_func_t action_func, void *par
     return (status);
 }
 
-static int Add1(void *data, void *param)
-{
-    UNUSED(data);
-
-    ++(*(size_t *)param);
-
-    return (0);
-}
-
 /* ------------------ inner functions ---------------------*/
 
-static bst_iter_t GenericFind(bst_t *tree, void *data, int* status)
+static bst_iter_t InnerFind(bst_t *tree, void *data, int *status)
 {
     bst_iter_t iter = tree->dummy.left;
     bst_iter_t parent_iter = (bst_iter_t)(&(tree->dummy));
@@ -356,24 +309,33 @@ static bst_iter_t GenericFind(bst_t *tree, void *data, int* status)
         cmp_res = tree->cmp_func(data, BstGetData(iter), NULL);
 
         parent_iter = iter;
-        
+
         if (0 > cmp_res)
         {
-            iter = iter->left;           
-            *status = 1; 
+            iter = iter->left;
+            *status = 1;
         }
         else if (0 < cmp_res)
         {
-            iter = iter->right; 
-            *status = 0;        
+            iter = iter->right;
+            *status = 0;
         }
         else
         {
-            *status = 0; 
+            *status = 0;
         }
     }
 
     return (0 == cmp_res ? iter : parent_iter);
+}
+
+static int Add1(void *data, void *param)
+{
+    UNUSED(data);
+
+    ++(*(size_t *)param);
+
+    return (0);
 }
 
 static int IsLeftChild(bst_iter_t iter)
@@ -381,4 +343,20 @@ static int IsLeftChild(bst_iter_t iter)
     assert(iter);
 
     return (iter->parent->left == iter);
+}
+
+static void FixGrandParent(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_link)
+{
+    assert(iter);
+
+    if (is_left_child)
+    {
+        iter->parent->left = iter_to_link;
+    }
+    else
+    {
+        iter->parent->right = iter_to_link;
+    }
+
+    return;
 }
