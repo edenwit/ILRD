@@ -9,7 +9,7 @@
 
 #include <stdlib.h> /* malloc */
 #include <assert.h>
-
+#include <stdio.h> /* puts */ 
 #include "bst.h"
 
 #define UNUSED(X) (void)(X)
@@ -131,7 +131,7 @@ bst_iter_t BstInsert(bst_t *tree, void *data)
 
     if (NULL == new_iter)
     {
-        return (NULL);
+        return (tree->dummy);
     }
 
     new_iter->data = data;
@@ -228,15 +228,32 @@ void BstRemove(bst_iter_t iter)
     else
     {
         to_remove = iter->right;
-
+      
         while (NULL != to_remove->left)
         {
             to_remove = to_remove->left;
         }
 
-        (to_remove->parent)->left = to_remove->right;
-
         iter->data = BstGetData(to_remove);
+    
+        if (to_remove == iter->right)
+        {
+            iter->right = to_remove->right;
+   
+            if (NULL != to_remove->right)
+            {
+                (to_remove->right)->parent = iter;
+            }
+        }
+        else
+        {
+            (to_remove->parent)->left = to_remove->right;
+            
+            if (NULL != to_remove->right)
+            {
+                (to_remove->right)->parent = to_remove->parent;
+            }
+        }
     }
 
     to_remove->left = NULL;

@@ -155,7 +155,7 @@ void BstRemove(bst_iter_t iter)
         AssignToIter(iter->parent, is_left_child, iter->right);
 
         next_iter = BstNext(iter);
-        next_iter->parent = iter->parent;
+        iter->right->parent = iter->parent;
         next_iter->left = iter->left;
         iter->left->parent = next_iter;
     }
@@ -299,7 +299,7 @@ static bst_iter_t InnerFind(bst_t *tree, void *data, int *status)
 
     while ((NULL != iter) && (0 != cmp_res))
     {
-        cmp_res = tree->cmp_func(data, BstGetData(iter), NULL);
+        cmp_res = tree->cmp_func(data, BstGetData(iter), tree->param);
 
         parent_iter = iter;
         *status = 0;
@@ -312,6 +312,7 @@ static bst_iter_t InnerFind(bst_t *tree, void *data, int *status)
         else if (0 < cmp_res)
         {
             iter = iter->right;
+            *status = 2;
         }
     }
 
