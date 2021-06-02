@@ -339,7 +339,7 @@ static void AssignToIter(bst_iter_t iter, int is_left_child, bst_iter_t iter_to_
 {
     assert(iter);
 
-    if (is_left_child)
+    if (1 == is_left_child)
     {
         iter->left = iter_to_link;
     }

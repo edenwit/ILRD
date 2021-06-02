@@ -9,7 +9,7 @@
 
 #include <stdlib.h> /* malloc */
 #include <assert.h>
-#include <stdio.h> /* puts */ 
+
 #include "bst.h"
 
 #define UNUSED(X) (void)(X)
@@ -73,20 +73,11 @@ bst_t *BstCreate(cmp_func_t func, void *param)
 
 void BstDestroy(bst_t *tree)
 {
-    bst_iter_t iter = NULL;
-    bst_iter_t iter_next = NULL;
-
     assert(NULL != tree);
-
-    iter = BstBegin(tree);
 
     while (!BstIsEmpty(tree))
     {
-        iter_next = BstNext(iter);
-    
-        BstRemove(iter);
-
-        iter = iter_next;
+        BstRemove(BstBegin(tree));
     }
     
     free(tree->dummy);
@@ -127,6 +118,7 @@ bst_iter_t BstInsert(bst_t *tree, void *data)
 
     iter = BstEnd(tree);
     iter_next = (BstEnd(tree))->left;
+
     new_iter = (bst_iter_t)malloc(sizeof(bst_node_t));
 
     if (NULL == new_iter)
@@ -245,10 +237,11 @@ void BstRemove(bst_iter_t iter)
                 (to_remove->right)->parent = iter;
             }
         }
+        
         else
         {
             (to_remove->parent)->left = to_remove->right;
-            
+
             if (NULL != to_remove->right)
             {
                 (to_remove->right)->parent = to_remove->parent;
@@ -357,14 +350,27 @@ bst_iter_t BstFind(bst_t *tree, void *data)
 
     assert(NULL != tree);
 
-    iter = BstBegin(tree);
+    iter = BstEnd(tree)->left;
 
-    while (!BstIterIsEqual(iter, tree->dummy) && (0 != tree->cmp_func(BstGetData(iter), data, tree->param)))
+    while (NULL != iter)
     {
-        iter = BstNext(iter);
+        if (0 < tree->cmp_func(BstGetData(iter), data, tree->param))
+        {
+            iter = iter->left;
+        }
+
+        else if (0 > tree->cmp_func(BstGetData(iter), data, tree->param))
+        {
+            iter = iter->right;
+        }
+        
+        else
+        {
+            return (iter);
+        }
     }
     
-    return (iter);
+    return (BstEnd(tree));
 }
 
 int BstForEach(bst_iter_t from, bst_iter_t to, act_func_t func, void *param)
@@ -375,15 +381,10 @@ int BstForEach(bst_iter_t from, bst_iter_t to, act_func_t func, void *param)
     assert(NULL != to);
     assert(NULL != func);
 
-    while (!BstIterIsEqual(from, to))
+    while (!BstIterIsEqual(from, to) && !status)
     {
         status = func(BstGetData(from), param);
     
-        if (0 != status)
-		{
-			return status;
-		}
-  
 		from = BstNext(from);
     }
   

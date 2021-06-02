@@ -25,7 +25,7 @@ int main()
 
 double Sqrt(double num) 
 {
-	double i = 1.0;
+	double i = 0.0;
 	double precision = 0.00001;
 
 	while ((i * i) <= num)
