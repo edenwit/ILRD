@@ -2,23 +2,35 @@ TARGET 	= dll
 
 SRC		= .
 INCLUDE	= ../../include
-TEST	= ../../test
-OBJ 	= ../../obj/$(TARGET)
+TEST		= ../../test
+OBJ 		= ../../obj/$(TARGET)
 BIN		= ../../bin
+LIB		= ../../lib
 
 CC 		= gcc
-CFLAGS	= -ansi -pedantic-errors -Wall -Wextra -g -I$(INCLUDE)
+CFLAGS		= -ansi -pedantic-errors -fPIC -Wall -Wextra -g -I$(INCLUDE)
+LDFLAGS	= -shared
+
+TARGET_LIB	= $(TARGET)# target lib
 
 VLG		= valgrind --leak-check=yes --track-origins=yes
-CGDB	= cgdb
+CGDB		= cgdb
 
 HEADERS	= $(INCLUDE)/$(TARGET).h 
 SOURCES	= $(TEST)/$(TARGET)_test.c $(SRC)/$(TARGET).c 
-OBJECT	= $(OBJ)/$(TARGET).o $(OBJ)/$(TARGET)_test.o 
+OBJECT		= $(OBJ)/$(TARGET).o #$(OBJ)/$(TARGET)_test.o 
 
-$(BIN)/$(TARGET): $(OBJECT) $(HEADERS) 
-	$(CC) $(CFLAGS) $(OBJECT) -o $@  
 
+$(BIN)/$(TARGET): $(LIB)/lib$(TARGET_LIB).so $(OBJ)/$(TARGET)_test.o 
+	$(CC) $(CFLAGS) $(LIB)/lib$(TARGET_LIB).so $(OBJ)/$(TARGET)_test.o  -o $@ -Wl,-rpath=$(LIB) -L$(LIB) -l$(TARGET_LIB)
+
+#$ cc $SRCS –Wl,-rpath=/home/beazley/libs \ -L/home/beazleys/libs -lfoo
+
+
+$(LIB)/lib$(TARGET_LIB).so: $(OBJECT) $(HEADERS)
+	@mkdir -p $(LIB)
+	$(CC) $(OBJECT) -o $@ ${LDFLAGS} 
+	
 $(OBJ)/%.o : $(SRC)/%.c
 	@mkdir -p $(OBJ)
 	$(CC) $(CFLAGS) -c $^ -o $@
@@ -35,6 +47,7 @@ run :
 clean : 
 	rm -f $(BIN)/$(TARGET)
 	rm -f $(OBJ)/*.o
+	rm -f $(LIB)/$(TARGET).so	
 	rm -r $(OBJ)
 	
 tree:
