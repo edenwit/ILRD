@@ -4,7 +4,7 @@
 #include <assert.h>
 
 #define PECISION_NUM 0.00001
-#define MAX2(a, b)  (a > b) ? (a) : (b))
+#define MAX2(a, b)  ((a > b) ? (a) : (b))
 
 double Sqrt(double num) ;
 
@@ -17,7 +17,7 @@ int main()
 	{
 		if (PECISION_NUM < fabs(sqrt(n) - Sqrt(n)))
 		{
-			printf("Error at square root of %lf . expected: %lf, actual: %lf, diff: %f\n", n, sqrt(n), Sqrt(n), fabs(sqrt(n) - Sqrt(n)));	
+			printf("Error at square root of %f . expected: %f, actual: %f, diff: %f\n", n, sqrt(n), Sqrt(n), fabs(sqrt(n) - Sqrt(n)));	
 		}
 		n += jumps;
 	}
