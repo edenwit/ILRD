@@ -3,7 +3,7 @@
 
 #include <stddef.h> /* size_t */
 
-#include "../sorted_ll/sorted_ll.h"
+#include "sorted_ll.h"
 
 typedef struct pq pq_t;
 

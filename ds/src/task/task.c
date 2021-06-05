@@ -2,7 +2,7 @@
 #include <assert.h> /* assert */
 #include <time.h> 		/* time_t */
 
-#include "../task/task.h"
+#include "task.h"
 
 struct task
 {

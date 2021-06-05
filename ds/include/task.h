@@ -1,7 +1,7 @@
 #ifndef __TASK_H__
 #define __TASK_H__
 
-#include "../uid/uid.h"
+#include "uid.h"
 
 typedef struct task task_t;
 

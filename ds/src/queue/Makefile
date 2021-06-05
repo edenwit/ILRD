@@ -1,28 +1,60 @@
+TARGET = $(notdir $(shell pwd))
+SHAREDLIB = lib$(notdir $(shell pwd)).so
+TEST_TARGET = $(TARGET)_test
 
-TARGET = $(notdir ${PWD})
 SRC = .
-BIN = ../../bin
 INC = ../../include
-OBJ = ../../obj/$(TARGET)
-LIB = ../../lib
+BIN = ../../bin
+LIB = /home/edenwit/git/ds/lib
 TEST = ../../test
 
+OBJ = ../../obj
 CC = gcc
-#gd flags
-CFLAGS = -ansi -pedantic-errors -Wall -Wextra -g -I$(INC)
-LDFLAGS = -L$(LIB)
+CFLAGS =  -ansi -pedantic-errors -Wall -Wextra -g -I$(INC) 
 
-$(BIN)/$(TARGET) : $(OBJ)/queue_test.o  $(OBJ)/queue.o $(OBJ)/sll.o
-	$(CC) $(CFLAGS) $^ -o $@  $(LDFLAGS)
- 	
-$(OBJ)/queue_test.o : $(TEST)/queue_test.c $(INC)/queue.h 
-	$(CC) $(CFLAGS) -c $< -o $@
-        
-$(OBJ)/queue.o : $(SRC)/queue.c $(OBJ)/sll.o $(INC)/queue.h  $(INC)/sll.h 
-	$(CC) $(CFLAGS) -c $< -o $@
+OBJECTS = $(OBJ)/$(TARGET)/$(TARGET).o 
+TEST_OBJECTS = $(OBJ)/$(TARGET)/$(TEST_TARGET).o 
 
-$(OBJ)/sll.o : ../sll/sll.c $(INC)/sll.h 
-	$(CC) $(CFLAGS) -c $< -o $@
+#--------------source & test sourec files-------------#
+TEST_SOURCE = $(TEST)/$(TEST_TARGET).c
+SOURCE = $(SRC)/$(TARGET).c 
 
-run:
-	./$(BIN)/$(TARGET)
+#----------------shared object flags------------------#
+SOFLAG_FIRST = -c -fpic 
+SOFLAG_SECOND = -shared -o
+LDFLAGS = -L$(LIB) -Wl,-rpath=$(LIB) -lds
+#----------------------------------------------------#
+
+
+$(OBJECTS): $(SOURCE) $(INC)/$(TARGET).h
+	$(CC) $(CFLAGS) $(SOFLAG_FIRST) $< -o $@
+
+$(LIB)/$(SHAREDLIB): $(OBJECTS) $(SOURCE) 
+	$(CC) $(CFLAGS) $(SOFLAG_SECOND) $^ -o $@
+
+$(BIN)/$(TARGET): $(TEST_SOURCE) $(LIB)/libds.so
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ 
+	
+$(TEST_OBJECTS).o: $(TEST_SOURCE) $(INC)/$(TARGET).h
+		$(CC) $(CFLAGS) $< -c -o $(OBJ)/$(TARGET)/$@
+
+.PHONY : build test so clean
+
+build:
+	@mkdir -p $(OBJ)/$(TARGET)  
+	@make $(BIN)/$(TARGET)
+
+test:
+	@./$(BIN)/$(TARGET)
+	
+so:
+	@mkdir -p $(OBJ)/$(TARGET)  
+	@make $(LIB)/$(SHAREDLIB)
+
+arc:
+	ar -vr $(LIB)/libD_S.a $(OBJECTS)
+
+clean :
+	rm -f -r $(OBJECTS) $(BIN)/$(TARGET) $(LIB)/$(SHAREDLIB)
+
+

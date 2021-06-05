@@ -3,7 +3,7 @@
 #include <assert.h> /* assert */
 
 
-#include "../dll/dll.h"
+#include "dll.h"
 #include "sorted_ll.h"
 
 #define UNUSED(X) ((void) X)
@@ -351,18 +351,19 @@ static sorted_list_iter_t ToSortedIter(d_list_iter_t iter_dll, sorted_list_t *li
 
 static int IsBigger(const void *data, const void *finder) /*data is what the user gives*/
 {
-	assert(finder);
 
 	finder_t *finder_ptr = (finder_t *)finder;
+
+	assert(finder);
 
 	return (0 < finder_ptr->cmp_func(data, finder_ptr->param));
 }
 
 static int IsBiggerEqual(const void *data, const void *finder) /*data is what the user gives*/
 {
-	assert(finder);
-	
 	finder_t *finder_ptr = (finder_t *)finder;
+
+	assert(finder);
 
 	return (0 <= finder_ptr->cmp_func(data, finder_ptr->param));
 }

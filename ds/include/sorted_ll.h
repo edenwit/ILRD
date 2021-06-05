@@ -3,7 +3,7 @@
 
 #include <stddef.h> /*size_t*/
 
-#include "../dll/dll.h"
+#include "dll.h"
 
 typedef struct sorted_list sorted_list_t;
 

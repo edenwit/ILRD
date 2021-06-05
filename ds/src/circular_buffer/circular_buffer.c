@@ -3,7 +3,7 @@
 #include <string.h> /* memcpy */
 #include <stdlib.h> /* malloc */
 #include <unistd.h>
-#include "../../include/circular_buffer.h"
+#include "circular_buffer.h"
 
 #define ARROFFSET OFFSETOF(struct circular_buffer, arr)
 #define OFFSETOF(s, f) ((size_t)&(((s *)0)->f))

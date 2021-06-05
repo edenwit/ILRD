@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #include "scheduler.h"
-#include "../task/task.h"
+#include "task.h"
 
 #define RUN_SUCCESS 			0
 #define RUN_FAILURE				1
@@ -25,7 +25,7 @@ struct scheduler
 };
 
 /*static int IsBigger(const void *task1, const void *task2);*/
-int CmpExeTime(const void *cur, const void *par);
+static int CmpExecutionTime(const void *data1, const void *data2);
 static int IsMatch(const void *data, const void *param);
 
 scheduler_t *SchedulerCreate	(void)
@@ -37,7 +37,7 @@ scheduler_t *SchedulerCreate	(void)
 		return (NULL);
 	}
 	
-	scheduler->pq = PQueueCreate(CmpExeTime);
+	scheduler->pq = PQueueCreate(CmpExecutionTime);
 	
 	if (NULL == scheduler->pq)
 	{
@@ -262,7 +262,7 @@ void SchedulerClear(scheduler_t *scheduler)
 	return;
 }
 
-int CmpExeTime(const void *data1, const void *data2)
+static int CmpExecutionTime(const void *data1, const void *data2)
 {
 	return (TaskGetExecutionTime((task_t *)data1) - TaskGetExecutionTime((task_t *)data2));
 }

@@ -1,53 +1,60 @@
-TARGET 	= fsa
+TARGET = $(notdir $(shell pwd))
+SHAREDLIB = lib$(notdir $(shell pwd)).so
+TEST_TARGET = $(TARGET)_test
 
-SRC		= .
-INCLUDE	= ../../include
-TEST	= ../../test
-OBJ 	= ../../obj/$(TARGET)
-BIN		= ../../bin
+SRC = .
+INC = ../../include
+BIN = ../../bin
+LIB = /home/edenwit/git/ds/lib
+TEST = ../../test
 
-CC 		= gcc
-CFLAGS	= -ansi -pedantic-errors -Wall -Wextra -g -I$(INCLUDE)
+OBJ = ../../obj
+CC = gcc
+CFLAGS =  -ansi -pedantic-errors -Wall -Wextra -g -I$(INC) 
 
-VLG		= valgrind --leak-check=yes --track-origins=yes
-CGDB	= cgdb
+OBJECTS = $(OBJ)/$(TARGET)/$(TARGET).o 
+TEST_OBJECTS = $(OBJ)/$(TARGET)/$(TEST_TARGET).o 
 
-HEADERS	= $(INCLUDE)/$(TARGET).h 
-SOURCES	= $(TEST)/$(TARGET)_test.c $(SRC)/$(TARGET).c 
-OBJECT	= $(OBJ)/$(TARGET).o $(OBJ)/$(TARGET)_test.o 
+#--------------source & test sourec files-------------#
+TEST_SOURCE = $(TEST)/$(TEST_TARGET).c
+SOURCE = $(SRC)/$(TARGET).c 
 
-$(BIN)/$(TARGET): $(OBJECT) $(HEADERS) 
-	$(CC) $(CFLAGS) $(OBJECT) -o $@  
+#----------------shared object flags------------------#
+SOFLAG_FIRST = -c -fpic 
+SOFLAG_SECOND = -shared -o
+LDFLAGS = -L$(LIB) -Wl,-rpath=$(LIB) -lds
+#----------------------------------------------------#
 
-$(OBJ)/%.o : $(SRC)/%.c
-	@mkdir -p $(OBJ)
-	$(CC) $(CFLAGS) -c $^ -o $@
+
+$(OBJECTS): $(SOURCE) $(INC)/$(TARGET).h
+	$(CC) $(CFLAGS) $(SOFLAG_FIRST) $< -o $@
+
+$(LIB)/$(SHAREDLIB): $(OBJECTS) $(SOURCE) 
+	$(CC) $(CFLAGS) $(SOFLAG_SECOND) $^ -o $@
+
+$(BIN)/$(TARGET): $(TEST_SOURCE) $(LIB)/libds.so
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ 
 	
-$(OBJ)/%.o : $(TEST)/%.c 
-	@mkdir -p $(OBJ)
-	$(CC) $(CFLAGS) -c $^ -o $@				
+$(TEST_OBJECTS).o: $(TEST_SOURCE) $(INC)/$(TARGET).h
+		$(CC) $(CFLAGS) $< -c -o $(OBJ)/$(TARGET)/$@
 
-.PHONY: clean run tree cgdb print 
+.PHONY : build test so clean
 
-run :
-	$(BIN)/$(TARGET)
+build:
+	@mkdir -p $(OBJ)/$(TARGET)  
+	@make $(BIN)/$(TARGET)
 
-clean : 
-	rm -f $(BIN)/$(TARGET)
-	rm -f $(OBJ)/*.o
-	rm -r $(OBJ)
+test:
+	@./$(BIN)/$(TARGET)
 	
-tree:
-	@tree ../../
+so:
+	@mkdir -p $(OBJ)/$(TARGET)  
+	@make $(LIB)/$(SHAREDLIB)
 
-vlg :
-	@$(VLG) ./$(BIN)/$(TARGET)	
+arc:
+	ar -vr $(LIB)/libD_S.a $(OBJECTS)
 
-cgdb :
-	@$(CGDB) ./$(BIN)/$(TARGET)
+clean :
+	rm -f -r $(OBJECTS) $(BIN)/$(TARGET) $(LIB)/$(SHAREDLIB)
 
-print :
-	@echo "Sources: $(SOURCES)"
-	@echo "Objects: $(OBJECT)"
-	@echo "Headers: $(HEADERS)"
 
