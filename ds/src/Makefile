@@ -1,72 +1,66 @@
+# Developer: Eden Wittenberg;									
+#   Status: done;												
+#   Date Of Creation: 02.06.21;									
+#   Date Of Approval:											
+#   Approved By: ;												
+#   Description: Makefile;			            	*/
 
-TARGET = $(notdir $(shell pwd))
-SHAREDLIB = libds.so
-TEST_TARGET = $(TARGET)_test
+NAME = data_structures
+LDIR = ../lib
+TDIR = ../test
+ODIR = ../obj
+IDIR = ../include
+SDIR = ../src
+BIN  = ../bin
+SRCS = $(shell find $(SDIR) -type f -name "*.c")
+OBJS_DEBUG = $(addprefix $(ODIR)/,$(patsubst %.c,%_DEBUG.o,$(notdir $(SRCS))))
+OBJS_RELEASE = $(addprefix $(ODIR)/,$(patsubst %.c,%_RELEASE.o,$(notdir $(SRCS))))
+DEBUG = -g
+RELEASE = -DNDEBUG -O3
+TESTS_SRC = $(wildcard $(TDIR)/*.c)
+TESTS = $(patsubst %.c,%.out,$(TESTS_SRC))
+CC = gcc -ansi -pedantic-errors -Wall -Wextra -I $(IDIR) -fPIC	
 
-SRC = .
-INC = ../include
-BIN = ../bin
-LIB = /home/edenwit/git/ds/lib
-TEST = ../test
+#auto dependency
+deps := $(patsubst %.o,%.d,$(OBJS)) 
+-include $(deps)
+DEPFLAGS = -MMD -MF $(@:.o=.d)
 
-OBJ = ../obj
-CC = gcc
-CFLAGS =  -ansi -pedantic-errors -Wall -Wextra -g -I$(INC) 
+##########################################################################################################
 
-OBJECTS = $(OBJ)/$(TARGET)/$(TARGET).o 
-TEST_OBJECTS = $(OBJ)/$(TARGET)/$(TEST_TARGET).o 
+# default which creates both debug and release version
+all: debug release	
 
-#--------------source & test sourec files-------------#
-TEST_SOURCE = $(TEST)/$(TEST_TARGET).c
-SOURCE = $(SRC)/$(TARGET).c 
+##########################################################################################################
+#creates executibles for each test in datastructures directory and runs them, also will build debug library if necessary
+test: $(TESTS)
 
-#----------------shared object flags------------------#
-SOFLAG_FIRST = -c -fPIC 
-SOFLAG_SECOND = -shared -o
-LDFLAGS = -L$(LIB) -Wl,-rpath=$(LIB) -lds
-#----------------------------------------------------#
+$(BIN): $(TESTS_SRC) debug
+	$(CC) $(SHARED_OBJ_PATH) $(patsubst %.out,%.c,$(TESTS)) -o $@ -L $(LDIR) $(LDIR)/lib_$(NAME)_DEBUG.so
+	$@
+############################################################################################################
+#builds debug version
+debug: $(LDIR)/lib_$(NAME)_DEBUG.so
 
+$(LDIR)/lib_$(NAME)_DEBUG.so: $(OBJS_DEBUG)
+	$(CC) -shared -o $@ $(OBJS_DEBUG)
 
+$(ODIR)/%_DEBUG.o: $(SDIR)/*/%.c
+	echo $<
+	$(CC) -c $(DEBUG) $< -o $@ $(DEPFLAGS)	
+#############################################################################################################
+#builds release version	
+release: $(LDIR)/lib_$(NAME)_RELEASE.so
 
+$(LDIR)/lib_$(NAME)_RELEASE.so: $(OBJS_RELEASE)
+	$(CC) -shared -o $@ $(OBJS_RELEASE)
+	
+$(ODIR)/%_RELEASE.o: $(SDIR)/*/%.c 
+	$(CC) -c $(RELEASE) $< -o $@ $(DEPFLAGS)	
 
-TOPTARGETS := all
-MAKECLEAN = $(shell make clean)
-
-SUBDIRS_LIB := $(wildcard ../lib/$(SHAREDLIB))
-SUBDIRS := $(wildcard */.)
-SUBOBJ := $(wildcard ../obj/.)
-
-
-$(TOPTARGETS): $(SUBDIRS) 
-$(SUBDIRS):
-	@mkdir -p $(OBJ)/$@
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
-
-
-.PHONY: $(TOPTARGETS) $(SUBDIRS)
-
-libds:
-	$(CC) $(CFLAGS) $(SOFLAG_SECOND) $(shell find $(OBJ)/*/. -maxdepth 1 -type f -regex ".*\.o")  -o $(LIB)/$(SHAREDLIB)
+############################################################################################################
+#Utilities
+.PHONY: clean all release debug test
 
 clean:
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS) clean
-#	$(shell rm -f -r $(OBJ)/$@/* $(BIN)/$@ $(LIB)/lib$@.so)
-
-mklb:
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS) so
-
-
-
-test:
-	@./$(BIN)/$(TARGET)
-	
-so:
-	@mkdir -p $(OBJ)/$(TARGET)  
-	@make -p $(LIB)/$(SHAREDLIB)
-
-arc:
-	ar -vr $(LIB)/libD_S.a $(OBJECTS)
-
+	rm $(TESTS) $(ODIR)/*.o $(LIBDIR)/*.so

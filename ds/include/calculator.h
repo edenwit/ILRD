@@ -1,22 +1,14 @@
-#ifndef _OL_102_FSM_H_
-#define _OL_102_FSM_H_
+#ifndef __OL_102_CALCULATOR_H__
+#define __OL_102_CALCULATOR_H__
 
-int Calculate(const char *expression, double *result);
-
-/* in c file
-typedef struct calculator
+typedef enum calc_status
 {
-    stack_t *operands;
-    stack_t *operations;
-    state_t  transition[STATE][EVENT];
-}calculator_t;
+    SUCCESS,
+    INVALID_EQUETION, /* syntax error */
+    MATH_ERROR, /* division by 0, overflow, 0 ^ 0 */
+    SYSTEM_FAIL /* inner program failure */
+}calc_status_t;
 
-typedef enum state
-{     
-	WAIT_FOR_DIGIT,
-	WAIT_FOR_OPERATOR,     
-	ERROR_STATE 
-} state_t;
-*/
+calc_status_t Calculate(const char *expression, double *result);
 
-#endif /* _OL_102_FSM_H_ */
+#endif /* __OL_102_CALCULATOR_H__ */

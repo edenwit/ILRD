@@ -1,60 +1,61 @@
+# Target name.
 TARGET = $(notdir $(shell pwd))
-SHAREDLIB = lib$(notdir $(shell pwd)).so
-TEST_TARGET = $(TARGET)_test
 
-SRC = .
-INC = ../../include
-BIN = ../../bin
-LIB = /home/edenwit/git/ds/lib
-TEST = ../../test
 
-OBJ = ../../obj
+# directories.
+OBJDIR = ../../obj
+LIBDIR = ../../lib
+INCDIR = ../../include
+
+# Compilation details.
 CC = gcc
-CFLAGS =  -ansi -pedantic-errors -Wall -Wextra -g -I$(INC) 
-
-OBJECTS = $(OBJ)/$(TARGET)/$(TARGET).o 
-TEST_OBJECTS = $(OBJ)/$(TARGET)/$(TEST_TARGET).o 
-
-#--------------source & test sourec files-------------#
-TEST_SOURCE = $(TEST)/$(TEST_TARGET).c
-SOURCE = $(SRC)/$(TARGET).c 
-
-#----------------shared object flags------------------#
-SOFLAG_FIRST = -c -fpic 
-SOFLAG_SECOND = -shared -o
-LDFLAGS = -L$(LIB) -Wl,-rpath=$(LIB) -lds
-#----------------------------------------------------#
+CFLAGS = -ansi -pedantic-errors -Wall -Wextra -g
+RFLAGS = -ansi -pedantic-errors -Wall -Wextra -DNDEBUG -O3
+LDFLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR)
 
 
-$(OBJECTS): $(SOURCE) $(INC)/$(TARGET).h
-	$(CC) $(CFLAGS) $(SOFLAG_FIRST) $< -o $@
+# List of object file names
+OBJNAMES = $(TARGET).o $(TARGET)_test.o
 
-$(LIB)/$(SHAREDLIB): $(OBJECTS) $(SOURCE) 
-	$(CC) $(CFLAGS) $(SOFLAG_SECOND) $^ -o $@
+# List of object file paths.
+OBJECTS = $(addprefix $(OBJDIR)/, $(OBJNAMES))
 
-$(BIN)/$(TARGET): $(TEST_SOURCE) $(LIB)/libds.so
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ 
+.PHONY: clean all test debug release test_ r
+
+all: $(LIBDIR)/lib$(TARGET).so a.out
+
+$(LIBDIR)/lib$(TARGET).so: $(OBJDIR)/$(TARGET).o
+	$(CC) -shared $< -o $@
 	
-$(TEST_OBJECTS).o: $(TEST_SOURCE) $(INC)/$(TARGET).h
-		$(CC) $(CFLAGS) $< -c -o $(OBJ)/$(TARGET)/$@
-
-.PHONY : build test so clean
-
-build:
-	@mkdir -p $(OBJ)/$(TARGET)  
-	@make $(BIN)/$(TARGET)
-
-test:
-	@./$(BIN)/$(TARGET)
+a.out: $(OBJDIR)/$(TARGET)_test.o
+	$(CC)  $^ -o $@ $(LDFLAGS) -l$(TARGET)
 	
-so:
-	@mkdir -p $(OBJ)/$(TARGET)  
-	@make $(LIB)/$(SHAREDLIB)
+$(OBJDIR)/$(TARGET).o: $(TARGET).c  $(TARGET).h
+	$(CC) $(CFLAGS) -fpic -c $< -o $@ -I $(INCDIR)
+	
+$(OBJDIR)/$(TARGET)_test.o: $(TARGET)_test.c $(TARGET).h
+	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCDIR)
 
-arc:
-	ar -vr $(LIB)/libD_S.a $(OBJECTS)
+release: $(LIBDIR)/lib$(TARGET)_R.so $(TARGET)_R
 
-clean :
-	rm -f -r $(OBJECTS) $(BIN)/$(TARGET) $(LIB)/$(SHAREDLIB)
+$(LIBDIR)/lib$(TARGET)_R.so: $(OBJDIR)/$(TARGET)_R.o
+	$(CC) -shared $< -o $@
+	
+$(TARGET)_R: $(OBJDIR)/$(TARGET)_test_R.o
+	$(CC) $(LDFLAGS) $^ -o $@ -l$(TARGET)
+	
+$(OBJDIR)/$(TARGET)_R.o: $(TARGET).c  $(TARGET).h
+	$(CC) $(RFLAGS) -fpic -c $< -o $@ -I $(INCDIR)
+	
+$(OBJDIR)/$(TARGET)_test_R.o: $(TARGET)_test.c $(TARGET).h
+	$(CC) $(RFLAGS) -c $< -o $@ -I $(INCDIR)
 
+test: a.out
+	./a.out
+	
+test_ r: $(TARGET)_R
+	./$(TARGET)_R
+
+clean:
+	rm a.out $(OBJECTS)
 

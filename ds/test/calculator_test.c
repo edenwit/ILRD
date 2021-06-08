@@ -1,22 +1,23 @@
-#ifndef _OL_102_FSM_H_
-#define _OL_102_FSM_H_
+#include "calculator.h"
+#include <stddef.h>
 
-int Calculate(const char *expression, double *result);
-
-/* in c file
-typedef struct calculator
+int main()
 {
-    stack_t *operands;
-    stack_t *operations;
-    state_t  transition[STATE][EVENT];
-}calculator_t;
+    size_t i = 0;
+    char string[8][100] = {{"      5  + 6 * 4 "}, {"24 / 3 / 8"},
+    {"1 + aghfhc15"},
+    {"5 + 6 * 4 "},
+    {"56 14 * 16 "},
+    {"56 * 2 + 2"},
+    {"14 + 5 ^ 2 ^ 3+ 5"},
+    {"3 + 2^2^3"}
+    };
+    double result = 0.0;
 
-typedef enum state
-{     
-	WAIT_FOR_DIGIT,
-	WAIT_FOR_OPERATOR,     
-	ERROR_STATE 
-} state_t;
-*/
+    for (i = 0; i < 8; ++i)
+    {
+        Calculate(string[i], &result);
+    }
 
-#endif /* _OL_102_FSM_H_ */
+    return (0);
+}

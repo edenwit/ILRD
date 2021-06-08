@@ -1,7 +1,7 @@
 #include <stdio.h> /* printf */
 #include <sys/types.h>
 #include <string.h> /* strlen */
-#include "../../include/circular_buffer.h"
+#include "circular_buffer.h"
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define CAPACITY (size_t)30
