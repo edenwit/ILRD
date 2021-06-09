@@ -76,7 +76,7 @@ void StackPush(stack_t *stack, void *data)
 void StackPop(stack_t *stack)
 {
 	assert(stack);
-	assert((stack->top) < (stack->capacity));
+	assert(0 != stack->top);
 	
 	--stack->top;
 	stack->elements[stack->top] = 0;
@@ -88,6 +88,7 @@ void StackPop(stack_t *stack)
 void *StackPeek(const stack_t *stack)
 {
 	assert(stack);
+	assert(0 != stack->top);
 
 	return stack->elements[(stack->top) - 1];
 }
