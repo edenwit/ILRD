@@ -165,7 +165,8 @@ char *StrStr(const char *haystack, const char *needle)
 	char *p1 = NULL;
 	char *p2 = NULL;
  
- 	assert (NULL != haystack && NULL != needle);
+ 	assert (haystack);
+	assert (needle);
  	
 	if ('\0' == *needle)
 	{

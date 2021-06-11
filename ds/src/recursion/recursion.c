@@ -1,3 +1,10 @@
+/*  Developer: Eden Wittenberg;									*
+ *  Status: done;												*
+ *  Date Of Creation:09.06.21;									*
+ *  Date Of Approval:10.06.21;									*
+ *  Approved By: ;							            		*
+ *  Description: Recursion - first ex       					*/
+
 #include <assert.h>
 #include "recursion.h"
 
@@ -9,8 +16,13 @@ struct node
     struct node *next;
 };
 
+/*--------------------------Fibonacci -------------------------*/
+
 int RecursiveFibonacci(int element_index)
 {
+    assert(0 <= element_index);
+
+
     if (element_index <= 1)
     {
         return (element_index);
@@ -25,7 +37,13 @@ int IterativeFibonacci(int element_index)
     unsigned long prev_num = 0;
     int i = 0;
 
-    assert(0 < element_index);
+
+    assert(0 <= element_index);
+
+    if (2 > element_index)
+    {
+        return (element_index);
+    }
 
     for (i = 1; i < element_index; ++i)
     {
@@ -36,9 +54,13 @@ int IterativeFibonacci(int element_index)
     return (num);
 }
 
+/*--------------------------Flip List -------------------------*/
+
 node_t *FlipList(node_t *head)
 {
     node_t *node = NULL;
+
+    assert(head);
 
     if (!head || !head->next)
     {
@@ -52,21 +74,28 @@ node_t *FlipList(node_t *head)
 
     return (node);
 }
+
+/*--------------------------Stack Sort -------------------------*/
+
 void StackSort(stack_t *stack)
 {
     int *num = NULL;
 
-    if (1 == StackSize(stack))
+    assert(stack);
+
+    if (1 >= StackSize(stack))
     {
         return;
     }
-        
+
     num = (int *)StackPeek(stack);
 
     StackPop(stack);
     StackSort(stack);
 
     InsertSmallest(stack, num);
+
+    return;
 }
 
 static void InsertSmallest(stack_t *stack, int *num)
@@ -74,11 +103,12 @@ static void InsertSmallest(stack_t *stack, int *num)
     int *peek = NULL;
 
     assert(stack);
+    assert(num);
 
     if (StackIsEmpty(stack) || *(int *)StackPeek(stack) < *num)
     {
         StackPush(stack, (void *)num);
-        
+
         return;
     }
 
@@ -93,8 +123,13 @@ static void InsertSmallest(stack_t *stack, int *num)
     return;
 }
 
+/*--------------------------Strings -------------------------*/
+
+
 size_t StrLen(const char *s)
 {
+    assert(s);
+
     if ('\0' == *s)
     {
         return (0);
@@ -105,6 +140,9 @@ size_t StrLen(const char *s)
 
 int StrCmp(const char *s1, const char *s2)
 {
+    assert(s1);
+    assert(s2);
+
     if (*s1 != *s2 || '\0' == *s1)
     {
         return (*s1 - *s2);
@@ -115,6 +153,9 @@ int StrCmp(const char *s1, const char *s2)
 
 char *StrCpy(char *dest, const char *src)
 {
+    assert(src);
+    assert(dest);
+
     *dest = *src;
 
     if ('\0' == *src)
@@ -127,19 +168,44 @@ char *StrCpy(char *dest, const char *src)
 
 char *StrCat(char *dest, const char *src)
 {
+    assert(src);
+    assert(dest);
+
     if ('\0' != *dest)
     {
         return (StrCat(dest + 1, src) - 1);
     }
 
-    *dest = *src;
-
-    if ('\0' != *src)
+    if ('\0' == *src)
     {
         return (dest);
     }
 
+    *dest = *src;
+    *(dest + 1) = '\0';
+
     return (StrCat(dest + 1, src + 1) - 1);
 }
 
-char *StrStr(const char *haystack, const char needle);
+char *StrStr(const char *haystack, const char *needle)
+{
+    assert(haystack);
+    assert(needle);
+
+    if ('\0' == *needle)
+    {
+        return ((char *)haystack);
+    }
+
+    if ('\0' == *haystack)
+    {
+        return (NULL);
+    }
+
+    if ((*haystack == *needle) && (haystack + 1) == (StrStr(haystack + 1, needle + 1)))
+    {
+        return ((char *)haystack);
+    }
+
+    return (StrStr(haystack + 1, needle));
+}
