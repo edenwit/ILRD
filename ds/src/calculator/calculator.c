@@ -70,10 +70,16 @@ static int OperatorFunc     (calculator_t *calc, char *exp, char **ptr);
 static int ClosedParsWFO (calculator_t *calc, char *exp, char **ptr);
 static int OpenParWFD(calculator_t *calc, char *exp, char **ptr);
 static int OpenParWFO(calculator_t *calc, char *exp, char **ptr);
+static int PushMinuS(calculator_t *calc, char *exp, char **ptr);
+
+static void EmptyStack(calculator_t *calc, operators_t index);
+
 
 static operators_t ToEnum   (char *exp);
 
 static int InitCalc         (calculator_t *calculator, size_t stack_size);
+void CalcDestroy(calculator_t *calculator);
+
 /*
 static state_t **InitLutState();
 static calc_func_t **InitLutOperators();
@@ -85,7 +91,6 @@ double Addition         (double num1, double num2);
 double Subtraction      (double num1, double num2);
 double Multiplication   (double num1, double num2);
 double Division         (double num1, double num2);
-double Multiply         (double num1, double num2);
 double Power            (double num1, double num2);
 double DoNothing        (double num1, double num2);
 
@@ -94,7 +99,7 @@ static state_t lut_state[STATE][EVENTS] = {{{ERROR_STATE, GoNext}, {ERROR_STATE,
                                             {WAIT_FOR_DIGIT, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext},
                                             {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, 
                                             {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {WAIT_FOR_DIGIT, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext},
-                                            {WAIT_FOR_DIGIT, OpenParWFD}, {ERROR_STATE, DigitFunc}, {ERROR_STATE, GoNext}, {WAIT_FOR_OPERATOR, DigitFunc}, {ERROR_STATE, GoNext}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {ERROR_STATE, GoNext}, 
+                                            {WAIT_FOR_DIGIT, OpenParWFD}, {ERROR_STATE, DigitFunc}, {ERROR_STATE, GoNext}, {WAIT_FOR_OPERATOR, DigitFunc}, {ERROR_STATE, GoNext}, {WAIT_FOR_DIGIT, PushMinuS}, {WAIT_FOR_OPERATOR, DigitFunc}, {ERROR_STATE, GoNext}, 
                                             {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, 
                                             {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {WAIT_FOR_OPERATOR, DigitFunc}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, 
                                             {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext},
@@ -127,7 +132,7 @@ static state_t lut_state[STATE][EVENTS] = {{{ERROR_STATE, GoNext}, {ERROR_STATE,
 
                                            {{ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}}
                                            };
-
+/*
 static calc_func_t lut_operators[OPERATORS][OPERATORS] =
     {   
         {DoNothing, DoNothing,      DoNothing,      DoNothing,      DoNothing,      DoNothing},
@@ -148,7 +153,7 @@ static calc_type_func_t lut_do_donothing[OPERATORS][OPERATORS] =
         {DoNotCalc, DoCalcs,    DoCalcs,    DoCalcs,    DoCalcs,    DoNotCalc}
     };
 
-
+*/
 static calc_func_t lut_operators_flat[OPERATORS] =
     {   DoNothing, Addition,        Subtraction,    Multiplication, Division,       Power};
 
@@ -173,7 +178,7 @@ calc_status_t Calculate(const char *expression, double *result)
     char *ptr_start = (char *)expression;
     char *ptr_get = ptr_start;
     int action_res = 0;
-    operators_t index = 0;
+   /* operators_t index = 0;*/
 
     assert(expression);
     assert(result);
@@ -190,13 +195,13 @@ calc_status_t Calculate(const char *expression, double *result)
 
         ptr_start = ptr_get;
 
-        printf("%s\n", ptr_start);
+       /* printf("%s\n", ptr_start);*/
 
     }
 
     printf("\n");
 
-    printf("aciton func: %d, state: %d\n", action_res, calc.active_state);
+    /*printf("aciton func: %d, state: %d\n", action_res, calc.active_state);*/
     if (WAIT_FOR_OPERATOR != calc.active_state || (action_res))
     {
         return (INVALID_EQUETION);
@@ -208,16 +213,18 @@ calc_status_t Calculate(const char *expression, double *result)
         lut_do_donothing_flat[(operators_t)StackPeek(calc.operators_stack)](&calc, lut_operators_flat[(operators_t)StackPeek(calc.operators_stack)]);
         /*lut_do_donothing_flat[index](&calc, lut_operators_flat[index]);*/
         /*DoCalcs(&calc, lut_operators_flat[index]);*/
-        printf("in here\n");
+       /* printf("in here\n");*/
 
     }
 /*
     EmptyStack(&calc);
 */
-    printf("here\n");
+    /*printf("here\n");*/
     *(void **)result = StackPeek(calc.digit_stack);
 
     printf("result: %f\n\n", *result);
+
+    CalcDestroy(&calc);
 
     return (SUCCESS);
 }
@@ -248,7 +255,7 @@ static int OpenParWFD(calculator_t *calc, char *exp, char **ptr)
     operators_t oper = OPEN_PARENTHESIS;
 
     UNUSED(exp);
-    printf("right here\n");
+    /*printf("right here\n");*/
     StackPush(calc->operators_stack, *(void **)&oper);
 
     ++(*ptr);
@@ -262,12 +269,30 @@ static int OpenParWFO(calculator_t *calc, char *exp, char **ptr)
  
     UNUSED(exp);
 
+    EmptyStack(calc, MULTIPLY);
+    
     StackPush(calc->operators_stack, *(void **)&oper);
-    printf("hi1\n");
+    
     oper = OPEN_PARENTHESIS;
+    
+    StackPush(calc->operators_stack, *(void **)&oper);
+
+    ++(*ptr); 
+    
+    return (EXIT_SUCCESS);
+}
+
+static int PushMinuS(calculator_t *calc, char *exp, char **ptr)
+{
+    operators_t oper = MULTIPLY;
+    double res = -1.0;
+    
+    UNUSED(exp);
 
     StackPush(calc->operators_stack, *(void **)&oper);
-    printf("hi2\n");
+   /* printf("hi1\n");*/
+    StackPush(calc->digit_stack, *(void **)&res);
+  /*  printf("hi2\n");*/
 
     ++(*ptr);
     
@@ -281,11 +306,7 @@ static int OperatorFunc(calculator_t *calc, char *exp, char **ptr)
 /*
     DoCalcs(calc, calc->operators_funcs[peek_res][index]);
 */
-    while (!StackIsEmpty(calc->operators_stack) && lut_prec[(operators_t)StackPeek(calc->operators_stack)][index])
-    {
-        printf("inside stack: %d\n", (operators_t)StackPeek(calc->operators_stack));
-        lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
-    }
+    EmptyStack(calc, index);
 
     StackPush(calc->operators_stack, *(void **)&index);
 /*    printf(": = %d\n", *(void **)&index);*/
@@ -295,27 +316,39 @@ static int OperatorFunc(calculator_t *calc, char *exp, char **ptr)
     return (EXIT_SUCCESS);
 }
 
+static void EmptyStack(calculator_t *calc, operators_t index)
+{
+    while (!StackIsEmpty(calc->operators_stack) && lut_prec[(operators_t)StackPeek(calc->operators_stack)][index])
+    {
+      /*  printf("inside stack: %d\n", (operators_t)StackPeek(calc->operators_stack));*/
+        lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
+    }
+
+    return;
+}
+
 static int ClosedParsWFO(calculator_t *calc, char *exp, char **ptr)
 {
-    operators_t close_pars = CLOSE_PARENTHESIS;
+    /*operators_t close_pars = CLOSE_PARENTHESIS;*/
 
     UNUSED(exp);
 
 /*
     DoCalcs(calc, calc->operators_funcs[peek_res][index]);
 */
-   /* printf("start this\n");*/
+    printf("start this\n");
 
     while (OPEN_PARENTHESIS != (operators_t)StackPeek(calc->operators_stack))
     {
-        printf("run this\n");
+       /* printf("run this\n");*/
 
 /*      lut_do_donothing[peek_res][CLOSE_PARENTHESIS](calc, lut_operators[peek_res][CLOSE_PARENTHESIS]);*/
         lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
     }
+
     StackPop(calc->operators_stack);
     /*StackPush(calc->operators_stack, *(void **)&close_pars);*/
-    printf("2: = %d\n", *(void **)&close_pars);
+   /* printf("2: = %d\n", *(void **)&close_pars);*/
 
     ++(*ptr);
 
@@ -338,7 +371,7 @@ static int InitCalc(calculator_t *calculator, size_t stack_size)
 {
     double dummy_digit = 0.0;
     operators_t dummy_operation = PLUS;
-    void *val = NULL;
+    /*void *val = NULL;*/
 
     assert(calculator);
     assert(0 < stack_size);
@@ -365,13 +398,21 @@ static int InitCalc(calculator_t *calculator, size_t stack_size)
     StackPush(calculator->digit_stack, *(void **)&dummy_digit);
     StackPush(calculator->operators_stack, *(void **)&dummy_operation);
 
-    printf("hi\n");
-    val = StackPeek(calculator->digit_stack);
-    printf("inside digit stack: %f\n", *((double *)&val));
-    val = StackPeek(calculator->operators_stack);
-    printf("inside operator stack: %d\n", *((int *)&val));
+   /* printf("hi\n");*/
+    /*val = StackPeek(calculator->digit_stack);*/
+    /*printf("inside digit stack: %f\n", *((double *)&val));*/
+    /*val = StackPeek(calculator->operators_stack);*/
+    /*printf("inside operator stack: %d\n", *((int *)&val));*/
 
     return (EXIT_SUCCESS);
+}
+
+void CalcDestroy(calculator_t *calculator)
+{
+    StackDestroy(calculator->digit_stack);
+    StackDestroy(calculator->operators_stack);
+
+    return;
 }
 
 int DoCalcs(calculator_t *calc, double (*calc_func)(double num1, double num2))
@@ -418,19 +459,27 @@ double Subtraction(double num1, double num2)
 
 double Multiplication(double num1, double num2)
 {
-    printf("multiply!\n");
+    /*printf("multiply!\n");*/
     return (num1 * num2);
 }
 
 double Division(double num1, double num2)
 {
-    printf("division!\n");
-
+    /*printf("division!\n");*/
+    if (0 == num2)
+    {
+        return (MATH_ERROR);
+    }
     return (num1 / num2);
 }
 
 double Power(double num1, double num2)
 {
+    if (0 == num1 && 0 == num2)
+    {
+        return (MATH_ERROR);
+    }
+
     return (pow(num1, num2));
 }
 
