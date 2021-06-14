@@ -5,9 +5,13 @@
 
 #include "bin_mrg_qck.h"
 
-#define SIZE (1000000)
+#define SIZE (100000)
 #define RANGE_RANDOM (100000)
-#define NEGETIVE_RANGE_RANDOM (50000)
+#define NEGETIVE_RANGE_RANDOM (-50000)
+
+#define RANGE_FROM (NEGETIVE_RANGE_RANDOM)
+#define RANGE_TO (NEGETIVE_RANGE_RANDOM + RANGE_RANDOM)
+
 
 static int Compare(const void * data1, const void * data2);
 static int *CreateRandomArray(size_t size, int range);
@@ -20,6 +24,8 @@ static void TestRecBinSearch();
 static void TestIterBinSearch1();
 static void TestRecBinSearch1();
 static void TestMergeSort();
+static void TestRecQsort();
+
 
 int main()
 {
@@ -28,8 +34,9 @@ int main()
     TestRecBinSearch();
     TestRecBinSearch1();
     TestMergeSort();
+    TestRecQsort();
 
-    return 0;
+    return (0);
 }
 
 static void TestIterBinSearch()
@@ -63,8 +70,6 @@ static void TestIterBinSearch()
     }
 
     return;
-
-    return;
 }
 
 static void TestIterBinSearch1()
@@ -72,7 +77,6 @@ static void TestIterBinSearch1()
     int arr[] = {1, 2, 3, 4, 5, 6, 7, 9, 10, 15, 20, 54, 56, 57, 80, 100, 108};
     int to_search[] = {6, 3, 2, 15, 56, 80, 10, 54, 108};
     size_t exp[] = {5, 2, 1, 9, 12, 14, 8, 11, 16};
-    int status_returned = -1;
 
     size_t size_to_send = sizeof(arr) / sizeof(arr[0]);
 
@@ -87,7 +91,7 @@ static void TestIterBinSearch1()
         {
             printf("Test TestRecBinSearch1 failed at line %d and at index %lu\n", __LINE__, i);
             printf("TestRecBinSearch1 index returned %ld\n", return_index);
-            printf("index expected %d\n", exp[i]);
+            printf("index expected %ld\n", exp[i]);
         }
         --size;
         ++i;
@@ -136,8 +140,6 @@ static void TestRecBinSearch1()
     int arr[] = {1, 2, 3, 4, 5, 6, 7, 9, 10, 15, 20, 54, 56, 57, 80, 100, 108};
     int to_search[] = {6, 3, 2, 15, 56, 80, 10, 54, 108};
     size_t exp[] = {5, 2, 1, 9, 12, 14, 8, 11, 16};
-    int status_returned = -1;
-
     size_t size_to_send = sizeof(arr) / sizeof(arr[0]);
 
     size_t size = sizeof(to_search) / sizeof(to_search[0]);
@@ -151,7 +153,7 @@ static void TestRecBinSearch1()
         {
             printf("Test TestRecBinSearch1 failed at line %d and at index %lu\n", __LINE__, i);
             printf("TestRecBinSearch1 index returned %ld\n", return_index);
-            printf("index expected %d\n", exp[i]);
+            printf("index expected %ld\n", exp[i]);
         }
         --size;
         ++i;
@@ -204,8 +206,94 @@ static void TestMergeSort()
 	return;	
 }
 
-
-
+static void TestRecQsort()
+{
+	clock_t start = 0;
+	clock_t end = 0;
+	double cpu_time = 0;
+	
+	int *actual = NULL;
+	int *expected = NULL;
+	
+	size_t size = SIZE;
+	
+	actual = CreateRandomArray(size, RANGE_RANDOM);
+	expected = CopyArray(actual, size);
+	
+	qsort (actual, size, sizeof(int), Compare); 
+	
+	start = clock();
+	
+	RecQsort((void *)actual, size, sizeof(int), Compare);
+	
+	end = clock();
+	
+	cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	
+	printf("cpu time for sorted RecQsort algorithm: %f\n",cpu_time);
+	
+	qsort (expected, size, sizeof(int), Compare); 
+	
+	if (!IsEqual(actual, expected, size))
+	{
+		printf("RecQsort func failed at line: %d\n", __LINE__);
+		printf("Actual result:\n");
+		PrintArray(actual, size);
+		printf("---------------------------------\n");
+		printf("Expected result:\n");
+		PrintArray(expected, size); 
+	}
+	
+	free(actual);
+	free(expected);
+	
+	return;	
+}
+/*
+static void TestRecQsort()
+{
+	clock_t start = 0;
+	clock_t end = 0;
+	double cpu_time = 0;
+	
+	int *actual = NULL;
+	int *expected = NULL;
+	
+	size_t size = SIZE;
+	
+	actual = CreateRandomArray(size, RANGE_RANDOM);
+	expected = CopyArray(actual, size);
+	
+	qsort (expected, size, sizeof(int), Compare); 
+	
+	start = clock();
+	
+	RecQsort((void *)actual, size, sizeof(int), Compare);
+	
+	end = clock();
+	
+	cpu_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	
+	printf("cpu time for sorted MergeSort algorithm: %f\n",cpu_time);
+	
+	qsort (expected, size, sizeof(int), Compare); 
+	
+	if (!IsEqual(actual, expected, size))
+	{
+		printf("RecQsort func failed at line: %d\n", __LINE__);
+		printf("Actual result:\n");
+		PrintArray(actual, size);
+		printf("---------------------------------\n");
+		printf("Expected result:\n");
+		PrintArray(expected, size); 
+	}
+	
+	free(actual);
+	free(expected);
+	
+	return;	
+}
+*/
 
 static int Compare(const void * data1, const void * data2)
 {
@@ -287,3 +375,4 @@ static void PrintArray(int *arr, size_t size)
     
     return;
 }
+

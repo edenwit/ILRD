@@ -2,9 +2,14 @@
 #include <stddef.h> /* size_t */
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int Merge(int *arr, size_t left, size_t midean, size_t right);
 static int MergeSortHelper(int *arr, size_t left, size_t right);
+static void Swap(void* a, void* b, size_t element_size);
+
+static void QuickSortHelper(void *arr_start, size_t left, size_t right, size_t element_size, int (*compar)(const void *, const void *));
+int Pivot (void *arr, size_t left, size_t right, size_t element_size);
 
 int IterBinSearch(int *arr_to_srch, size_t arr_size, int num, size_t *output_idx)
 {
@@ -162,7 +167,79 @@ static int MergeSortHelper(int *arr, size_t left, size_t right)
 }
 
 
-
 /* O (n log n) avg*/
 void RecQsort(void *base, size_t arr_size, size_t element_size, 
-					  int (*compar)(const void *, const void *));
+					  int (*compar)(const void *, const void *))
+{
+	QuickSortHelper(base, 0, arr_size - 1, element_size, compar);
+
+	return;
+}
+
+static void QuickSortHelper(void *arr_start, size_t left, size_t right, size_t element_size, int (*compar)(const void *, const void *))
+{
+	size_t piv = 0;
+
+	assert(arr_start);
+
+    if (left < right)
+    {
+        piv = Pivot(arr_start, left, right, element_size);
+ 
+        QuickSortHelper(arr_start, left, piv - 1,  element_size, compar);
+        QuickSortHelper(arr_start, piv + 1, right, element_size, compar);
+    }
+}
+
+
+int Pivot (void *arr, size_t left, size_t right, size_t element_size)
+{
+    int pivot = *(int *)((char *)(arr) + (right * element_size));
+    size_t i = (left - 1); 
+	size_t j = 0;
+
+    for (j = left; j <= (right - 1); ++j)
+    {
+        if (*(int *)((char *)arr + (j * element_size)) < pivot)
+        {
+            ++i;
+
+            Swap((void *)((char *)arr + (i * element_size)), (void *)((char *)arr + (j * element_size)), element_size);
+        }
+    }
+
+    Swap((void *)((char *)arr + ((i + 1) * element_size)), (void *)((char *)arr + (right * element_size)), element_size);
+
+    return (i + 1);
+}
+
+
+static void Swap(void* a, void* b, size_t element_size)
+{
+    char t = 0;
+	
+	size_t i = 0; 
+	
+	char *a_ptr = (char *)a;
+	char *b_ptr = (char *)b;
+
+	assert(a);
+	assert(b);
+
+	for (i = 0; i < element_size; ++i)
+	{
+		t = *a_ptr;
+    	*a_ptr = *b_ptr;
+    	*b_ptr = t;
+
+		++a_ptr;
+		++b_ptr;
+	}
+
+/*
+	memmove((void *)&temp, a, element_size);
+	memmove(a, b, element_size);
+	memmove(b, &temp, element_size);
+*/
+	return;
+}
