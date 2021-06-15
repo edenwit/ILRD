@@ -5,7 +5,7 @@
 
 #include "bin_mrg_qck.h"
 
-#define SIZE (100000)
+#define SIZE (1000000)
 #define RANGE_RANDOM (100000)
 #define NEGETIVE_RANGE_RANDOM (-50000)
 
@@ -176,8 +176,7 @@ static void TestMergeSort()
 	actual = CreateRandomArray(size, RANGE_RANDOM);
 	expected = CopyArray(actual, size);
 	
-	qsort (actual, size, sizeof(int), Compare); 
-	
+
 	start = clock();
 	
 	MergeSort(actual, size);
@@ -219,8 +218,6 @@ static void TestRecQsort()
 	
 	actual = CreateRandomArray(size, RANGE_RANDOM);
 	expected = CopyArray(actual, size);
-	
-	qsort (actual, size, sizeof(int), Compare); 
 	
 	start = clock();
 	
@@ -303,14 +300,19 @@ static int Compare(const void * data1, const void * data2)
 static int *CreateRandomArray(size_t size, int range)
 {
 	size_t i = 0;
-	
+   	time_t t = 0;
+
 	int *new_arr = (int *)malloc(sizeof(int) * size);
+
+	t =time(NULL);
+	srand (time(&t));
 	
 	if (NULL == new_arr)
 	{
 		return NULL;
 	}
-	
+
+
 	for (i = 0; i < size; i++)
 	{	
     	new_arr[i] = (rand() % range - NEGETIVE_RANGE_RANDOM);
