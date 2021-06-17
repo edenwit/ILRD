@@ -23,8 +23,8 @@
 typedef struct state state_t;
 typedef struct calculator calculator_t;
 typedef int (*oper_func_t)(calculator_t *, char *, char **);
-typedef double (*calc_func_t)(double, double);
-typedef int (*calc_type_func_t)(calculator_t *, calc_func_t);
+typedef int (*calc_func_t)(double num1, double num2, double *res);
+typedef int (*calc_type_func_t)(calculator_t *calc, calc_func_t func);
 
 typedef enum operators
 {
@@ -35,8 +35,8 @@ typedef enum operators
     DIVISE,
     POWER,
     OPEN_PARENTHESIS,
-    CLOSE_PARENTHESIS
-    
+    CLOSE_PARENTHESIS,
+    NUM_OF_OPERATORS
 } operators_t;
 
 typedef enum calc_state
@@ -72,8 +72,7 @@ static int OpenParWFD(calculator_t *calc, char *exp, char **ptr);
 static int OpenParWFO(calculator_t *calc, char *exp, char **ptr);
 static int PushMinuS(calculator_t *calc, char *exp, char **ptr);
 
-static void EmptyStack(calculator_t *calc, operators_t index);
-
+static int EmptyStack(calculator_t *calc, operators_t index);
 
 static operators_t ToEnum   (char *exp);
 
@@ -84,16 +83,15 @@ void CalcDestroy(calculator_t *calculator);
 static state_t **InitLutState();
 static calc_func_t **InitLutOperators();
 */
-int DoCalcs(calculator_t *calc, double (*calc_func_t)(double num1, double num2));
-int DoNotCalc(calculator_t *calc, double (*calc_func_t)(double num1, double num2));
+int DoCalcs(calculator_t *calc, int (*calc_func)(double num1, double num2, double *res));
+int DoNotCalc(calculator_t *calc, int (*calc_func_t)(double num1, double num2, double *res));
 
-double Addition         (double num1, double num2);
-double Subtraction      (double num1, double num2);
-double Multiplication   (double num1, double num2);
-double Division         (double num1, double num2);
-double Power            (double num1, double num2);
-double DoNothing        (double num1, double num2);
-
+int Addition         (double num1, double num2, double *res);
+int Subtraction      (double num1, double num2, double *res);
+int Multiplication   (double num1, double num2, double *res);
+int Division         (double num1, double num2, double *res);
+int Power            (double num1, double num2, double *res);
+int DoNothing        (double num1, double num2, double *res);
 
 static state_t lut_state[STATE][EVENTS] = {{{ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {WAIT_FOR_DIGIT, GoNext},
                                             {WAIT_FOR_DIGIT, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext}, {ERROR_STATE, GoNext},
@@ -154,11 +152,15 @@ static calc_type_func_t lut_do_donothing[OPERATORS][OPERATORS] =
     };
 
 */
+
+
 static calc_func_t lut_operators_flat[OPERATORS] =
-    {   DoNothing, Addition,        Subtraction,    Multiplication, Division,       Power};
+    {   DoNothing, Addition,    Subtraction,    Multiplication, Division,       Power};
 
 static calc_type_func_t lut_do_donothing_flat[OPERATORS] =
     {   DoNotCalc, DoCalcs,     DoCalcs,    DoCalcs,    DoCalcs,    DoCalcs};
+
+
 
 static int lut_prec[OPERATORS][OPERATORS] =
 {
@@ -202,20 +204,37 @@ calc_status_t Calculate(const char *expression, double *result)
     printf("\n");
 
     /*printf("aciton func: %d, state: %d\n", action_res, calc.active_state);*/
-    if (WAIT_FOR_OPERATOR != calc.active_state || (action_res))
+    if (WAIT_FOR_OPERATOR != calc.active_state)
     {
+        printf("INVALID EQUATION\n");
+
         return (INVALID_EQUETION);
     }
 
-    while (!StackIsEmpty(calc.operators_stack))
+    if (1 == action_res)
+    {
+        printf("MATH ERROR\n");
+
+        return (MATH_ERROR);
+    }
+
+    while (0 == action_res && !StackIsEmpty(calc.operators_stack))
     {
         /*index = (operators_t)StackPeek(calc.operators_stack);*/
-        lut_do_donothing_flat[(operators_t)StackPeek(calc.operators_stack)](&calc, lut_operators_flat[(operators_t)StackPeek(calc.operators_stack)]);
+        action_res = lut_do_donothing_flat[(operators_t)StackPeek(calc.operators_stack)](&calc, lut_operators_flat[(operators_t)StackPeek(calc.operators_stack)]);
         /*lut_do_donothing_flat[index](&calc, lut_operators_flat[index]);*/
         /*DoCalcs(&calc, lut_operators_flat[index]);*/
        /* printf("in here\n");*/
 
     }
+
+    if (1 == action_res)
+    {
+        printf("MATH ERROR\n");
+
+        return (MATH_ERROR);
+    }
+
 /*
     EmptyStack(&calc);
 */
@@ -242,12 +261,13 @@ static int GoNext(calculator_t *calc, char *exp, char **ptr)
 static int DigitFunc(calculator_t *calc, char *exp, char **ptr)
 {
     double strtod_res = 0.0;
+    calc_status_t status = SUCCESS;
 
     strtod_res = strtod(exp, ptr);
 
     StackPush(calc->digit_stack, *(void **)&strtod_res);
 
-    return (EXIT_SUCCESS);
+    return (status);
 }
 
 static int OpenParWFD(calculator_t *calc, char *exp, char **ptr)
@@ -266,10 +286,11 @@ static int OpenParWFD(calculator_t *calc, char *exp, char **ptr)
 static int OpenParWFO(calculator_t *calc, char *exp, char **ptr)
 {
     operators_t oper = MULTIPLY;
- 
+    calc_state_t status = SUCCESS;
+
     UNUSED(exp);
 
-    EmptyStack(calc, MULTIPLY);
+    status = EmptyStack(calc, MULTIPLY);
     
     StackPush(calc->operators_stack, *(void **)&oper);
     
@@ -279,7 +300,7 @@ static int OpenParWFO(calculator_t *calc, char *exp, char **ptr)
 
     ++(*ptr); 
     
-    return (EXIT_SUCCESS);
+    return (status);
 }
 
 static int PushMinuS(calculator_t *calc, char *exp, char **ptr)
@@ -302,34 +323,38 @@ static int PushMinuS(calculator_t *calc, char *exp, char **ptr)
 static int OperatorFunc(calculator_t *calc, char *exp, char **ptr)
 {
     operators_t index = ToEnum(exp);
+    calc_state_t status = SUCCESS;
 
 /*
     DoCalcs(calc, calc->operators_funcs[peek_res][index]);
 */
-    EmptyStack(calc, index);
+    status = EmptyStack(calc, index);
 
     StackPush(calc->operators_stack, *(void **)&index);
 /*    printf(": = %d\n", *(void **)&index);*/
 
     ++(*ptr);
 
-    return (EXIT_SUCCESS);
+    return (status);
 }
 
-static void EmptyStack(calculator_t *calc, operators_t index)
+static int EmptyStack(calculator_t *calc, operators_t index)
 {
-    while (!StackIsEmpty(calc->operators_stack) && lut_prec[(operators_t)StackPeek(calc->operators_stack)][index])
+    int status = 0;
+
+    while (0 == status &&!StackIsEmpty(calc->operators_stack) && lut_prec[(operators_t)StackPeek(calc->operators_stack)][index])
     {
       /*  printf("inside stack: %d\n", (operators_t)StackPeek(calc->operators_stack));*/
-        lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
+        status = lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
     }
 
-    return;
+    return (status);
 }
 
-static int ClosedParsWFO(calculator_t *calc, char *exp, char **ptr)
+static int ClosedParsWFO (calculator_t *calc, char *exp, char **ptr)
 {
     /*operators_t close_pars = CLOSE_PARENTHESIS;*/
+    calc_status_t status = 0;
 
     UNUSED(exp);
 
@@ -338,12 +363,12 @@ static int ClosedParsWFO(calculator_t *calc, char *exp, char **ptr)
 */
     printf("start this\n");
 
-    while (OPEN_PARENTHESIS != (operators_t)StackPeek(calc->operators_stack))
+    while (0 == status && OPEN_PARENTHESIS != (operators_t)StackPeek(calc->operators_stack))
     {
        /* printf("run this\n");*/
 
 /*      lut_do_donothing[peek_res][CLOSE_PARENTHESIS](calc, lut_operators[peek_res][CLOSE_PARENTHESIS]);*/
-        lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
+        status = lut_do_donothing_flat[(operators_t)StackPeek(calc->operators_stack)](calc, lut_operators_flat[(operators_t)StackPeek(calc->operators_stack)]);
     }
 
     StackPop(calc->operators_stack);
@@ -352,7 +377,7 @@ static int ClosedParsWFO(calculator_t *calc, char *exp, char **ptr)
 
     ++(*ptr);
 
-    return (EXIT_SUCCESS);
+    return (status);
 }
 
 
@@ -415,10 +440,11 @@ void CalcDestroy(calculator_t *calculator)
     return;
 }
 
-int DoCalcs(calculator_t *calc, double (*calc_func)(double num1, double num2))
+int DoCalcs(calculator_t *calc, int (*calc_func)(double num1, double num2, double *res))
 {
     void *val1 = NULL;
     void *val2 = NULL;
+    int status = 0;
 
     assert(calc);
 
@@ -431,15 +457,15 @@ int DoCalcs(calculator_t *calc, double (*calc_func)(double num1, double num2))
 
     StackPop(calc->digit_stack);
 
-    *(double *)&val1 = calc_func(*(double *)&(val1), *(double *)&(val2));
-   /* printf("val1: %f\n", *(double *)&val1);*/
+    status = calc_func(*(double *)&(val1), *(double *)&(val2), (double *)&(val1));
+    /* printf("val1: %f\n", *(double *)&val1);*/
     StackPush(calc->digit_stack, val1);
     StackPop(calc->operators_stack);
 
-    return (EXIT_SUCCESS);
+    return (status);
 }
 
-int DoNotCalc(calculator_t *calc, double (*calc_func_t)(double num1, double num2))
+int DoNotCalc(calculator_t *calc, int (*calc_func_t)(double num1, double num2, double *res))
 {
     UNUSED(calc);
     UNUSED(calc_func_t);
@@ -447,50 +473,69 @@ int DoNotCalc(calculator_t *calc, double (*calc_func_t)(double num1, double num2
     return (0);
 }
 
-double Addition(double num1, double num2)
+int Addition(double num1, double num2, double *calc_res)
 {
-    return (num1 + num2);
-}
-
-double Subtraction(double num1, double num2)
-{
-    return (num1 - num2);
-}
-
-double Multiplication(double num1, double num2)
-{
-    /*printf("multiply!\n");*/
-    return (num1 * num2);
-}
-
-double Division(double num1, double num2)
-{
-    /*printf("division!\n");*/
-    if (0 == num2)
-    {
-        return (MATH_ERROR);
-    }
-    return (num1 / num2);
-}
-
-double Power(double num1, double num2)
-{
-    if (0 == num1 && 0 == num2)
-    {
-        return (MATH_ERROR);
-    }
-
-    return (pow(num1, num2));
-}
-
-double DoNothing(double num1, double num2)
-{
-    UNUSED(num1);
-    UNUSED(num2);
+/*     assert(calc_res);
+ */    
+    *calc_res = num1 + num2;
 
     return (0);
 }
 
+int Subtraction(double num1, double num2, double *calc_res)
+{
+/*     assert(calc_res);
+ */        
+    *calc_res = num1 - num2;
+
+    return (0);
+}
+
+int Multiplication(double num1, double num2, double *calc_res)
+{
+/*     assert(calc_res);
+ */
+    *calc_res = num1 * num2;
+
+    return (0);
+}
+
+int Division(double num1, double num2, double *calc_res)
+{
+/*     assert(calc_res);
+ */
+    if (0.0 == num2)
+    {
+        return (1);
+    }
+
+    *calc_res = num1 / num2;
+
+    return (0);
+}
+
+int Power(double num1, double num2, double *calc_res)
+{
+/*     assert(calc_res);
+ */
+    if (0 == num1 && 0 >= num2)
+    {
+        return (1);
+    }
+
+    *calc_res = pow(num1, num2);
+
+    return (0);
+}
+
+int DoNothing(double num1, double num2, double *calc_res)
+{
+    UNUSED(num1);
+    UNUSED(num2);
+    UNUSED(calc_res);
+
+    return (0);
+}
 
 static operators_t ToEnum(char *exp)
 {
