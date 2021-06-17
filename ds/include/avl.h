@@ -45,27 +45,3 @@ void *AVLFind(const avl_t *tree, const void *data);
 int AVLForEach(avl_t *tree, act_func_t func, void *param, order_t order);
 
 #endif /* _OL_102_AVL_H_ */
-
-/*------------- impl elems in c file ------------*/
-typedef enum childrens
-{
-    LEFT,
-    RIGHT,
-    NUM_OF_CHILDRENS
-}childrens_t;
-
-typedef struct avl_node avl_node_t; 
-
-struct avl_node
-{
-    void *data;
-    struct avl_node *children[NUM_OF_CHILDRENS];
-    int balance_factor;
-};
-
-struct avl
-{
-    cmp_func_t func;
-    struct avl_node *root;
-};
-
