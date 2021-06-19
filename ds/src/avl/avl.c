@@ -304,7 +304,7 @@ static int ForEachPostOrder(avl_node_t *node, act_func_t func, void *param)
         return (status);
     }
 
-    status =ForEachPostOrder(node->children[LEFT], func, param);
+    status = ForEachPostOrder(node->children[LEFT], func, param);
 
     if (status)
     {
@@ -359,8 +359,8 @@ static int FreeNode(void *node)
 {
     assert(node);
 
-    ((avl_node_t *)node)->children[LEFT] = NULL;
-    ((avl_node_t *)node)->children[RIGHT] = NULL;
+    (avl_node_t *)node->children[LEFT] = NULL;
+    (avl_node_t *)node->children[RIGHT] = NULL;
 
     free(node);
 

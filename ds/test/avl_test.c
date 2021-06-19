@@ -8,7 +8,7 @@
 int Cmp_Num(void *data1, void *data2);
 static void AVLTest();
 static int PrintData(void * data, void *param);
-static void PrintTree(const avl_t *tree);
+static void PrintTree(const avl_t *tree, order_t order);
 
 int main()
 {
@@ -70,7 +70,7 @@ static void AVLTest()
 	printf("Height: %ld\n", AVLHeight(tree_test));
 
 
-    PrintTree(tree_test);
+	PrintTree(tree_test, IN_ORDER);
 
     searched = 6;
 
@@ -105,7 +105,7 @@ static void AVLTest()
     AVLRemove(tree_test, &to_remove);
 
     printf("hi\n");
-    PrintTree(tree_test);
+	PrintTree(tree_test, IN_ORDER);
 	printf("Size: %ld\n", AVLSize(tree_test));
     to_remove = 8;
 
@@ -113,7 +113,7 @@ static void AVLTest()
 	printf("Height: %ld\n", AVLHeight(tree_test));
 
     printf("hi\n");
-    PrintTree(tree_test);
+	PrintTree(tree_test, IN_ORDER);
 	printf("Size: %ld\n", AVLSize(tree_test));
     to_remove = 11;
 	printf("Height: %ld\n", AVLHeight(tree_test));
@@ -122,7 +122,7 @@ static void AVLTest()
 	printf("Height: %ld\n", AVLHeight(tree_test));
 
     printf("hi\n");
-    PrintTree(tree_test);
+	PrintTree(tree_test, IN_ORDER);
 	printf("Size: %ld\n", AVLSize(tree_test));
     to_remove = 13;
 	printf("Height: %ld\n", AVLHeight(tree_test));
@@ -130,15 +130,17 @@ static void AVLTest()
     AVLRemove(tree_test, &to_remove);
 
     printf("hi\n");
-    PrintTree(tree_test);
+	PrintTree(tree_test, IN_ORDER);
 	printf("Size: %ld\n", AVLSize(tree_test));
     to_remove = 99;
 
     AVLRemove(tree_test, &to_remove);
 
     printf("hi\n");
-    PrintTree(tree_test);
-	printf("Size: %ld\n", AVLSize(tree_test));
+    PrintTree(tree_test, PRE_ORDER);
+	PrintTree(tree_test, IN_ORDER);
+    PrintTree(tree_test, POST_ORDER);
+printf("Size: %ld\n", AVLSize(tree_test));
 	printf("Height: %ld\n", AVLHeight(tree_test));
 
 /* 
@@ -207,11 +209,12 @@ static int PrintData(void * data, void *param)
 	return (0);
 }
 
-static void PrintTree(const avl_t *tree)
+static void PrintTree(const avl_t *tree, order_t order)
 {
-	AVLForEach((avl_t *)tree, PrintData, NULL, IN_ORDER);
+	AVLForEach((avl_t *)tree, PrintData, NULL, order);
 
 	printf("\n");
 	
 	return;
 }
+
