@@ -273,7 +273,7 @@ d_list_iter_t DLLFind(d_list_iter_t from,
 /* complexity time O(n) */                        
 int DLLForEach	(d_list_iter_t from, 
               	 d_list_iter_t to,
-              	 int (*action_func)(void *data,void *param),
+              	 int (*action_func)(void *data, void *param),
               	 void *param)
 {
 	int status = 0;
