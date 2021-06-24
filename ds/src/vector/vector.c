@@ -7,8 +7,8 @@
 #define GROW_FACTOR 2
 
 enum STATUS {
-    FAIL = 0,
-    SUCCESS = 1
+    SUCCESS,
+	FAIL
 };
 
 struct vector
@@ -76,6 +76,7 @@ int VectorPushBack(vector_t *vector, void *data)
 		}
 	}
 	++vector->size;	
+
 	VectorSetElem(vector, (vector->size - 1), data);
 
 	return SUCCESS;	

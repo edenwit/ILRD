@@ -5,70 +5,60 @@
 
 int IterBinSearch(int *arr_to_srch, size_t arr_size, int num, size_t *output_idx)
 {
-    size_t mid = 0;
+    size_t middle = 0;
+    int end = arr_size - 1;
+    int start = 0;
     
-    *output_idx = 0;
-
-    while ((int)arr_size > 0)
+    while (start <= end)
     {
-        mid = arr_size/2 ;
-        if (num == *(arr_to_srch + mid ))
+        middle = ((start + end)/2);
+
+        if (num == arr_to_srch[middle])
         {
-            *output_idx += mid ;
+            *output_idx = middle  ;
             
-           
-            return 0;
+            return (0);
         }
 
-        else if (num < *(arr_to_srch + mid))
+        else if (num < arr_to_srch[middle])
         {
-            arr_size = mid;
-
+            end = middle - 1;
         }
-        else if (num > *(arr_to_srch + mid))
+        else 
         {
-            *output_idx += mid +1;
-            arr_size = mid;
-            arr_to_srch = arr_to_srch + mid + 1;
-            
+            start = middle + 1;
         }
     }
-
-
-    return 1;
+    return (1);
 }
 
 int RecBinSearch(int *arr_to_srch, size_t arr_size, int num, size_t *output_idx)
-{
-    int mid = arr_size/2;
+{   
+    
+    int middle = (arr_size - 1) / 2;
+    int status = 1;
 
-    if (num == *(arr_to_srch + mid))
+    if (num == arr_to_srch[middle])
     {
+        *output_idx = middle;  
+        return (0);
+    }
+
+    else if (num < arr_to_srch[middle] && 0 < arr_size)
+    {
+        return (RecBinSearch(arr_to_srch, middle, num, output_idx));    
         
-        if (num == *(arr_to_srch + mid))
-        {
-            *output_idx += mid;
-            
-            return 0;
-
-        }
-
     }
-    else if (num < *(arr_to_srch + mid)  && 0 < arr_size)
+    else if(num > arr_to_srch[middle] && 0 < arr_size)
     {
-            
-        return RecBinSearch(arr_to_srch, mid  , num, output_idx);
+        status = RecBinSearch(arr_to_srch + middle + 1, arr_size - middle - 1  , num, output_idx);
+
+        *output_idx += middle + 1;
+
+        return (status);
     }
 
-    else if (num > *(arr_to_srch + mid)  && 0 < arr_size)
-    {
-        *output_idx += mid + 1;
-
-        return RecBinSearch(arr_to_srch + mid + 1 , mid, num, output_idx);
-    }
-
-    return 1; 
-
+    return (status); 
 }
 
 int FunMerge(int *arr1,size_t size1, int *arr2 ,size_t size2)
@@ -115,23 +105,22 @@ int FunMerge(int *arr1,size_t size1, int *arr2 ,size_t size2)
         j++;
     }
 
-
     for (i = 0 ; i < size1+ size2; i++)
     {
         arr1[i] = merged_arr[i];
     }
     
     free(merged_arr);
-    return 1;
+
+    return (1);
 }
 
 
 int MergeSort(int *arr_to_sort, size_t arr_size)
 {
     if (arr_size == 1)
-    {
-            
-        return 1;
+    {    
+        return (1);
     }
     
     if (arr_size % 2 == 0)
@@ -147,18 +136,14 @@ int MergeSort(int *arr_to_sort, size_t arr_size)
         FunMerge(arr_to_sort, arr_size/2 +1, arr_to_sort + arr_size/2 +1 ,arr_size/2);  
     }
 
-      
-    
-    return 1;
-
+    return (1);
 }
 
 void SwapChar(char *data1 , char *data2)
 {
     char temp = *data1;
     *data1 = *data2;
-    *data2 = temp;
-    
+    *data2 = temp; 
 }
 
 
@@ -172,7 +157,7 @@ void Swap(char *data1, char *data2, size_t element_size)
         data2++;
         element_size--;
     }
-    
+    return;
 }
 
 
@@ -192,6 +177,7 @@ void *partition(void *base, size_t arr_size, size_t element_size, int (*compar)(
         }
     }
     Swap(start + i, pivot, element_size);
+
     return (start + i);
 }
 

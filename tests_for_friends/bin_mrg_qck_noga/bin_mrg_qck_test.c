@@ -118,8 +118,6 @@ static void TestRecBinSearch()
 
     while (0 < size)
     {
-		return_index = 0;
-
         status_returned = RecBinSearch(arr, size_to_send, arr_val[i], &return_index);
         if ((status_returned != status[i] && return_index != (size_t)arr_index_exp[i]))
         {
@@ -150,8 +148,6 @@ static void TestRecBinSearch1()
 
     while (0 < size)
     {
-		return_index = 0;
-
         RecBinSearch(arr, size_to_send, to_search[i], &return_index);
         if (return_index != (size_t)exp[i])
         {

@@ -1,12 +1,11 @@
 /*  Developer: Eden Wittenberg;									*
  *  Status: done;												*
- *  Date Of Creation:14.06.21;									*
- *  Date Of Approval:16.06.21;									*
+ *  Date Of Creation: 14.06.21;									*
+ *  Date Of Approval: 23.06.21;									*
  *  Review By: Avital Moses;									*
  *  Description: AVL tree;			                    		*/
 
-#include <stddef.h>     /* size_t */
-#include <assert.h>
+#include <assert.h> /* assert */
 #include <stdlib.h> /* malloc */
 #include "avl.h"
 
@@ -26,7 +25,7 @@ struct avl_node
 {
     void *data;
     struct avl_node *children[NUM_OF_CHILDRENS];
-    int balance_factor;
+    int height;
 };
 
 struct avl
@@ -37,29 +36,39 @@ struct avl
 
 typedef int (*travese_func)(avl_node_t *node, act_func_t func, void *param);
 
-static int InnerForEach(avl_node_t *node, act_func_t func,
+static int RecForEach(avl_node_t *node, act_func_t func,
                         void *param, order_t order);
 static int ForEachPreOrder(avl_node_t *node, act_func_t func, void *param);
 static int ForEachInOrder(avl_node_t *node, act_func_t func, void *param);
 static int ForEachPostOrder(avl_node_t *node, act_func_t func, void *param);
 
-static int Add1(void *data, void *param);
-static int FreeNode(void *node);
-
-static void *InnerFind(avl_node_t *node, cmp_func_t func, const void *data);
-static avl_node_t *InnerInsert(avl_node_t *root,
+static void *RecFind(avl_node_t *node, cmp_func_t func, const void *data);
+static avl_node_t *RecInsert(avl_node_t *root,
                                avl_node_t *node, cmp_func_t cmp_func);
-static size_t InnerHeight(avl_node_t *root);
-static void InnerDestroy(avl_node_t *node);
-static avl_node_t *InnerRemove(avl_node_t *node, void *data, cmp_func_t func);
 
+
+static void RecDestroy(avl_node_t *node);
+static avl_node_t *RecRemove(avl_node_t *node, void *data, cmp_func_t func);
+
+static int IncreaseByOne(void *data, void *param);
+static int FreeNode(void *node);
 static void *NextData(avl_node_t *node);
+
+static void UpdateHeight(avl_node_t *node);
+static int GetBalanceDiff(avl_node_t *node);
+
+static avl_node_t *LeftRotation(avl_node_t *node);
+static avl_node_t *RightRotation(avl_node_t *node);
+static avl_node_t *BalanceTree(avl_node_t *node);
+
 
 avl_t *AVLCreate(cmp_func_t func)
 {
-    avl_t *tree = (avl_t *)malloc(sizeof(avl_t));
+    avl_t *tree = NULL;
     
     assert(func);
+
+    tree = (avl_t *)malloc(sizeof(avl_t));
 
     if (NULL == tree)
     {
@@ -76,7 +85,7 @@ void AVLDestroy(avl_t *tree)
 {
     assert(tree);
 
-    InnerDestroy(tree->root);
+    RecDestroy(tree->root);
 
     free(tree);
 
@@ -91,7 +100,7 @@ size_t AVLSize(const avl_t *tree)
 
     if (!AVLIsEmpty(tree))
     {
-        AVLForEach((avl_t *)tree, Add1, &counter, PRE_ORDER);
+        AVLForEach((avl_t *)tree, IncreaseByOne, &counter, PRE_ORDER);
     }
 
     return (counter);
@@ -106,17 +115,24 @@ int AVLIsEmpty(const avl_t *tree)
 
 size_t AVLHeight(const avl_t *tree)
 {
+    assert(tree);
+
     if (AVLIsEmpty(tree))
     {
         return (0);
     }
 
-    return (InnerHeight(((avl_t *)tree)->root) - 1);
+    return (tree->root->height);
 }
 
 int AVLInsert(avl_t *tree, void *data)
 {
-    avl_node_t *node = (avl_node_t *)malloc(sizeof(avl_node_t));
+    avl_node_t *node = NULL;
+
+    assert(tree);
+    assert(tree->func);
+
+    node = (avl_node_t *)malloc(sizeof(avl_node_t));
 
     if (NULL == node)
     {
@@ -126,7 +142,7 @@ int AVLInsert(avl_t *tree, void *data)
     node->data = data;
     node->children[LEFT] = NULL;
     node->children[RIGHT] = NULL;
-    node->balance_factor = 0;
+    node->height = 0;
 
     if (AVLIsEmpty(tree))
     {
@@ -135,19 +151,38 @@ int AVLInsert(avl_t *tree, void *data)
         return (0);
     }
 
-    InnerInsert(tree->root, node, tree->func);
+    tree->root = RecInsert(tree->root, node, tree->func);
 
     return (0);
 }
 
 void AVLRemove(avl_t *tree, const void *data)
 {
-    tree->root = InnerRemove(tree->root, (void *)data, tree->func);
+    assert(tree);
+    assert(tree->func);
+
+    tree->root = RecRemove(tree->root, (void *)data, tree->func);
 }
 
-/* ---------------------- Inner Functions ---------------------------------- */
 
-static avl_node_t *InnerRemove(avl_node_t *node, void *data, cmp_func_t func)
+void *AVLFind(const avl_t *tree, const void *data)
+{
+    assert(tree);
+
+    return (RecFind(tree->root, tree->func, data));
+}
+
+int AVLForEach(avl_t *tree, act_func_t func, void *param, order_t order)
+{
+    assert(tree);
+    assert(func);
+
+    return (RecForEach(tree->root, func, param, order));
+}
+
+/* ---------------------- Rec Functions ---------------------------------- */
+
+static avl_node_t *RecRemove(avl_node_t *node, void *data, cmp_func_t func)
 {
     int cmp_res = 0;
     avl_node_t *tmp_node = NULL;
@@ -161,13 +196,16 @@ static avl_node_t *InnerRemove(avl_node_t *node, void *data, cmp_func_t func)
 
     if (0 == cmp_res)
     {
+        /* if i have a right child - assign node with the next data 
+        and remove that next using recursion */
         if (node->children[RIGHT])
         {
             node->data = NextData(node->children[RIGHT]);
             node->children[RIGHT] 
-            = InnerRemove(node->children[RIGHT], node->data, func);
+            = RecRemove(node->children[RIGHT], node->data, func);
         }
-
+        /* if i don't have a right child - keep my left child as tmp,
+         remove me and return my left child */
         else
         {
             tmp_node = node->children[LEFT];
@@ -180,18 +218,22 @@ static avl_node_t *InnerRemove(avl_node_t *node, void *data, cmp_func_t func)
 
     else if (0 > cmp_res)
     {
-        node->children[RIGHT] = InnerRemove(node->children[RIGHT], data, func);
-
-        return (node);
+        node->children[RIGHT] = RecRemove(node->children[RIGHT], data, func);
     }
     
-    node->children[LEFT] = InnerRemove(node->children[LEFT], data, func);
+    else
+    {
+        node->children[LEFT] = RecRemove(node->children[LEFT], data, func);
+    }
+
+    UpdateHeight(node);
+
+    node = BalanceTree(node);
 
     return (node); 
 }
 
-
-static avl_node_t *InnerInsert(avl_node_t *root, avl_node_t *node,
+static avl_node_t *RecInsert(avl_node_t *root, avl_node_t *node,
                                cmp_func_t cmp_func)
 {
     if (NULL == root)
@@ -201,13 +243,17 @@ static avl_node_t *InnerInsert(avl_node_t *root, avl_node_t *node,
 
     if (0 > cmp_func(root->data, node->data))
     {
-        root->children[RIGHT] = InnerInsert(root->children[RIGHT],
-                                            node, cmp_func);
-
-        return (root);
+        root->children[RIGHT] = RecInsert(root->children[RIGHT], node, cmp_func);
     }
     
-    root->children[LEFT] = InnerInsert(root->children[LEFT], node, cmp_func);
+    else
+    {
+        root->children[LEFT] = RecInsert(root->children[LEFT], node, cmp_func);
+    }
+    
+    UpdateHeight(root);
+
+    root = BalanceTree(root);
 
     return (root);
 }
@@ -224,21 +270,15 @@ static void *NextData(avl_node_t *node)
     return (NextData(node->children[LEFT]));
 }
 
-void *AVLFind(const avl_t *tree, const void *data)
-{
-    return (InnerFind(tree->root, tree->func, data));
-}
-
-int AVLForEach(avl_t *tree, act_func_t func, void *param, order_t order)
-{
-    return (InnerForEach(tree->root, func, param, order));
-}
-
-static int InnerForEach(avl_node_t *node, act_func_t func,
+static int RecForEach(avl_node_t *node, act_func_t func,
                         void *param, order_t order)
 {
+
     static travese_func func_arr[] = 
                         {ForEachPreOrder, ForEachInOrder, ForEachPostOrder};
+
+    assert(node);
+    assert(func);
 
     return (func_arr[order](node, func, param));
 }
@@ -321,7 +361,7 @@ static int ForEachPostOrder(avl_node_t *node, act_func_t func, void *param)
     return (func(node->data, param));
 }
 
-static void *InnerFind(avl_node_t *node, cmp_func_t func, const void *data)
+static void *RecFind(avl_node_t *node, cmp_func_t func, const void *data)
 {
     int cmp_res = 0;
  
@@ -339,14 +379,29 @@ static void *InnerFind(avl_node_t *node, cmp_func_t func, const void *data)
 
     else if (0 > cmp_res)
     {
-        return (InnerFind(node->children[RIGHT], func, data));
+        return (RecFind(node->children[RIGHT], func, data));
     }
     
-    return (InnerFind(node->children[LEFT], func, data));
+    return (RecFind(node->children[LEFT], func, data));
 }
 
+static void RecDestroy(avl_node_t *node)
+{
+    if (NULL == node)
+    {
+        return;
+    }
 
-static int Add1(void *data, void *param)
+    RecDestroy(node->children[LEFT]);
+
+    RecDestroy(node->children[RIGHT]);
+
+    FreeNode(node);
+
+    return;
+}
+
+static int IncreaseByOne(void *data, void *param)
 {
     UNUSED(data);
 
@@ -359,37 +414,120 @@ static int FreeNode(void *node)
 {
     assert(node);
 
-    (avl_node_t *)node->children[LEFT] = NULL;
-    (avl_node_t *)node->children[RIGHT] = NULL;
+    ((avl_node_t *)node)->children[LEFT] = NULL;
+    ((avl_node_t *)node)->children[RIGHT] = NULL;
 
     free(node);
 
     return (0);
 }
 
-static size_t InnerHeight(avl_node_t *root)
+static void UpdateHeight(avl_node_t *node)
 {
-    if (NULL == root)
+    assert(node);
+
+    if (NULL == node->children[LEFT] && NULL == node->children[RIGHT])
     {
-        return (0);
+        node->height = 0;
     }
 
-    return (MAX2(InnerHeight(root->children[LEFT]),
-                 InnerHeight(root->children[RIGHT])) + 1);
-}
-
-static void InnerDestroy(avl_node_t *node)
-{
-    if (NULL == node)
+    else if (NULL != node->children[LEFT] && NULL != node->children[RIGHT])
     {
-        return;
+        node->height = MAX2(node->children[LEFT]->height, node->children[RIGHT]->height) + 1;
     }
 
-    InnerDestroy(node->children[LEFT]);
+    else if (NULL != node->children[LEFT])
+    {
+        node->height = node->children[LEFT]->height + 1;
+    }
 
-    InnerDestroy(node->children[RIGHT]);
-
-    FreeNode(node);
+    else
+    {
+        node->height = node->children[RIGHT]->height + 1;
+    }
 
     return;
+}
+
+static avl_node_t *LeftRotation(avl_node_t *node)
+{
+    avl_node_t *right_child = node->children[RIGHT];
+    avl_node_t *temp = right_child->children[LEFT];
+
+    right_child->children[LEFT] = node;
+    node->children[RIGHT] = temp;
+
+    UpdateHeight(node);
+    UpdateHeight(right_child);
+
+    return(right_child);
+}
+
+static avl_node_t *RightRotation(avl_node_t *node)
+{
+    avl_node_t *left_child = node->children[LEFT];
+    avl_node_t *temp = left_child->children[RIGHT];
+
+    left_child->children[RIGHT] = node;
+    node->children[LEFT] = temp;
+
+    UpdateHeight(node);
+    UpdateHeight(left_child);
+
+    return(left_child);
+}
+
+static int GetBalanceDiff(avl_node_t *node)
+{
+    size_t left_child_height = 0;
+    size_t right_child_height = 0;
+
+    assert(node);
+
+    if (NULL != node->children[RIGHT])
+    {
+        right_child_height = node->children[RIGHT]->height + 1;
+    }
+    if (NULL != node->children[LEFT])
+    {
+        left_child_height = node->children[LEFT]->height + 1;
+    }
+
+    return (right_child_height - left_child_height);
+}
+
+static avl_node_t *BalanceTree(avl_node_t *node)
+{
+    int balace_diff = 0;
+    int balace_diff_child = 0;
+
+    assert(node);
+
+    balace_diff = GetBalanceDiff(node);
+
+    if (1 < balace_diff)
+    {
+        balace_diff_child = GetBalanceDiff(node->children[RIGHT]);
+        
+        if (0 > balace_diff_child)
+        {
+            node->children[RIGHT] = RightRotation(node->children[RIGHT]);      
+        }
+
+        node = LeftRotation(node);
+    }
+
+    else if (-1 > balace_diff)
+    {
+        balace_diff_child = GetBalanceDiff(node->children[LEFT]);
+        
+        if (0 < balace_diff_child)
+        {
+            node->children[LEFT] = LeftRotation(node->children[LEFT]);      
+        }
+
+        node = RightRotation(node);
+    }
+
+    return(node);
 }
