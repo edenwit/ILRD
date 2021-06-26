@@ -150,7 +150,7 @@ void PQueueClear(pq_t *p_queue)
 	return (data);
 }			 */     				 
 
- void PQueueErase(	pq_t *p_queue, 
+ void *PQueueErase(	pq_t *p_queue, 
 					int (*is_match_func)(const void *data, const void *param),
 					void *param													)
 {
@@ -159,7 +159,6 @@ void PQueueClear(pq_t *p_queue)
 	assert(is_match_func);
 	assert(!HeapIsEmpty(p_queue->p_queue));
 	
-	HeapRemove(p_queue->p_queue, is_match_func, param);
+	return (HeapRemove(p_queue->p_queue, is_match_func, param));
 		
-	return;
 }			      				 

@@ -1,6 +1,6 @@
 #include <stdio.h> /* printf */
 
-#include "priority_queue.h"
+#include "heap_priority_queue.h"
 
 #define TIMES_TO_LOOP 6
 
@@ -9,7 +9,7 @@ static int FindMatchInt(const void * data, const void *param);
 
 int main()
 {
-	int arr[] = {1, 2, 3, 4, 5, 6, 10000};
+	int arr[] = {1, 2, 3, 10000, 4, 5, 6};
 	
 	size_t i = 0;
 	void *data = NULL;
@@ -112,7 +112,12 @@ int main()
 		}	
 	}
 	
-	PQueueErase(p_queue, FindMatchInt, (arr + TIMES_TO_LOOP -1));
+	data = PQueueErase(p_queue, FindMatchInt, (arr + TIMES_TO_LOOP -1));
+	
+	if (*(int *)data != *(int *)(arr + TIMES_TO_LOOP -1))
+	{
+		printf ("PQueueErase failed! Actual: %d, expected: %d.\n", *(int *)data, *(int *)(arr + TIMES_TO_LOOP -1));	
+	}
 	
 	if (TIMES_TO_LOOP - 1 != PQueueSize(p_queue))
 	{
@@ -120,6 +125,11 @@ int main()
 	}		
 	data = PQueueErase(p_queue, FindMatchInt, (arr + TIMES_TO_LOOP -1));
 	
+	if (data != NULL)
+	{
+		printf ("PQueueErase failed! Actual: %d, expected: NULL.\n", *(int *)data);	
+	}	
+
 	PQueueDestroy(p_queue);
 		
 	return 0;
@@ -133,5 +143,5 @@ int Cmp_Num(const void *cur, const void *par)
 
 static int FindMatchInt(const void * data, const void *param)
 {
-	return (*(int *)data >= *(int *)param);
+	return (*(int *)data == *(int *)param);
 }

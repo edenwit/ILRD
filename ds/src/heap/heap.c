@@ -5,18 +5,10 @@
 #include "vector.h"
 
 #define CAPACITY 50
-#define LEFT_CHILD(index) ((index * 2) + 1)
-#define RIGHT_CHILD(index) ((index * 2) + 2)
-#define PARENT(index) ((index - 1 ) / 2)
 
-/* 
-typedef int (*cmp_func_t)(const void *cur_node_data, const void *inserted_data);
-typedef int (*is_match_func_t)(const void *cur_node_data, const void *searched_data);
-
-typedef struct heap heap_t;
- */
-
-
+#define LEFT_CHILD_IDX(index) ((index * 2) + 1)
+#define RIGHT_CHILD_IDX(index) ((index * 2) + 2)
+#define PARENT_IDX(index) ((index - 1 ) / 2)
 
 struct heap
 {
@@ -82,7 +74,8 @@ void HeapPop(heap_t *heap)
 {
     assert(heap);
 
-    VectorSetElem(heap->vector, 0, VectorGetElem(heap->vector, VectorSize(heap->vector) - 1));
+    VectorSetElem(heap->vector, 0, VectorGetElem(heap->vector, 
+                                   VectorSize(heap->vector) - 1));
  
     VectorPopBack(heap->vector);
 
@@ -115,47 +108,57 @@ int HeapIsEmpty(const heap_t *heap)
     return (0 == HeapSize(heap));
 }
 
-void HeapRemove(heap_t *heap, is_match_func_t is_match, const void *searched_data)
+void *HeapRemove(heap_t *heap, is_match_func_t is_match,
+                 const void *searched_data)
 {
     size_t i = 0;
     size_t heap_size = 0;
-    
+    void *retrieved_data = NULL;
+
     assert(heap);
     assert(is_match);
-/*  assert(searched_data);*/
 
     heap_size = HeapSize(heap);
 
     for (i = 0; i < heap_size; ++i)
     {
-        if (is_match(searched_data, VectorGetElem(heap->vector, i)))
+        retrieved_data = VectorGetElem(heap->vector, i);
+
+        if (is_match(searched_data, retrieved_data))
         {
-            VectorSetElem(heap->vector, i, VectorGetElem(heap->vector, heap_size - 1));
+            
+            VectorSetElem(heap->vector, i, VectorGetElem(heap->vector, 
+                        heap_size - 1));
             VectorPopBack(heap->vector);
             HeapifyDown(heap, i);
 
-            return;
+            return (retrieved_data);
         }
     }
 
-    return;
+    return (NULL);
 }
+
+ /*---------------------------- static functions ----------------------------*/
 
 static void HeapifyUp(heap_t *heap)
 {
     size_t current_index = 0;
+    void *element_value = NULL;
 
     assert(heap);
 
     current_index = HeapSize(heap) - 1;
+    element_value = VectorGetElem(heap->vector, current_index);
 
     while (0 < current_index)
     {
-        if (0 < heap->cmp_func(VectorGetElem(heap->vector, current_index), VectorGetElem(heap->vector, PARENT(current_index))))
+        if (0 < heap->cmp_func(element_value,
+                        VectorGetElem(heap->vector, PARENT_IDX(current_index))))
         {
-            SwapPointers(heap, current_index, PARENT(current_index));
+            SwapPointers(heap, current_index, PARENT_IDX(current_index));
 
-            current_index = PARENT(current_index);
+            current_index = PARENT_IDX(current_index);
         }
         else
         {
@@ -170,29 +173,35 @@ static void HeapifyDown(heap_t *heap, size_t start_index)
 {
     size_t big_boy_index = 0;
     size_t last_index_used = 0;
+    void *element_value = NULL;
 
     assert(heap);
 
     last_index_used = HeapSize(heap);
+    element_value = VectorGetElem(heap->vector, start_index);
 
-    while (last_index_used > LEFT_CHILD(start_index))
+    while (last_index_used > LEFT_CHILD_IDX(start_index))
     {
-        if (LEFT_CHILD(start_index) < last_index_used)
+        /* Check if element has a left child */
+        if (LEFT_CHILD_IDX(start_index) < last_index_used)
         {
-            if (RIGHT_CHILD(start_index) < last_index_used)
+            /* Check if element has a right child */
+            if (RIGHT_CHILD_IDX(start_index) < last_index_used)
             { 
-                if (0 < heap->cmp_func(VectorGetElem(heap->vector, LEFT_CHILD(start_index)), VectorGetElem(heap->vector, RIGHT_CHILD(start_index))))
+                if (0 < heap->cmp_func(
+                    VectorGetElem(heap->vector, LEFT_CHILD_IDX(start_index)), 
+                    VectorGetElem(heap->vector, RIGHT_CHILD_IDX(start_index))))
                 {
-                    big_boy_index = LEFT_CHILD(start_index);
+                    big_boy_index = LEFT_CHILD_IDX(start_index);
                 }
                 else
                 {
-                    big_boy_index = RIGHT_CHILD(start_index);
+                    big_boy_index = RIGHT_CHILD_IDX(start_index);
                 }
             }
             else
             {
-                big_boy_index = LEFT_CHILD(start_index);
+                big_boy_index = LEFT_CHILD_IDX(start_index);
             }
         }
         else
@@ -200,7 +209,8 @@ static void HeapifyDown(heap_t *heap, size_t start_index)
             return;
         }
 
-        if (0 > heap->cmp_func(VectorGetElem(heap->vector, start_index), VectorGetElem(heap->vector, big_boy_index)))
+        if (0 > heap->cmp_func(element_value, 
+                               VectorGetElem(heap->vector, big_boy_index)))
         {
             SwapPointers(heap, start_index, big_boy_index);
 
@@ -226,4 +236,3 @@ static void SwapPointers(heap_t *heap, size_t index1, size_t index2)
 
 	return;
 }
-

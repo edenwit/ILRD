@@ -5,8 +5,6 @@
 
 #include <stddef.h> /* size_t */
 
-#include "heap.h"
-
 typedef struct pq pq_t;
 
 /*
@@ -30,7 +28,7 @@ void      *PQueueDequeue(pq_t *p_queue);		    		 	   				    /* O(1) */
 void      *PQueuePeek   (const pq_t *p_queue);				      	    		    /* O(1) */
   
 void 	   PQueueClear  (pq_t *p_queue);					            			/* O(n) */
-void 	  PQueueErase  (pq_t *p_queue, 
+void 	  *PQueueErase  (pq_t *p_queue, 
 						 int (*is_match_func)(const void *data, const void *param),
 						 void *param); 			     					  		    /* O(n) */
 
