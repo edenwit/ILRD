@@ -12,7 +12,7 @@
 !/quizzes
 !/system_programming
 !Makefile
-*/tests_for_friends
+/tests_for_friends
 
 !.myFunc
 !*.c

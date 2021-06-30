@@ -4,16 +4,12 @@
 
 #include "heap_priority_queue.h"
 #include "heap.h"
-/*
-typedef struct pq pq_t;
-*/
 
 struct pq
 {
-	heap_t *p_queue;
+	heap_t *heap;
 };
 
-/* Approved by shelly */
 pq_t *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 {
 	pq_t *priority_queue = NULL;
@@ -27,9 +23,9 @@ pq_t *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 		return NULL;
 	}
 	
-	priority_queue->p_queue = HeapCreate(cmp_func);
+	priority_queue->heap = HeapCreate(cmp_func);
 	
-	if (NULL == priority_queue->p_queue)
+	if (NULL == priority_queue->heap)
 	{
 		free(priority_queue);
 		
@@ -39,126 +35,89 @@ pq_t *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 	return (priority_queue);	
 }
 
-/* Approved by shelly */
 void PQueueDestroy(pq_t *p_queue)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);	
+	assert(p_queue->heap);	
 	
-	HeapDestroy(p_queue->p_queue);
+	HeapDestroy(p_queue->heap);
 	
-	p_queue->p_queue = NULL;
+	p_queue->heap = NULL;
 	
 	free(p_queue);
 	
 	return;	
 }
 
-/* Approved by shelly */
 size_t PQueueSize(const pq_t *p_queue)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);	
+	assert(p_queue->heap);	
 
-	return (HeapSize(p_queue->p_queue));
+	return (HeapSize(p_queue->heap));
 }     
 
-/* Approved by shelly */ 			        			
 int PQueueIsEmpty(const pq_t *p_queue)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);	
+	assert(p_queue->heap);	
 
-	return (HeapIsEmpty(p_queue->p_queue));
+	return (HeapIsEmpty(p_queue->heap));
 }  	   	
 
-/* Approved by shelly */
 int PQueueEnqueue(pq_t *p_queue, void *data)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);
+	assert(p_queue->heap);
 	
-	return (HeapPush(p_queue->p_queue, data));		
+	return (HeapPush(p_queue->heap, data));		
 }   	
 
-/* Approved by shelly */ 				    	  
 void *PQueueDequeue(pq_t *p_queue)
 {
 	void *data = NULL;
 
 	assert(p_queue);
-	assert(p_queue->p_queue);
+	assert(p_queue->heap);
 	assert(!PQueueIsEmpty(p_queue));
 	
-	data = HeapPeek(p_queue->p_queue);
-	HeapPop(p_queue->p_queue);
+	data = HeapPeek(p_queue->heap);
+	HeapPop(p_queue->heap);
 
 	return (data);
 }		
 
-/* Approved by shelly */    		 	   				    
 void      *PQueuePeek   (const pq_t *p_queue)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);
+	assert(p_queue->heap);
 	assert(!PQueueIsEmpty(p_queue));
 
-	return (HeapPeek(p_queue->p_queue));
+	return (HeapPeek(p_queue->heap));
 }		      	    		  
   
-  /* Approved by shelly */
 void PQueueClear(pq_t *p_queue)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);
+	assert(p_queue->heap);
 	
-	while (!HeapIsEmpty(p_queue->p_queue))
+	while (!HeapIsEmpty(p_queue->heap))
 	{
-		HeapPop(p_queue->p_queue);
+		HeapPop(p_queue->heap);
 	}
 	
 	return ;
 }
-
-/* Approved by shelly */
-/* void *PQueueErase(	pq_t *p_queue, 
-					int (*is_match_func)(const void *data, const void *param),
-					void *param													)
-{
-	sorted_list_iter_t iter = {0};
-	void *data = NULL;
-	
-	assert(p_queue);
-	assert(p_queue->p_queue);
-	assert(is_match_func);
-	assert(!HeapIsEmpty(p_queue));
-	
-	iter = SortedLLFindIf(	SortedLLBegin(p_queue->p_queue), 
-							SortedLLEnd(p_queue->p_queue), 
-							is_match_func, 
-							param);	
-							
-	data = SortedLLGetData(iter);
-	
-	if (SortedLLIsSameIter(SortedLLEnd(p_queue->p_queue), iter))
-	{
-		return NULL;
-	}
-
-	HeapRemove(p_queue->p_queue, param);
-		
-	return (data);
-}			 */     				 
 
  void *PQueueErase(	pq_t *p_queue, 
 					int (*is_match_func)(const void *data, const void *param),
 					void *param													)
 {
 	assert(p_queue);
-	assert(p_queue->p_queue);
+	assert(p_queue->heap);
 	assert(is_match_func);
-	assert(!HeapIsEmpty(p_queue->p_queue));
+	assert(!HeapIsEmpty(p_queue->heap));
 	
-	return (HeapRemove(p_queue->p_queue, is_match_func, param));
+	return (HeapRemove(p_queue->heap, is_match_func, param));
 		
-}			      				 
+}
