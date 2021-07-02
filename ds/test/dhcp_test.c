@@ -34,7 +34,7 @@ static void Test()
     unsigned char exp_ip_arr[CHARS_IN_ARR] = {192, 168, 1, 17};
 
     size_t occupied_bits = 24;
-
+    int status = 0;
     dhcp_t *dhcp = NULL;
 
     dhcp = DhcpCreate(ip_arr, occupied_bits);
@@ -48,7 +48,7 @@ static void Test()
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
     }
-    
+
     if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
@@ -75,11 +75,11 @@ static void Test()
     if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
     if (pow(2, BITS_IN_IP - occupied_bits) - 5 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
     ++exp_ip_arr[3];
 
     if (exp_ip_arr[3] != output_ip[3])
@@ -92,12 +92,12 @@ static void Test()
     if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 6 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -107,17 +107,16 @@ static void Test()
         PrintIp(output_ip);
     }
 
-    
-    *((unsigned long *)output_ip) = 0;    
+    *((unsigned long *)output_ip) = 0;
     if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 7 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -125,17 +124,17 @@ static void Test()
     {
         printf("DhcpAllocteIp failed.\n");
         PrintIp(output_ip);
-    }    
+    }
     *((unsigned long *)output_ip) = 0;
     if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 8 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -145,15 +144,15 @@ static void Test()
         PrintIp(output_ip);
     }
     *((unsigned long *)output_ip) = 0;
-        if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
+    if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 9 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -163,15 +162,15 @@ static void Test()
         PrintIp(output_ip);
     }
     *((unsigned long *)output_ip) = 0;
-        if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
+    if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 10 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -181,15 +180,15 @@ static void Test()
         PrintIp(output_ip);
     }
     *((unsigned long *)output_ip) = 0;
-        if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
+    if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 11 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -197,17 +196,17 @@ static void Test()
     {
         printf("DhcpAllocteIp failed.\n");
         PrintIp(output_ip);
-    }    
-    *((unsigned long *)output_ip) = 0; 
-        if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
+    }
+    *((unsigned long *)output_ip) = 0;
+    if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 12 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -217,15 +216,15 @@ static void Test()
         PrintIp(output_ip);
     }
     *((unsigned long *)output_ip) = 0;
-        if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
+    if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 13 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -235,15 +234,15 @@ static void Test()
         PrintIp(output_ip);
     }
     *((unsigned long *)output_ip) = 0;
-        if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
+    if (SUCCESS != DhcpAllocteIp(dhcp, requested_arr, output_ip))
     {
         printf("DhcpAllocteIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 14 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }    
+    }
 
     ++exp_ip_arr[3];
 
@@ -252,27 +251,94 @@ static void Test()
         printf("DhcpAllocteIp failed.\n");
         PrintIp(output_ip);
     }
-        
+
     if (SUCCESS != DhcpFreeIp(dhcp, output_ip))
     {
         printf("DhcpFreeIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 13 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }        
-    
+    }
+
     if (ALLREADY_FREED != DhcpFreeIp(dhcp, output_ip))
     {
         printf("DhcpFreeIp failed\n");
-    }    
+    }
 
     if (pow(2, BITS_IN_IP - occupied_bits) - 13 != DhcpCountFree(dhcp))
     {
         printf("DhcpCountFree: %ld\n", DhcpCountFree(dhcp));
-    }        
+    }
+
+    requested_arr[3] = 0;
+
+    status = DhcpAllocteIp(dhcp, requested_arr, output_ip);
     
+    if (NOT_IN_SUBNET_RANGE != status)
+    {
+        printf("DhcpAllocteIp failed. status: %d\n", status);
+    }
+    status = DhcpFreeIp(dhcp, requested_arr);
+    
+    if (NOT_IN_SUBNET_RANGE != status)
+    {
+        printf("DhcpFreeIp failed. status: %d\n", status);
+    }  
+    requested_arr[3] = 1;
+
+    status = DhcpAllocteIp(dhcp, requested_arr, output_ip);
+    
+    if (SUCCESS != status)
+    {
+        printf("DhcpAllocteIp failed. status: %d\n", status);
+    }
+    
+    status = DhcpFreeIp(dhcp, requested_arr);
+    
+    if (SUCCESS != status)
+    {
+        printf("DhcpFreeIp failed. status: %d\n", status);
+    }  
+    status = DhcpFreeIp(dhcp, requested_arr);
+    
+    if (ALLREADY_FREED != status)
+    {
+        printf("DhcpFreeIp failed. status: %d\n", status);
+    }  
+
+    requested_arr[3] = 254;
+
+    status = DhcpAllocteIp(dhcp, requested_arr, output_ip);
+    
+    if (NOT_IN_SUBNET_RANGE != status)
+    {
+        printf("DhcpAllocteIp failed. status: %d\n", status);
+    }
+    
+    status = DhcpFreeIp(dhcp, requested_arr);
+    
+    if (NOT_IN_SUBNET_RANGE != status)
+    {
+        printf("DhcpFreeIp failed. status: %d\n", status);
+    }  
+
+    requested_arr[3] = 255;
+
+    status = DhcpAllocteIp(dhcp, requested_arr, output_ip);
+    
+    if (NOT_IN_SUBNET_RANGE != status)
+    {
+        printf("DhcpAllocteIp failed. status: %d\n", status);
+    }
+
+    status = DhcpFreeIp(dhcp, requested_arr);
+    
+    if (NOT_IN_SUBNET_RANGE != status)
+    {
+        printf("DhcpFreeIp failed. status: %d\n", status);
+    }  
 
 
     DhcpDestroy(dhcp);
