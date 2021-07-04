@@ -54,10 +54,13 @@ static void FinitCalc(calculator_t *calculator);
 
 static event_t GetEvent(char input);
 static func_state_t GetTransition(state_t active_state, event_t active_event);
+static calc_status_t CheckForOpenPars(event_t event);
 static int IsPreceding(event_t first_op, event_t second_op);
 static calc_func_t GetOpFunc(event_t active_event);
 
 static calc_status_t HandleSubCalc(calculator_t *calculator);
+static calc_status_t EmptyStack(calculator_t *calculator);
+
 static calc_status_t GetSuccess(calculator_t *calculator);
 static calc_status_t HandleNumber(calculator_t *calculator);
 static calc_status_t HandleNegative(calculator_t *calculator);
@@ -113,7 +116,7 @@ calc_status_t Calculate(const char *expression, double *result)
     else if (SUCCESS == status)
     {
         calculator.active_event = ADDITION;
-        status = HandleSubCalc(&calculator);
+        status = EmptyStack(&calculator);
         *(void **)result = StackPeek(calculator.digit_stack);
     }
 
@@ -190,6 +193,32 @@ static calc_status_t HandleSubCalc(calculator_t *calculator)
 
     return (status);
 }
+
+static calc_status_t EmptyStack(calculator_t *calculator)
+{
+    calc_status_t status = SUCCESS;
+    event_t operation_in_stack = SPACE;
+
+    assert(calculator);
+
+    operation_in_stack = (event_t)StackPeek(calculator->operators_stack);
+
+    status = CheckForOpenPars(operation_in_stack);
+
+    while ((SUCCESS == status) && 
+           (IsPreceding(operation_in_stack, calculator->active_event)))
+    {
+        status = Calc(calculator, GetOpFunc(operation_in_stack));
+        StackPop(calculator->operators_stack);
+        operation_in_stack = (event_t)StackPeek(calculator->operators_stack);
+    }
+
+    StackPush(calculator->operators_stack, 
+             (void *)(size_t)(calculator->active_event));
+
+    return (status);
+}
+
 
 static calc_status_t HandleOpenParsAsOp(calculator_t *calculator)
 {
@@ -317,14 +346,14 @@ static calc_status_t Addition(double num1, double num2, double *calc_res)
 
 static calc_status_t Subtraction(double num1, double num2, double *calc_res)
 {
-    *calc_res = num1 - num2;
+    *calc_res = (num1 - num2);
 
     return (SUCCESS);
 }
 
 static calc_status_t Multiplication(double num1, double num2, double *calc_res)
 {
-    *calc_res = num1 * num2;
+    *calc_res = (num1 * num2);
 
     return (SUCCESS);
 }
@@ -336,14 +365,14 @@ static calc_status_t Division(double num1, double num2, double *calc_res)
         return (MATH_ERROR);
     }
 
-    *calc_res = num1 / num2;
+    *calc_res = (num1 / num2);
 
     return (SUCCESS);
 }
 
 static calc_status_t Power(double num1, double num2, double *calc_res)
 {
-    if (0.0 == num1 && 0.0 >= num2)
+    if ((0.0 == num1 && 0.0 >= num2) || (0.0 > num1 && 1 > num2))
     {
         return (MATH_ERROR);
     }
@@ -456,17 +485,27 @@ static int IsPreceding(const event_t op_in_stack, const event_t op_in_exp)
 {
     static int precedence_lut[EVENTS][EVENTS] =
     {
-        {0, 0, 0, 0, 0, 0, 0, 0,0, 0},
-        {0, 1, 1, 0, 0, 0, 0, 0,0, 0},
-        {0, 1, 1, 0, 0, 0, 0, 0,0, 0},
-        {0, 1, 1, 1, 1, 0, 0, 0,0, 0},
-        {0, 1, 1, 1, 1, 0, 0, 0,0, 0},
-        {0, 1, 1, 1, 1, 0, 0, 0,0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0,0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0,0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0,0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0,0, 0}
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+        {0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
+        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
     };
 
     return (precedence_lut[op_in_stack][op_in_exp]);
+}
+
+
+static calc_status_t CheckForOpenPars(event_t event)
+{
+    static calc_status_t open_without_close[] = 
+    {SUCCESS, SUCCESS, SUCCESS, SUCCESS, SUCCESS, 
+    SUCCESS, INVALID_EQUETION, SUCCESS, SUCCESS, SUCCESS};
+
+    return (open_without_close[event]);
 }
