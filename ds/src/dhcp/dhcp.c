@@ -5,14 +5,14 @@
 #include "trie.h"
 #include "dhcp.h"
 
-#define CHARS_IN_ARR 4
 #define SUBNET_SIZE 4
 #define RESERVED_ADDRESSES 3
 #define BITS_IN_IP 32
 #define BITS_IN_BYTE 8
 #define BIN_BASE 2
 
-static void Convert(unsigned long ip, unsigned char new_ip[4]);
+static void LongToCharArr(unsigned long ip, unsigned char new_ip[4]);
+static void CharArrToLong(unsigned long *ip, unsigned char new_ip[4]);
 
 struct dhcp
 {
@@ -24,11 +24,10 @@ struct dhcp
     unsigned long reserved_adresses[3];
 };
 
-dhcp_t *DhcpCreate(const unsigned char subnet_id_bytes[CHARS_IN_ARR], size_t occupied_bits)
+dhcp_t *DhcpCreate(const unsigned char subnet_id_bytes[SUBNET_SIZE], size_t occupied_bits)
 {
     dhcp_t *dhcp = NULL;
-    size_t i = 0;
-    unsigned long subnet_in_int = 0;
+    unsigned long subnet = 0;
     unsigned long dummy = 0;
 
     dhcp = (dhcp_t *)malloc(sizeof(dhcp_t));
@@ -49,21 +48,23 @@ dhcp_t *DhcpCreate(const unsigned char subnet_id_bytes[CHARS_IN_ARR], size_t occ
 
     dhcp->occupied_bits = occupied_bits;
 
-    /*convert char array to int*/
-    for (i = 0; i < CHARS_IN_ARR; ++i)
-    {
-        subnet_in_int = subnet_in_int << BITS_IN_BYTE;
-        subnet_in_int |= subnet_id_bytes[i];
-    }
+    CharArrToLong(&subnet, (unsigned char *)subnet_id_bytes);
 
-    dhcp->subnet_id_long = subnet_in_int;
+    InitDhcp(dhcp, subnet, occupied_bits);
+
+    return (dhcp);
+}
+
+static int InitDhcp(dhcp_t *dhcp, unsigned long subnet, size_t occupied_bits, )
+{
+    assert(dhcp);
+
+    dhcp->subnet_id_long = subnet;
     dhcp->subnet_mask = ((1 << occupied_bits) - 1) << (BITS_IN_IP - occupied_bits);
-    dhcp->reserved_adresses[0] = dhcp->subnet_mask & subnet_in_int;
-    dhcp->reserved_adresses[2] = ((~dhcp->subnet_mask) | subnet_in_int);
+    dhcp->reserved_adresses[0] = dhcp->subnet_mask & subnet;
+    dhcp->reserved_adresses[2] = ((~dhcp->subnet_mask) | subnet);
     dhcp->reserved_adresses[1] = dhcp->reserved_adresses[2] - 1;
-/* 
-    printf("subnet:    %p\nnetwork:   %p\nserver:    %p\nbroadcast: %p\n", subnet_in_int, network_address, server_address, broadcast_address);
-    */
+
     if  (  TrieInsert(dhcp->trie, dhcp->reserved_adresses[0], &dummy)
         || TrieInsert(dhcp->trie, dhcp->reserved_adresses[1], &dummy)
         || TrieInsert(dhcp->trie, dhcp->reserved_adresses[2], &dummy))
@@ -72,8 +73,6 @@ dhcp_t *DhcpCreate(const unsigned char subnet_id_bytes[CHARS_IN_ARR], size_t occ
         free(dhcp);
         return (NULL);
     }
-
-    return (dhcp);
 }
 
 dhcp_status_t DhcpAllocteIp(dhcp_t *dhcp,
@@ -91,7 +90,7 @@ dhcp_status_t DhcpAllocteIp(dhcp_t *dhcp,
 
     if (NULL != optional_ip)
     {
-        for (i = 0; i < CHARS_IN_ARR; ++i)
+        for (i = 0; i < SUBNET_SIZE; ++i)
         {
           optional_ip_int = optional_ip_int << BITS_IN_BYTE;
           optional_ip_int |= optional_ip[i];
@@ -123,7 +122,7 @@ dhcp_status_t DhcpAllocteIp(dhcp_t *dhcp,
 
     new_ip_long |= dhcp->subnet_id_long;
 
-    Convert(new_ip_long, new_ip);
+    LongToCharArr(new_ip_long, new_ip);
 
     return (SUCCESS);
 
@@ -138,7 +137,7 @@ dhcp_status_t DhcpFreeIp(dhcp_t *dhcp, const unsigned char ip_address[4])
     assert(dhcp->trie);
     assert(ip_address);
     
-    for (i = 0; i < CHARS_IN_ARR; ++i)
+    for (i = 0; i < SUBNET_SIZE; ++i)
     {
         ip_address_long = ip_address_long << BITS_IN_BYTE;
         ip_address_long |= ip_address[i];
@@ -167,7 +166,7 @@ size_t DhcpCountFree(const dhcp_t *dhcp)
     assert(dhcp);
     assert(dhcp->trie);
 
-    return (pow(BIN_BASE, BITS_IN_IP - dhcp->occupied_bits) - TrieSize(dhcp->trie));
+    return ((0x1 << (BITS_IN_IP - dhcp->occupied_bits)) - TrieSize(dhcp->trie));
 }
 
 void DhcpDestroy(dhcp_t *dhcp)
@@ -184,7 +183,7 @@ void DhcpDestroy(dhcp_t *dhcp)
 
 /* ------------------------Static Funcs ---------------------------------- */
 
-static void Convert(unsigned long ip, unsigned char new_ip[4])
+static void LongToCharArr(unsigned long ip, unsigned char new_ip[4])
 {
     size_t i = 0;
 
@@ -198,3 +197,19 @@ static void Convert(unsigned long ip, unsigned char new_ip[4])
 
     return;
 }
+
+static void CharArrToLong(unsigned long *ip, unsigned char new_ip[4])
+{
+    size_t i = 0;
+
+    assert(ip);
+
+    for (i = 0; i < SUBNET_SIZE; ++i)
+    {
+        *ip = *ip << BITS_IN_BYTE;
+        *ip |= new_ip[i];
+    }
+
+    return;
+}
+

@@ -1,6 +1,7 @@
-#include "calculator.h"
 #include <stddef.h>
 #include <stdio.h> /* printf */
+
+#include "calculator.h"
 
 int main()
 {

@@ -196,7 +196,7 @@ static avl_node_t *RecRemove(avl_node_t *node, void *data, cmp_func_t func)
 
     if (0 == cmp_res)
     {
-        /* if i have a right child - assign node with the next data 
+        /* if current node has a right child - assign node with the next data 
         and remove that next using recursion */
         if (node->children[RIGHT])
         {
@@ -204,7 +204,7 @@ static avl_node_t *RecRemove(avl_node_t *node, void *data, cmp_func_t func)
             node->children[RIGHT] 
             = RecRemove(node->children[RIGHT], node->data, func);
         }
-        /* if i don't have a right child - keep my left child as tmp,
+        /* if current node does not have a right child - keep my left child as tmp,
          remove me and return my left child */
         else
         {
@@ -498,18 +498,18 @@ static int GetBalanceDiff(avl_node_t *node)
 
 static avl_node_t *BalanceTree(avl_node_t *node)
 {
-    int balace_diff = 0;
-    int balace_diff_child = 0;
+    int balance_diff = 0;
+    int balance_diff_child = 0;
 
     assert(node);
 
-    balace_diff = GetBalanceDiff(node);
+    balance_diff = GetBalanceDiff(node);
 
-    if (1 < balace_diff)
+    if (1 < balance_diff)
     {
-        balace_diff_child = GetBalanceDiff(node->children[RIGHT]);
+        balance_diff_child = GetBalanceDiff(node->children[RIGHT]);
         
-        if (0 > balace_diff_child)
+        if (0 > balance_diff_child)
         {
             node->children[RIGHT] = RightRotation(node->children[RIGHT]);      
         }
@@ -517,11 +517,11 @@ static avl_node_t *BalanceTree(avl_node_t *node)
         node = LeftRotation(node);
     }
 
-    else if (-1 > balace_diff)
+    else if (-1 > balance_diff)
     {
-        balace_diff_child = GetBalanceDiff(node->children[LEFT]);
+        balance_diff_child = GetBalanceDiff(node->children[LEFT]);
         
-        if (0 < balace_diff_child)
+        if (0 < balance_diff_child)
         {
             node->children[LEFT] = LeftRotation(node->children[LEFT]);      
         }

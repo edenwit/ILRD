@@ -28,7 +28,7 @@ struct scheduler
 static int CmpExecutionTime(const void *data1, const void *data2);
 static int IsMatch(const void *data, const void *param);
 
-scheduler_t *SchedulerCreate	(void)
+scheduler_t *SchedulerCreate (void)
 {
 	scheduler_t *scheduler = (scheduler_t *)malloc(sizeof(scheduler_t));
 	
