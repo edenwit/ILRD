@@ -1,11 +1,13 @@
 /*
   Name : Nir
-  Status: Impl tested
-  Reviewer: Eden Witen
+  Status: Reviewed
+  Reviewer: Eden Wittenberg
   Description: FSM calculator
-  Date : 08/06/2021
+  Date : 19/06/2021
 */
-#define  isnan(x) ((x) != (x))
+
+
+#define  isnan(x) ((x) != (x)) /* Is not a number function for ansi standart */
 #include <stdlib.h> /* malloc, free */
 #include <string.h> /* strlen */
 #include <ctype.h> /* isspace */
@@ -20,7 +22,8 @@ typedef enum
 {
     WAIT_FOR_DIGIT,
     WAIT_FOR_OPERATOR,
-    ERROR_STATE
+    ERROR_STATE,
+    STATES_SIZE
 } state_t;
 
 typedef enum 
@@ -33,11 +36,10 @@ typedef enum
     POW_EVENT,
     OPEN_BRACKET_EVENT,
     CLOSE_BRACKET_EVENT,
-    ERROR_EVENT
+    ERROR_EVENT,
+    EVENTS_SIZE
 } event_t;
 
-#define STATES ERROR_STATE + 1
-#define EVENTS ERROR_EVENT + 1
 #define UNUSED(x) ((void)(x))
 
 
@@ -49,8 +51,8 @@ typedef struct calculator
     event_t curr_event;
 } calc_t;
 
-typedef int (*char_handler_t)(calc_t *calculator);
-typedef int (*arit_operation_t)(double left, double right, double *result);
+typedef calc_status_t (*char_handler_t)(calc_t *calculator);
+typedef calc_status_t (*arit_operation_t)(double left, double right, double *result);
 
 typedef struct transaction
 {
@@ -65,25 +67,25 @@ static int IsPreceding(event_t first_op, event_t second_op);
 static arit_operation_t GetOpFunc(event_t curr_event);
 
 /* Calculator event loop functions */ 
-static int SubCalc(calc_t *calculator);
-static int SkipSpace(calc_t *calculator);
-static int Nothing(calc_t *calculator);
-static int PushNum(calc_t *calculator);
-static int SkipChar(calc_t *calculator);
-static int HandleNegative(calc_t *calculator);
-static int HandleCloseBrackets(calc_t *calculator);
-static int HandleOpenBrackets(calc_t *calculator);
-static int HandleOpenBracketsAsOp(calc_t *calculator);
+static calc_status_t SubCalc(calc_t *calculator);
+static calc_status_t SkipSpace(calc_t *calculator);
+static calc_status_t Nothing(calc_t *calculator);
+static calc_status_t PushNum(calc_t *calculator);
+static calc_status_t SkipChar(calc_t *calculator);
+static calc_status_t HandleNegative(calc_t *calculator);
+static calc_status_t HandleCloseBrackets(calc_t *calculator);
+static calc_status_t HandleOpenBrackets(calc_t *calculator);
+static calc_status_t HandleOpenBracketsAsOp(calc_t *calculator);
 
-static int PerformOperation(calc_t *calculator, arit_operation_t op_func);
+static calc_status_t PerformOperation(calc_t *calculator, arit_operation_t op_func);
 
 /* Operation functions */
-static int NoOperation(double left, double right, double *result);
-static int Add(double left, double right, double *result);
-static int Substract(double left, double right, double *result);
-static int Pow(double left, double right, double *result);
-static int Mul(double left, double right, double *result);
-static int Div(double left, double right, double *result);
+static calc_status_t NoOperation(double left, double right, double *result);
+static calc_status_t Add(double left, double right, double *result);
+static calc_status_t Substract(double left, double right, double *result);
+static calc_status_t Pow(double left, double right, double *result);
+static calc_status_t Mul(double left, double right, double *result);
+static calc_status_t Div(double left, double right, double *result);
 
 
 
@@ -126,13 +128,13 @@ static event_t GetEvent(char input)
             ERROR_EVENT, ERROR_EVENT, ERROR_EVENT, ERROR_EVENT, ERROR_EVENT, ERROR_EVENT, ERROR_EVENT, ERROR_EVENT, 
     };
 
-    return char_to_event[(size_t)input];
+    return (char_to_event[(size_t)input]);
 
 }
 /* O(1) */
 static trans_t GetTransition(state_t curr_state, event_t curr_event)
 {
-    static trans_t trans_lut[STATES][EVENTS] = 
+    static trans_t trans_lut[STATES_SIZE][EVENTS_SIZE] = 
     {
         { 
             {PushNum, WAIT_FOR_OPERATOR}, {Nothing, WAIT_FOR_DIGIT}, {HandleNegative, WAIT_FOR_DIGIT}, {Nothing, ERROR_STATE}, 
@@ -148,46 +150,46 @@ static trans_t GetTransition(state_t curr_state, event_t curr_event)
         }
     };
 
-    return trans_lut[curr_state] [curr_event];
+    return (trans_lut[curr_state] [curr_event]);
 }
 
 /* O(1) */
 static arit_operation_t GetOpFunc(event_t curr_event)
 {
-    static arit_operation_t  op_lut[EVENTS] = 
+    static arit_operation_t  op_lut[EVENTS_SIZE] = 
     {
         NoOperation, Add, Substract, Mul, Div, Pow, NoOperation, NoOperation, NoOperation
     };
 
-    return op_lut[curr_event];
+    return (op_lut[curr_event]);
 }
 
 /* O(1) */
 static int IsPreceding(event_t first_op, event_t second_op)
 {
-    /*static int precedence_lut[EVENTS] = {0, 1, 1, 2, 2, 3, 4, 4, 8};*/
-    static int precedence_lut[EVENTS][EVENTS] = 
+
+    static int precedence_lut[EVENTS_SIZE][EVENTS_SIZE] = 
     {
         { 
             0, 0, 0, 0, 0, 0, 0, 0,0,
         },
         { 
-            0, 1, 1, 0, 0, 0, 0, 0,0,
+            1, 1, 1, 0, 0, 0, 0, 0,0,
         },
         { 
-            0, 1, 1, 0, 0, 0, 0, 0,0,
+            1, 1, 1, 0, 0, 0, 0, 0,0,
         },
         { 
-            0, 1, 1, 1, 1, 0, 0, 0,0,
+            1, 1, 1, 1, 1, 0, 0, 0,0,
         },
         { 
-            0, 1, 1, 1, 1, 0, 0, 0,0,
+            1, 1, 1, 1, 1, 0, 0, 0,0,
         },
         { 
-            0, 1, 1, 1, 1, 0, 0, 0,0,
+            1, 1, 1, 1, 1, 0, 0, 0,0,
         },
         { 
-            0, 0, 0, 0, 0, 0, 0, 0,0,
+            1, 0, 0, 0, 0, 0, 0, 0,0,
         },
         { 
             0, 0, 0, 0, 0, 0, 0, 0,0,
@@ -197,7 +199,7 @@ static int IsPreceding(event_t first_op, event_t second_op)
         }
     };
 
-    return precedence_lut[first_op][second_op];
+    return (precedence_lut[first_op][second_op]);
 }
 
 /* O(1) */
@@ -224,8 +226,8 @@ static calc_t *CreateCalculator(const char *expression)
     calculator->operators = StackCreate(exp_len + 2);
     if (!calculator->operators)
     {
+        StackDestroy(calculator->operands);
         free(calculator);
-        free(calculator->operators);
     }
 
     calculator->curr_event = DIGIT_EVENT;
@@ -236,7 +238,7 @@ static calc_t *CreateCalculator(const char *expression)
     StackPush(calculator->operators, (void *)CLOSE_BRACKET_EVENT);
     StackPush(calculator->operands, *(void **)&dummy_operand);
 
-    return calculator;
+    return (calculator);
 }
 
 /* O(1) */
@@ -255,7 +257,7 @@ static void DestroyCalculator(calc_t *calculator)
 calc_status_t Calculate(const char *expression, double *result)
 {
     calc_t *calculator = NULL;
-    int status = SUCCESS;
+    calc_status_t status = SUCCESS;
     trans_t curr_trans = {0};
     state_t curr_state = DIGIT_EVENT;
 
@@ -265,13 +267,13 @@ calc_status_t Calculate(const char *expression, double *result)
     calculator = CreateCalculator(expression);
     if(!calculator)
     {
-        return SYSTEM_FAIL;
+        return (SYSTEM_FAIL);
     }
 
     SkipSpace(calculator);
 
     while (ERROR_STATE != curr_state && 0 == status 
-                            && *(calculator->exp_ptr) != '\0')
+           && '\0' != *(calculator->exp_ptr))
     {
       calculator->curr_event = GetEvent(*(calculator->exp_ptr));
       curr_trans = GetTransition(curr_state, calculator->curr_event);
@@ -283,11 +285,12 @@ calc_status_t Calculate(const char *expression, double *result)
 
     if (ERROR_STATE == curr_state || WAIT_FOR_DIGIT == curr_state)
     {
-        status = INVALID_EQUETION; 
+        status = INVALID_EQUATION; 
     }
     else if (!status)
     {
-        calculator->curr_event = ADD_EVENT;
+        /* Push event to calculate the rest */
+        calculator->curr_event = DIGIT_EVENT;
         status = SubCalc(calculator);
         *(void **)result = StackPeek(calculator->operands);
     }
@@ -298,9 +301,9 @@ calc_status_t Calculate(const char *expression, double *result)
 }
 
 /* O(m) m - number of operators with equal precdence */
-static int SubCalc(calc_t *calculator)
+static calc_status_t SubCalc(calc_t *calculator)
 {
-    int status = SUCCESS;
+    calc_status_t status = SUCCESS;
     event_t prev_op = (event_t)StackPeek(calculator->operators);
 
     while ( status == 0 &&
@@ -317,13 +320,13 @@ static int SubCalc(calc_t *calculator)
 }
 
 /* O(m) m - number of operators with equal precdence */
-static int HandleCloseBrackets(calc_t *calculator)
+static calc_status_t HandleCloseBrackets(calc_t *calculator)
 {
-    int status = SUCCESS;
+    calc_status_t status = SUCCESS;
     event_t prev_op = (event_t)StackPeek(calculator->operators);
 
-    while ( status == SUCCESS &&
-            OPEN_BRACKET_EVENT != prev_op)
+    while (SUCCESS == status &&
+           OPEN_BRACKET_EVENT != prev_op)
     {
         status = PerformOperation(calculator, GetOpFunc(prev_op));
         StackPop(calculator->operators);
@@ -336,9 +339,9 @@ static int HandleCloseBrackets(calc_t *calculator)
 }
 
 /* O(1) */
-static int HandleOpenBracketsAsOp(calc_t *calculator)
+static calc_status_t HandleOpenBracketsAsOp(calc_t *calculator)
 {
-    int status = 0;
+    calc_status_t status = 0;
     assert(calculator);
 
     calculator->curr_event = MULTIPLICATION_EVENT;
@@ -349,7 +352,7 @@ static int HandleOpenBracketsAsOp(calc_t *calculator)
 }
 
 /* O(1) */
-static int HandleOpenBrackets(calc_t *calculator)
+static calc_status_t HandleOpenBrackets(calc_t *calculator)
 {
     assert(calculator);
 
@@ -359,7 +362,7 @@ static int HandleOpenBrackets(calc_t *calculator)
 }
 
 /* O(1) */
-static int Nothing(calc_t *calculator)
+static calc_status_t Nothing(calc_t *calculator)
 {
     UNUSED(calculator);
 
@@ -367,7 +370,7 @@ static int Nothing(calc_t *calculator)
 }
 
 /* O(k) k- number of spaces in a equence */
-static int SkipSpace(calc_t *calculator)
+static calc_status_t SkipSpace(calc_t *calculator)
 {
     while (isspace(*(calculator->exp_ptr)))
     {
@@ -378,7 +381,7 @@ static int SkipSpace(calc_t *calculator)
 }
 
 /* O(n + k) n - number size in digits k- number of spaces in a equence */
-static int PushNum(calc_t *calculator)
+static calc_status_t PushNum(calc_t *calculator)
 {
     double num = 0.0;
 
@@ -392,7 +395,7 @@ static int PushNum(calc_t *calculator)
     return (SUCCESS);
 }
 
-static int SkipChar(calc_t *calculator)
+static calc_status_t SkipChar(calc_t *calculator)
 {
     ++(calculator->exp_ptr);
     SkipSpace(calculator);
@@ -400,7 +403,7 @@ static int SkipChar(calc_t *calculator)
     return (SUCCESS);
 }
 
-static int HandleNegative(calc_t *calculator)
+static calc_status_t HandleNegative(calc_t *calculator)
 {
     const double negative = -1.0;
     StackPush(calculator->operands, *(void **)&negative);
@@ -411,10 +414,10 @@ static int HandleNegative(calc_t *calculator)
 }
 
 /* O(1) */
-static int PerformOperation(calc_t *calculator, arit_operation_t op_func)
+static calc_status_t PerformOperation(calc_t *calculator, arit_operation_t op_func)
 {
     void *first = NULL;
-    int status = SUCCESS;
+    calc_status_t status = SUCCESS;
     void *second = StackPeek(calculator->operands);
 
     assert(calculator);
@@ -435,17 +438,17 @@ static int PerformOperation(calc_t *calculator, arit_operation_t op_func)
 
 
 /* O(1) */
-static int NoOperation(double left, double right, double *result)
+static calc_status_t NoOperation(double left, double right, double *result)
 {
     UNUSED(left);
     UNUSED(right);
     UNUSED(result);
 
-    return (INVALID_EQUETION);
+    return (INVALID_EQUATION);
 }
 
 /* O(1) */
-static int Add(double left, double right, double *result)
+static calc_status_t Add(double left, double right, double *result)
 {
     assert(result);
 
@@ -455,7 +458,7 @@ static int Add(double left, double right, double *result)
 }
 
 /* O(1) */
-static int Substract(double left, double right, double *result)
+static calc_status_t Substract(double left, double right, double *result)
 {
     assert(result);
 
@@ -465,22 +468,22 @@ static int Substract(double left, double right, double *result)
 }
 
 /* O(1) */
-static int Pow(double left, double right, double *result)
+static calc_status_t Pow(double left, double right, double *result)
 {
     assert(result);
 
     *result = pow(left, right);
 
-    if ((left == 0 && right ==  0) || isnan(*result))
+    if ((0 == left && 0 >= right) || isnan(*result))
     {
-        return MATH_ERROR;
+        return (MATH_ERROR);
     }
 
     return (SUCCESS);    
 }
 
 /* O(1) */
-static int Mul(double left, double right, double *result)
+static calc_status_t Mul(double left, double right, double *result)
 {
     assert(result);
 
@@ -490,7 +493,7 @@ static int Mul(double left, double right, double *result)
 }
 
 /* O(1) */
-static int Div(double left, double right, double *result)
+static calc_status_t Div(double left, double right, double *result)
 {
     assert(result);
 

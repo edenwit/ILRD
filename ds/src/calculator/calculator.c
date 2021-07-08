@@ -108,9 +108,9 @@ calc_status_t Calculate(const char *expression, double *result)
       GoNext(&calculator);
     }
 
-    if (ERROR_STATE == active_state || WAIT_FOR_DIGIT == active_state)
+    if ( (WAIT_FOR_OPERATOR != active_state) && (MATH_ERROR != status))
     {
-        status = INVALID_EQUETION;
+        status = INVALID_EQUATION;
     }
 
     else if (SUCCESS == status)
@@ -334,7 +334,7 @@ static calc_status_t HandleInvalidEquetion
     UNUSED(num2);
     UNUSED(calc_res);
 
-    return (INVALID_EQUETION);
+    return (INVALID_EQUATION);
 }
 
 static calc_status_t Addition(double num1, double num2, double *calc_res)
@@ -490,7 +490,7 @@ static int IsPreceding(const event_t op_in_stack, const event_t op_in_exp)
         {0, 1, 1, 0, 0, 0, 0, 0, 0, 0},
         {0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
         {0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
-        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 1, 1, 1, 1, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -505,7 +505,7 @@ static calc_status_t CheckForOpenPars(event_t event)
 {
     static calc_status_t open_without_close[] = 
     {SUCCESS, SUCCESS, SUCCESS, SUCCESS, SUCCESS, 
-    SUCCESS, INVALID_EQUETION, SUCCESS, SUCCESS, SUCCESS};
+    SUCCESS, INVALID_EQUATION, SUCCESS, SUCCESS, SUCCESS};
 
     return (open_without_close[event]);
 }

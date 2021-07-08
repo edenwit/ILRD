@@ -16,7 +16,7 @@ static void PrintT();
 void WwpIf()
 {
 	unsigned char ch = 0;
-	system("stty -icanon -echo");
+	system("v");
 	while(EOF != ch && ESC != ch)
 	{
 		ch = toupper(getchar());

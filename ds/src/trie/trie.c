@@ -56,11 +56,12 @@ struct trie_node
     struct trie_node *nodes[NUM_OF_NODES];
 };
 
-trie_t *TrieCreate(size_t bits_lefts)
+trie_t *TrieCreate(size_t occupied_bits)
 {
     trie_t *trie = NULL;
+    size_t bits_left = BITS_IN_IP - occupied_bits;
 
-    assert(bits_lefts);
+    assert(occupied_bits < (BITS_IN_IP - 2));
 
     trie = (trie_t *)malloc(sizeof(trie_t));
 
@@ -79,7 +80,7 @@ trie_t *TrieCreate(size_t bits_lefts)
 
     InitTrieNode(trie->root);
 
-    trie->branch_depth = bits_lefts;
+    trie->branch_depth = bits_left;
 
     return (trie);
 }

@@ -7,6 +7,7 @@ int main()
 {
     size_t i = 0;
     char string[][60] = {
+    {"0 ^ -5 + 1"},
     {"6+(5"},
     {"6(+5"},
     {"(-2)^0.5"},
@@ -36,8 +37,7 @@ int main()
     {" 14 ^ -3"},
     {" 0 ^ 0.2"},
     {"0 ^ -12"},
-    {"(2)4)5)6)"},
-    {"2(2(2(2)))"}
+    {"(2)4)5)6)"}
     };
     double result = 0.0;
     calc_status_t status = SUCCESS;
@@ -54,9 +54,9 @@ int main()
         {
             switch (status)
             {
-                case INVALID_EQUETION:
+                case INVALID_EQUATION:
                 {
-                    printf("INVALID EQUETION\n");
+                    printf("INVALID EQUATION\n");
                     break;
                 }
                 case MATH_ERROR:
