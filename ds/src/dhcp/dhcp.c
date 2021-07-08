@@ -14,7 +14,7 @@
 static dhcp_t *InitDhcp(dhcp_t *dhcp, unsigned long subnet, size_t occupied_bits);
 
 static void LongToCharArr(unsigned long ip, unsigned char new_ip[4]);
-static void CharArrToLong(unsigned long *ip, unsigned char new_ip[4]);
+static unsigned long CharArrToLong(unsigned char new_ip[4]);
 
 enum reserved_addresses
 {
@@ -56,7 +56,7 @@ dhcp_t *DhcpCreate(const unsigned char subnet_id_bytes[SUBNET_SIZE], size_t occu
 
     dhcp->occupied_bits = occupied_bits;
 
-    CharArrToLong(&subnet, (unsigned char *)subnet_id_bytes);
+    subnet = CharArrToLong((unsigned char *)subnet_id_bytes);
 
     return (InitDhcp(dhcp, subnet, occupied_bits));
 }
@@ -69,13 +69,13 @@ static dhcp_t *InitDhcp(dhcp_t *dhcp, unsigned long subnet, size_t occupied_bits
 
     dhcp->subnet_id_long = subnet;
     dhcp->subnet_mask = ((1 << occupied_bits) - 1) << (BITS_IN_IP - occupied_bits);
-    dhcp->reserved_addresses[NETWORK_ADDRESS] = dhcp->subnet_mask & subnet;
-    dhcp->reserved_addresses[BROADCAST_ADDRESS] = ((~dhcp->subnet_mask) | subnet);
-    dhcp->reserved_addresses[SERVER_ADDRESS] = dhcp->reserved_addresses[BROADCAST_ADDRESS] - 1;
+    dhcp->reserved_addresses[0] = dhcp->subnet_mask & subnet;
+    dhcp->reserved_addresses[2] = ((~dhcp->subnet_mask) | subnet);
+    dhcp->reserved_addresses[1] = dhcp->reserved_addresses[2] - 1;
 
-    if  (  TrieInsert(dhcp->trie, dhcp->reserved_addresses[NETWORK_ADDRESS], &dummy)
-        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[SERVER_ADDRESS], &dummy)
-        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[BROADCAST_ADDRESS], &dummy))
+    if  (  TrieInsert(dhcp->trie, dhcp->reserved_addresses[0], &dummy)
+        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[1], &dummy)
+        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[2], &dummy))
     {
         TrieDestroy(dhcp->trie);
         free(dhcp);
@@ -100,7 +100,7 @@ dhcp_status_t DhcpAllocteIp(dhcp_t *dhcp,
 
     if (NULL != optional_ip)
     {
-        CharArrToLong(&optional_ip_long, (unsigned char *)new_ip);
+        optional_ip_long = CharArrToLong((unsigned char *)optional_ip); 
 
         if ((optional_ip_long & (dhcp->subnet_mask)) != dhcp->subnet_id_long)
         {
@@ -131,7 +131,6 @@ dhcp_status_t DhcpAllocteIp(dhcp_t *dhcp,
     LongToCharArr(new_ip_long, new_ip);
 
     return (SUCCESS);
-
 }
 
 dhcp_status_t DhcpFreeIp(dhcp_t *dhcp, const unsigned char ip_address[4])
@@ -143,13 +142,14 @@ dhcp_status_t DhcpFreeIp(dhcp_t *dhcp, const unsigned char ip_address[4])
     assert(dhcp->trie);
     assert(ip_address);
     
-    CharArrToLong(&ip_address_long, (unsigned char *)ip_address);
+    ip_address_long = CharArrToLong((unsigned char *)ip_address);
 
     if ((ip_address_long & (dhcp->subnet_mask)) != dhcp->subnet_id_long)
     {
         return (NOT_IN_SUBNET_RANGE);
     }
     
+    /* check if requested ip is in resserved list */
     for (i = 0; i < RESERVED_ADDRESSES; ++i)
     {
         if (ip_address_long == dhcp->reserved_addresses[i])
@@ -200,18 +200,16 @@ static void LongToCharArr(unsigned long ip, unsigned char new_ip[4])
     return;
 }
 
-static void CharArrToLong(unsigned long *ip, unsigned char new_ip[4])
+static unsigned long CharArrToLong(unsigned char new_ip[4])
 {
     size_t i = 0;
-
-    assert(ip);
+    unsigned long ip = 0;
 
     for (i = 0; i < SUBNET_SIZE; ++i)
     {
-        *ip = *ip << BITS_IN_BYTE;
-        *ip |= new_ip[i];
+        ip = ip << BITS_IN_BYTE;
+        ip |= new_ip[i];
     }
 
-    return;
+    return (ip);
 }
-
