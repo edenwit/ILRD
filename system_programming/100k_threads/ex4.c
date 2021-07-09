@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#define THREADS (4)
+#define THREADS (30000)
 #define NUM (1200000000)
 #define RANGE (NUM / THREADS)
 

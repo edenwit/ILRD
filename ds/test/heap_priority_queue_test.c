@@ -9,7 +9,7 @@ static int FindMatchInt(const void * data, const void *param);
 
 int main()
 {
-	int arr[] = {1, 2, 3, 10000, 4, 5, 6};
+	int arr[] = {1, 2, 3, 4, 5, 6, 10000};
 	
 	size_t i = 0;
 	void *data = NULL;
@@ -143,5 +143,5 @@ int Cmp_Num(const void *cur, const void *par)
 
 static int FindMatchInt(const void * data, const void *param)
 {
-	return (*(int *)data == *(int *)param);
+	return (*(int *)data >= *(int *)param);
 }

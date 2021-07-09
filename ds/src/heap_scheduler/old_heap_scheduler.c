@@ -28,7 +28,7 @@ struct scheduler
 static int CmpExecutionTime(const void *data1, const void *data2);
 static int IsMatch(const void *data, const void *param);
 
-scheduler_t *SchedulerCreate (void)
+scheduler_t *SchedulerCreate	(void)
 {
 	scheduler_t *scheduler = (scheduler_t *)malloc(sizeof(scheduler_t));
 	
@@ -264,14 +264,9 @@ void SchedulerClear(scheduler_t *scheduler)
 
 static int CmpExecutionTime(const void *data1, const void *data2)
 {
-	return (TaskGetExecutionTime((task_t *)data1) - TaskGetExecutionTime((task_t *)data2));
+	return (TaskGetExecutionTime((task_t *)data2) - TaskGetExecutionTime((task_t *)data1));
 }
-/*
-static int IsBigger(const void *task1, const void *task2)
-{
-	return (TaskGetExecutionTime((task_t)task1) > TaskGetExecutionTime((task_t)task2));
-}
-}*/
+
 static int IsMatch(const void *data, const void *param)
 {
     return (UidIsSame(TaskGetUid((task_t *)data), (*(ilrd_uid_t *)param)));

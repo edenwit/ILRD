@@ -24,7 +24,7 @@ int main()
 
 	for (i = 0; i < TIMES_TO_LOOP; ++i)
 	{
-		if (!PQueueEnqueue(p_queue, (void *)(arr + i)))
+		if (PQueueEnqueue(p_queue, (void *)(arr + i)))
 		{
 			printf ("Insersion p_queue1 #%ld failed!\n", i + 1);	
 		}	
@@ -32,7 +32,7 @@ int main()
 	
 	for (i = 0; i < TIMES_TO_LOOP / 2; ++i)
 	{
-		if (!PQueueEnqueue(p_queue2, (void *)(arr + i)))
+		if (PQueueEnqueue(p_queue2, (void *)(arr + i)))
 		{
 			printf ("Insersion p_queue2 #%ld failed!\n", i + 1);	
 		}
@@ -86,7 +86,7 @@ int main()
 
 	for (i = 0; i < TIMES_TO_LOOP; ++i)
 	{
-		if (!PQueueEnqueue(p_queue, (void *)(arr + i)))
+		if (PQueueEnqueue(p_queue, (void *)(arr + i)))
 		{
 			printf ("Insersion p_queue1 #%ld failed!\n", i + 1);	
 		}	
@@ -106,7 +106,7 @@ int main()
 	
 	for (i = 0; i < TIMES_TO_LOOP; ++i)
 	{
-		if (!PQueueEnqueue(p_queue, (void *)(arr + i)))
+		if (PQueueEnqueue(p_queue, (void *)(arr + i)))
 		{
 			printf ("Insersion p_queue1 #%ld failed!\n", i + 1);	
 		}	

@@ -175,7 +175,7 @@ static void HeapifyUp(heap_t *heap)
 
     while (0 < current_index)
     {
-        if (0 < heap->cmp_func(element_value,
+        if (0 > heap->cmp_func(element_value,
                         VectorGetElem(heap->vector, PARENT_IDX(current_index))))
         {
             SwapPointers(heap, current_index, PARENT_IDX(current_index));
@@ -208,7 +208,7 @@ static void HeapifyDown(heap_t *heap, size_t start_index)
         /* Check if element has a right child */
         if (RIGHT_CHILD_IDX(start_index) < last_index_used)
         { 
-            if (0 < heap->cmp_func(
+            if (0 > heap->cmp_func(
                 VectorGetElem(heap->vector, LEFT_CHILD_IDX(start_index)), 
                 VectorGetElem(heap->vector, RIGHT_CHILD_IDX(start_index))))
             {
@@ -223,7 +223,7 @@ static void HeapifyDown(heap_t *heap, size_t start_index)
         {
             big_boy_index = LEFT_CHILD_IDX(start_index);
         }
-        if (0 > heap->cmp_func(element_value, 
+        if (0 < heap->cmp_func(element_value, 
                                VectorGetElem(heap->vector, big_boy_index)))
         {
             SwapPointers(heap, start_index, big_boy_index);
