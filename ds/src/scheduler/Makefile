@@ -1,61 +1,32 @@
-# Target name.
-TARGET = $(notdir $(shell pwd))
+NAME = $(notdir ${PWD})
+LIB = ../../lib
+TEST = ../test
+OBJ = ../../obj
+INC = ../../include
+SRC = .
+BIN = ../bin
+SRCS := $(NAME)/$(wildcard $(SRC)/*.c)
+export EXES_SRC := $(TEST)/$(NAME:.c=_test.c)
+export EXES := $(BIN)/$(NAME:=_test)
+all:
+	$(MAKE) all -C../ -e
 
+debug:
+	$(MAKE) debug -C../ -e
 
-# directories.
-OBJDIR = ../../obj
-LIBDIR = ../../lib
-INCDIR = ../../include
+release:
+	$(MAKE) release -C../ -e
 
-# Compilation details.
-CC = gcc
-CFLAGS = -ansi -pedantic-errors -Wall -Wextra -g
-RFLAGS = -ansi -pedantic-errors -Wall -Wextra -DNDEBUG -O3
-LDFLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR)
+test:
+	$(MAKE) test -C../ -e
 
+.PHONY: clean all release debug test run gdb
 
-# List of object file names
-OBJNAMES = $(TARGET).o $(TARGET)_test.o
-
-# List of object file paths.
-OBJECTS = $(addprefix $(OBJDIR)/, $(OBJNAMES))
-
-.PHONY: clean all test debug release test_ r
-
-all: $(LIBDIR)/lib$(TARGET).so a.out
-
-$(LIBDIR)/lib$(TARGET).so: $(OBJDIR)/$(TARGET).o
-	$(CC) -shared $< -o $@
-	
-a.out: $(OBJDIR)/$(TARGET)_test.o
-	$(CC)  $^ -o $@ $(LDFLAGS) -l$(TARGET)
-	
-$(OBJDIR)/$(TARGET).o: $(TARGET).c  $(TARGET).h
-	$(CC) $(CFLAGS) -fpic -c $< -o $@ -I $(INCDIR)
-	
-$(OBJDIR)/$(TARGET)_test.o: $(TARGET)_test.c $(TARGET).h
-	$(CC) $(CFLAGS) -c $< -o $@ -I $(INCDIR)
-
-release: $(LIBDIR)/lib$(TARGET)_R.so $(TARGET)_R
-
-$(LIBDIR)/lib$(TARGET)_R.so: $(OBJDIR)/$(TARGET)_R.o
-	$(CC) -shared $< -o $@
-	
-$(TARGET)_R: $(OBJDIR)/$(TARGET)_test_R.o
-	$(CC) $(LDFLAGS) $^ -o $@ -l$(TARGET)
-	
-$(OBJDIR)/$(TARGET)_R.o: $(TARGET).c  $(TARGET).h
-	$(CC) $(RFLAGS) -fpic -c $< -o $@ -I $(INCDIR)
-	
-$(OBJDIR)/$(TARGET)_test_R.o: $(TARGET)_test.c $(TARGET).h
-	$(CC) $(RFLAGS) -c $< -o $@ -I $(INCDIR)
-
-test: a.out
-	./a.out
-	
-test_ r: $(TARGET)_R
-	./$(TARGET)_R
-
+gdb:
+	@cd ../ && cgdb $(BIN)/$(NAME)_test
+run:
+	@cd ../ && $(BIN)/$(NAME)_test
+help:
+	$(MAKE) help -C../ -e
 clean:
-	rm a.out $(OBJECTS)
-
+	$(MAKE) clean -C../ -e

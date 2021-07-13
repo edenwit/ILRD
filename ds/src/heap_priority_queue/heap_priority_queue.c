@@ -10,7 +10,7 @@ struct pq
 	heap_t *heap;
 };
 
-pq_t *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
+pq_t *HeapPQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 {
 	pq_t *priority_queue = NULL;
 
@@ -35,7 +35,7 @@ pq_t *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2))
 	return (priority_queue);	
 }
 
-void PQueueDestroy(pq_t *p_queue)
+void HeapPQueueDestroy(pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->heap);	
@@ -49,7 +49,7 @@ void PQueueDestroy(pq_t *p_queue)
 	return;	
 }
 
-size_t PQueueSize(const pq_t *p_queue)
+size_t HeapPQueueSize(const pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->heap);	
@@ -57,7 +57,7 @@ size_t PQueueSize(const pq_t *p_queue)
 	return (HeapSize(p_queue->heap));
 }     
 
-int PQueueIsEmpty(const pq_t *p_queue)
+int HeapPQueueIsEmpty(const pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->heap);	
@@ -65,7 +65,7 @@ int PQueueIsEmpty(const pq_t *p_queue)
 	return (HeapIsEmpty(p_queue->heap));
 }  	   	
 
-int PQueueEnqueue(pq_t *p_queue, void *data)
+int HeapPQueueEnqueue(pq_t *p_queue, void *data)
 {
 	assert(p_queue);
 	assert(p_queue->heap);
@@ -73,13 +73,13 @@ int PQueueEnqueue(pq_t *p_queue, void *data)
 	return (HeapPush(p_queue->heap, data));		
 }   	
 
-void *PQueueDequeue(pq_t *p_queue)
+void *HeapPQueueDequeue(pq_t *p_queue)
 {
 	void *data = NULL;
 
 	assert(p_queue);
 	assert(p_queue->heap);
-	assert(!PQueueIsEmpty(p_queue));
+	assert(!HeapPQueueIsEmpty(p_queue));
 	
 	data = HeapPeek(p_queue->heap);
 	HeapPop(p_queue->heap);
@@ -87,16 +87,16 @@ void *PQueueDequeue(pq_t *p_queue)
 	return (data);
 }		
 
-void      *PQueuePeek   (const pq_t *p_queue)
+void      *HeapPQueuePeek   (const pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->heap);
-	assert(!PQueueIsEmpty(p_queue));
+	assert(!HeapPQueueIsEmpty(p_queue));
 
 	return (HeapPeek(p_queue->heap));
 }		      	    		  
   
-void PQueueClear(pq_t *p_queue)
+void HeapPQueueClear(pq_t *p_queue)
 {
 	assert(p_queue);
 	assert(p_queue->heap);
@@ -109,7 +109,7 @@ void PQueueClear(pq_t *p_queue)
 	return ;
 }
 
- void *PQueueErase(	pq_t *p_queue, 
+ void *HeapPQueueErase(	pq_t *p_queue, 
 					int (*is_match_func)(const void *data, const void *param),
 					void *param													)
 {

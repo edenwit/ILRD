@@ -17,7 +17,7 @@ static int PrintArray(void *tree_data, void *user_param);
 
 int main()
 {
-	/* AVLTest(); */
+	AVLTest();
 	TestRemove();
 	
 	return (0);

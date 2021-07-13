@@ -7,13 +7,13 @@
 #define LOOPS (3)
 #define SECONDS_TO_WAIT (2)
 
-static void SchedulerTest();
+static void HeapSchedulerTest();
 int ActionPrint(void *param);
 int ActionPrint2(void *param);
 static void PrintUid(ilrd_uid_t uid);
 int StopTheRun(void *scheduler);
 int PrintCat(void *param);
-int AddPrintCatToScheduler(void *scheduler);
+int AddPrintCatToHeapScheduler(void *scheduler);
 int CommitSuicide(void *scheduler);
 
 typedef struct sched_and_uid
@@ -24,12 +24,12 @@ typedef struct sched_and_uid
 
 int main()
 {
-	SchedulerTest();
+	HeapSchedulerTest();
 	
 	return 0;
 }
 
-static void SchedulerTest()
+static void HeapSchedulerTest()
 {
 	suicide_kit sui = {0};
 	size_t interval = 2;
@@ -40,19 +40,19 @@ static void SchedulerTest()
 	int repeat = 0; /* 0 - no, 2- yes */
 	int repeat2 = 2; /* 0 - no, 2- yes */
 	int run_status = 0;
-	scheduler_t *scheduler_test = SchedulerCreate();
+	scheduler_t *scheduler_test = HeapSchedulerCreate();
 	
 	if (NULL == scheduler_test)
 	{
 		printf("scheduler pointer is NULL.\n");
 	}
 
-	if (!SchedulerIsEmpty(scheduler_test))
+	if (!HeapSchedulerIsEmpty(scheduler_test))
 	{
-		printf("SchedulerIsEmpty Failed.\n");	
+		printf("HeapSchedulerIsEmpty Failed.\n");	
 	}
 	
-	uid = SchedulerAdd(scheduler_test, ActionPrint, interval, (void *)&repeat);
+	uid = HeapSchedulerAdd(scheduler_test, ActionPrint, interval, (void *)&repeat);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{
@@ -61,26 +61,26 @@ static void SchedulerTest()
 			PrintUid(GetBadUid());				
 	}	
 	
-	if (SchedulerIsEmpty(scheduler_test))
+	if (HeapSchedulerIsEmpty(scheduler_test))
 	{
-		printf("SchedulerAdd Failed scheduler still empty.\n");	
+		printf("HeapSchedulerAdd Failed scheduler still empty.\n");	
 	}
 	
-	if (1 != SchedulerSize(scheduler_test))
+	if (1 != HeapSchedulerSize(scheduler_test))
 	{
-		printf("SchedulerSize Failed scheduler still empty.\n");			
+		printf("HeapSchedulerSize Failed scheduler still empty.\n");			
 	}
 	
-	run_status = SchedulerRun(scheduler_test);
+	run_status = HeapSchedulerRun(scheduler_test);
 	
 	printf("Run stopped at status %d\n", run_status);
 	
-	if (!SchedulerIsEmpty(scheduler_test))
+	if (!HeapSchedulerIsEmpty(scheduler_test))
 	{
-		printf("SchedulerIsEmpty Failed.\n");	
+		printf("HeapSchedulerIsEmpty Failed.\n");	
 	}	
 
-	uid = SchedulerAdd(scheduler_test, ActionPrint, interval, (void *)&repeat2);
+	uid = HeapSchedulerAdd(scheduler_test, ActionPrint, interval, (void *)&repeat2);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{
@@ -89,7 +89,7 @@ static void SchedulerTest()
 			PrintUid(GetBadUid());				
 	}	
 
-	uid = SchedulerAdd(scheduler_test, ActionPrint2, interval3, (void *)&repeat2);
+	uid = HeapSchedulerAdd(scheduler_test, ActionPrint2, interval3, (void *)&repeat2);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{
@@ -98,7 +98,7 @@ static void SchedulerTest()
 			PrintUid(GetBadUid());				
 	}	
 
-	uid = SchedulerAdd(scheduler_test, StopTheRun, interval2, (void *)scheduler_test);
+	uid = HeapSchedulerAdd(scheduler_test, StopTheRun, interval2, (void *)scheduler_test);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{
@@ -107,13 +107,13 @@ static void SchedulerTest()
 			PrintUid(GetBadUid());				
 	}	
 	
-	if (3 != SchedulerSize(scheduler_test))
+	if (3 != HeapSchedulerSize(scheduler_test))
 	{
-		printf("SchedulerSize Failed. Supposed to have 2 tasks, has %ld.\n", SchedulerSize(scheduler_test));			
+		printf("HeapSchedulerSize Failed. Supposed to have 2 tasks, has %ld.\n", HeapSchedulerSize(scheduler_test));			
 	}
 	
 	
-	uid = SchedulerAdd(scheduler_test, AddPrintCatToScheduler, 0, (void *)scheduler_test);
+	uid = HeapSchedulerAdd(scheduler_test, AddPrintCatToHeapScheduler, 0, (void *)scheduler_test);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{
@@ -124,7 +124,7 @@ static void SchedulerTest()
 	
 	sui.scheduler = scheduler_test;
 
-	sui.uid = SchedulerAdd(scheduler_test, CommitSuicide, interval4, (void *)&sui);
+	sui.uid = HeapSchedulerAdd(scheduler_test, CommitSuicide, interval4, (void *)&sui);
 
 	/*
 	printf("sui.uid:\n");
@@ -139,13 +139,13 @@ static void SchedulerTest()
 	
 	/*sleep(10);*/
 		
-	run_status = SchedulerRun(scheduler_test);
+	run_status = HeapSchedulerRun(scheduler_test);
 	
 	printf("Run stopped at status %d\n", run_status);
 	
-	if (2 != SchedulerSize(scheduler_test))
+	if (2 != HeapSchedulerSize(scheduler_test))
 	{
-		printf("SchedulerSize Failed. Supposed to have 2 tasks, has %ld.\n", SchedulerSize(scheduler_test));			
+		printf("HeapSchedulerSize Failed. Supposed to have 2 tasks, has %ld.\n", HeapSchedulerSize(scheduler_test));			
 	}
 
 	return;
@@ -170,7 +170,7 @@ int CommitSuicide(void *sui)
 	int status = 0;
 	/*suicide_kit su_kit = (suicide_kit *)sui;*/
 	printf("Im dying!\n");
-	status = SchedulerRemove((((suicide_kit *)sui)->scheduler), (((suicide_kit *)sui)->uid));
+	status = HeapSchedulerRemove((((suicide_kit *)sui)->scheduler), (((suicide_kit *)sui)->uid));
 	
 	return status;	
 }
@@ -179,7 +179,7 @@ int StopTheRun(void *scheduler)
 {
 	printf("Stopping run!\n");
 	
-	SchedulerStop((scheduler_t *)scheduler);
+	HeapSchedulerStop((scheduler_t *)scheduler);
 	
 	return 0;
 }
@@ -210,10 +210,10 @@ int PrintCat(void *param)
 	return (*(int *)param);
 }
 
-int AddPrintCatToScheduler(void *scheduler)
+int AddPrintCatToHeapScheduler(void *scheduler)
 {
 	int repeat = 0;
-	ilrd_uid_t uid = SchedulerAdd((scheduler_t *)scheduler, PrintCat, 1, (void *)&repeat);
+	ilrd_uid_t uid = HeapSchedulerAdd((scheduler_t *)scheduler, PrintCat, 1, (void *)&repeat);
 	
 	if (UidIsSame(uid, GetBadUid()))
 	{

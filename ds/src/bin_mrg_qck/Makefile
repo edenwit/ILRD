@@ -1,60 +1,32 @@
-TARGET 	= $(notdir $(shell pwd))
+NAME = $(notdir ${PWD})
+LIB = ../../lib
+TEST = ../test
+OBJ = ../../obj
+INC = ../../include
+SRC = .
+BIN = ../bin
+SRCS := $(NAME)/$(wildcard $(SRC)/*.c)
+export EXES_SRC := $(TEST)/$(NAME:.c=_test.c)
+export EXES := $(BIN)/$(NAME:=_test)
+all:
+	$(MAKE) all -C../ -e
 
-SRC		= .
-INCLUDE	= ../../include
-TEST	= ../../test
-OBJ 	= ../../obj/$(TARGET)
-BIN		= ../../bin
+debug:
+	$(MAKE) debug -C../ -e
 
-CC 		= gcc
-CFLAGS	= -ansi -pedantic-errors -Wall -Wextra -g -I$(INCLUDE)
+release:
+	$(MAKE) release -C../ -e
 
-VLG		= valgrind --leak-check=yes --track-origins=yes
-CGDB	= cgdb
+test:
+	$(MAKE) test -C../ -e
 
-HEADERS	= $(INCLUDE)/$(TARGET).h 
-SOURCES	= $(TEST)/$(TARGET)_test.c $(SRC)/$(TARGET).c 
-OBJECT	= $(OBJ)/$(TARGET).o $(OBJ)/$(TARGET)_test.o 
+.PHONY: clean all release debug test run gdb
 
-$(BIN)/$(TARGET): $(OBJECT) $(HEADERS) 
-	$(CC) $(CFLAGS) $(OBJECT) -o $@  
-
-$(OBJ)/%.o : $(SRC)/%.c
-	@mkdir -p $(OBJ)
-	$(CC) $(CFLAGS) -c $^ -o $@
-	
-$(OBJ)/%.o : $(TEST)/%.c 
-	@mkdir -p $(OBJ)
-	$(CC) $(CFLAGS) -c $^ -o $@				
-
-.PHONY: clean run tree cgdb print 
-
-run :
-	$(BIN)/$(TARGET)
-
-clean : 
-	rm -f $(BIN)/$(TARGET)
-	rm -f $(OBJ)/*.o
-	rm -r $(OBJ)
-	
-tree:
-	@tree ../../
-
-vlg :
-	@$(VLG) ./$(BIN)/$(TARGET)	
-
-cgdb :
-	@$(CGDB) ./$(BIN)/$(TARGET)
-
-print :
-	@echo "Sources: $(SOURCES)"
-	@echo "Objects: $(OBJECT)"
-	@echo "Headers: $(HEADERS)"
-				
-	
-
-
-	
-	
-	
-	
+gdb:
+	@cd ../ && cgdb $(BIN)/$(NAME)_test
+run:
+	@cd ../ && $(BIN)/$(NAME)_test
+help:
+	$(MAKE) help -C../ -e
+clean:
+	$(MAKE) clean -C../ -e

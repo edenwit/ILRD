@@ -17,18 +17,18 @@ struct pq
 
 */
 
-pq_t 	  *PQueueCreate (int (*cmp_func)(const void *data1, const void *data2)); 	/* O(1) */
-void       PQueueDestroy(pq_t *p_queue);			         	            		/* O(n) */	
+pq_t 	  *HeapPQueueCreate (int (*cmp_func)(const void *data1, const void *data2)); 	/* O(1) */
+void       HeapPQueueDestroy(pq_t *p_queue);			         	            		/* O(n) */	
 
-size_t     PQueueSize   (const pq_t *p_queue);       			        			/* O(n) */ 
-int        PQueueIsEmpty(const pq_t *p_queue);		   			        			/* O(1) */
+size_t     HeapPQueueSize   (const pq_t *p_queue);       			        			/* O(n) */ 
+int        HeapPQueueIsEmpty(const pq_t *p_queue);		   			        			/* O(1) */
 
-int        PQueueEnqueue(pq_t *p_queue, void *data);   	 				    	    /* O(n) */
-void      *PQueueDequeue(pq_t *p_queue);		    		 	   				    /* O(1) */
-void      *PQueuePeek   (const pq_t *p_queue);				      	    		    /* O(1) */
+int        HeapPQueueEnqueue(pq_t *p_queue, void *data);   	 				    	    /* O(n) */
+void      *HeapPQueueDequeue(pq_t *p_queue);		    		 	   				    /* O(1) */
+void      *HeapPQueuePeek   (const pq_t *p_queue);				      	    		    /* O(1) */
   
-void 	   PQueueClear  (pq_t *p_queue);					            			/* O(n) */
-void 	  *PQueueErase  (pq_t *p_queue, 
+void 	   HeapPQueueClear  (pq_t *p_queue);					            			/* O(n) */
+void 	  *HeapPQueueErase  (pq_t *p_queue, 
 						 int (*is_match_func)(const void *data, const void *param),
 						 void *param); 			     					  		    /* O(n) */
 

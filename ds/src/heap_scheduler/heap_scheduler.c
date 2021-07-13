@@ -28,7 +28,7 @@ struct scheduler
 static int CmpExecutionTime(const void *data1, const void *data2);
 static int IsMatch(const void *data, const void *param);
 
-scheduler_t *SchedulerCreate (void)
+scheduler_t *HeapSchedulerCreate (void)
 {
 	scheduler_t *scheduler = (scheduler_t *)malloc(sizeof(scheduler_t));
 	
@@ -37,7 +37,7 @@ scheduler_t *SchedulerCreate (void)
 		return (NULL);
 	}
 	
-	scheduler->pq = PQueueCreate(CmpExecutionTime);
+	scheduler->pq = HeapPQueueCreate(CmpExecutionTime);
 	
 	if (NULL == scheduler->pq)
 	{
@@ -52,21 +52,21 @@ scheduler_t *SchedulerCreate (void)
 	return (scheduler);
 }
 
-void  SchedulerDestroy(scheduler_t *scheduler)
+void  HeapSchedulerDestroy(scheduler_t *scheduler)
 {
 	assert(scheduler);
 	assert(scheduler->pq);
 	
-	SchedulerClear(scheduler);
+	HeapSchedulerClear(scheduler);
 	
-	PQueueDestroy(scheduler->pq);
+	HeapPQueueDestroy(scheduler->pq);
 	
 	free(scheduler);	
 	
 	return;	
 }
 
-ilrd_uid_t SchedulerAdd(scheduler_t *scheduler, 
+ilrd_uid_t HeapSchedulerAdd(scheduler_t *scheduler, 
 			int (*action_func)(void *param), 
 			size_t interval_in_sec, void *param)
 {
@@ -83,7 +83,7 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 		return GetBadUid();
 	}
 	
-	if (1 == PQueueEnqueue(scheduler->pq, (void *)task))
+	if (1 == HeapPQueueEnqueue(scheduler->pq, (void *)task))
 	{
 		TaskDestroy(task);
 		scheduler->current_task = NULL;					
@@ -98,7 +98,7 @@ ilrd_uid_t SchedulerAdd(scheduler_t *scheduler,
 																	  * instance to be executed
 																	  * in x seconds. time complexity: O(n) 
 																	  */	   
-int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
+int HeapSchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 {
 	task_t *task = NULL;
 
@@ -113,7 +113,7 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 		return (0);	
 	}
 	
-	task = PQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
+	task = HeapPQueueErase(scheduler->pq, IsMatch, (void *)&task_id);
 	
 	if (NULL == task)
 	{
@@ -126,24 +126,24 @@ int SchedulerRemove(scheduler_t *scheduler, ilrd_uid_t task_id)
 	return (0);
 }
 
-size_t SchedulerSize(const scheduler_t *scheduler) 	 /* time complexity: O(n) */
+size_t HeapSchedulerSize(const scheduler_t *scheduler) 	 /* time complexity: O(n) */
 {
 	assert(scheduler);
 	assert(scheduler->pq);
 	
-	return (PQueueSize(scheduler->pq));	
+	return (HeapPQueueSize(scheduler->pq));	
 }
 
-int SchedulerIsEmpty(const scheduler_t *scheduler)
+int HeapSchedulerIsEmpty(const scheduler_t *scheduler)
 {
 	assert(scheduler);
 	assert(scheduler->pq);
 	
-	return (PQueueIsEmpty(scheduler->pq));		
+	return (HeapPQueueIsEmpty(scheduler->pq));		
 }
 
 /* 0- success, 1- fail, 2- action_function_fail, 3- stopped*/
-int SchedulerRun(scheduler_t *scheduler)
+int HeapSchedulerRun(scheduler_t *scheduler)
 {
 	time_t current_time = (time_t)-1; 
 	int remain = 0;
@@ -153,17 +153,17 @@ int SchedulerRun(scheduler_t *scheduler)
 	
 	scheduler->is_run = 1;
 	
-	while ((1 == scheduler->is_run) && (!SchedulerIsEmpty(scheduler)))
+	while ((1 == scheduler->is_run) && (!HeapSchedulerIsEmpty(scheduler)))
 	{
 		current_time = time(NULL);
 
 		if ((time_t)-1 == current_time)
 		{
-			SchedulerStop(scheduler);
+			HeapSchedulerStop(scheduler);
 			return (RUN_FAILURE); /* fail */
 		}
 
-		scheduler->current_task = PQueueDequeue(scheduler->pq);
+		scheduler->current_task = HeapPQueueDequeue(scheduler->pq);
 		
 		remain = TaskGetExecutionTime(scheduler->current_task) - current_time;
 		
@@ -192,7 +192,7 @@ int SchedulerRun(scheduler_t *scheduler)
 				TaskDestroy(scheduler->current_task);
 				scheduler->current_task = NULL;
 				
-				SchedulerStop(scheduler);
+				HeapSchedulerStop(scheduler);
 				return (RUN_ACTION_FUNC_FAILURE); /* fail action function */
 			}
 			case ACTION_FUNC_REPEAT:
@@ -206,16 +206,16 @@ int SchedulerRun(scheduler_t *scheduler)
 				{
 					TaskDestroy(scheduler->current_task);
 					scheduler->current_task = NULL;					
-					SchedulerStop(scheduler);	
+					HeapSchedulerStop(scheduler);	
 
 					return (RUN_FAILURE); /* fail */			
 				}
 				
-				if (1 == PQueueEnqueue(scheduler->pq, (void *)scheduler->current_task))
+				if (1 == HeapPQueueEnqueue(scheduler->pq, (void *)scheduler->current_task))
 				{
 					TaskDestroy(scheduler->current_task);
 					scheduler->current_task = NULL;					
-					SchedulerStop(scheduler);		
+					HeapSchedulerStop(scheduler);		
 								
 					return (RUN_FAILURE); /* fail */
 				}				
@@ -231,13 +231,13 @@ int SchedulerRun(scheduler_t *scheduler)
 	{
 		return (RUN_STOP); /* stop */
 	}
-	SchedulerStop(scheduler);	
+	HeapSchedulerStop(scheduler);	
 	
 	return (RUN_SUCCESS); /* success */
 	
 }
 
-void SchedulerStop(scheduler_t *scheduler)
+void HeapSchedulerStop(scheduler_t *scheduler)
 {
 	assert(scheduler);
 	assert(scheduler->pq);
@@ -247,14 +247,14 @@ void SchedulerStop(scheduler_t *scheduler)
 	return;	
 }
 
-void SchedulerClear(scheduler_t *scheduler)
+void HeapSchedulerClear(scheduler_t *scheduler)
 {
 	assert(scheduler);
 	assert(scheduler->pq);
 	
-	while (!SchedulerIsEmpty(scheduler))
+	while (!HeapSchedulerIsEmpty(scheduler))
 	{
-		TaskDestroy(PQueueDequeue(scheduler->pq));
+		TaskDestroy(HeapPQueueDequeue(scheduler->pq));
 	}
 	
 	scheduler->current_task = NULL;						

@@ -10,8 +10,8 @@
 
 static void TaskTest();
 int ActionPrint(void *param);
-static void PrintUid(ilrd_uid_t uid);
-
+/* static void PrintUid(ilrd_uid_t uid);
+ */
 int main()
 {
 	TaskTest();
@@ -47,7 +47,7 @@ static void TaskTest()
 		printf("TaskUpdateExecutionTime Failed. returned 1\n");
 	}
 			
-	if (TaskGetExecutionTime(task_test) != exec_time + interval)
+	if ((unsigned long)TaskGetExecutionTime(task_test) != (exec_time + interval))
 	{
 		printf("TaskUpdateExecutionTime Failed. expacted: %ld, actual: %ld.\n", exec_time + interval, TaskGetExecutionTime(task_test));	
 	}	
@@ -118,9 +118,9 @@ int ActionPrint(void *param)
 	return (*(int *)&param);
 }
 
-static void PrintUid(ilrd_uid_t uid)
+/* static void PrintUid(ilrd_uid_t uid)
 {
 	printf("Uid:\ncount:%ld\nprocess_id: %d\ntime_stamp: %ld\n", uid.count, uid.process_ID, uid.time_stamp);
 	
 	return;
-}
+} */

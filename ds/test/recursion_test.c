@@ -209,8 +209,8 @@ static void IterativeFibonacciTest()
 	int test_arr[] = {1, 2, 3, 4, 5, 6, 10, 20, 30, 40};
 	int exp_arr[] = {1, 1, 2, 3, 5, 8, 55, 6765, 832040, 102334155};
 	size_t arr_size = sizeof(test_arr) / sizeof(test_arr[0]);
-	size_t recur_res = 0;
 	size_t i = 0;
+	int recur_res = 0;
 
 	for (i = 0; i < arr_size; ++i)
 	{
@@ -218,7 +218,7 @@ static void IterativeFibonacciTest()
 
 		if (recur_res != exp_arr[i])
 		{
-			printf("GetNFibonacciElement Test #%ld failed. n: %d, actual: %d, expacted: %d.\n", i + 1, test_arr[i], recur_res);
+			printf("GetNFibonacciElement Test #%ld failed. n: %d, actual: %d.\n", i + 1, test_arr[i], recur_res);
 		}
 	}
 
@@ -235,11 +235,11 @@ static void RecursiveFibonacciTest()
 
 	for (i = 0; i < arr_size; ++i)
 	{
-		recur_res = RecursiveFibonacci(test_arr[i]);
+		recur_res = (long)RecursiveFibonacci(test_arr[i]);
 
 		if (recur_res != exp_arr[i])
 		{
-			printf("GetNFibonacciElement Test #%ld failed. n: %d, actual: %d, expacted: %d.\n", i + 1, test_arr[i], recur_res);
+			printf("GetNFibonacciElement Test #%ld failed. n: %d, actual: %d.\n", i + 1, test_arr[i], recur_res);
 		}
 	}
 
