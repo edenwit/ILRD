@@ -6,7 +6,6 @@
 #include "dhcp.h"
 
 #define SUBNET_SIZE 4
-#define RESERVED_ADDRESSES 3
 #define BITS_IN_IP 32
 #define BITS_IN_BYTE 8
 #define BIN_BASE 2
@@ -20,7 +19,8 @@ enum reserved_addresses
 {
     NETWORK_ADDRESS,
     SERVER_ADDRESS,
-    BROADCAST_ADDRESS
+    BROADCAST_ADDRESS,
+    RESERVED_ADDRESSES
 };
 
 struct dhcp
@@ -61,6 +61,19 @@ dhcp_t *DhcpCreate(const unsigned char subnet_id_bytes[SUBNET_SIZE], size_t occu
     return (InitDhcp(dhcp, subnet, occupied_bits));
 }
 
+
+void DhcpDestroy(dhcp_t *dhcp)
+{
+    assert(dhcp);
+    assert(dhcp->trie);
+
+    TrieDestroy(dhcp->trie);
+    dhcp->trie = NULL;
+    free(dhcp);
+
+    return;
+}
+
 static dhcp_t *InitDhcp(dhcp_t *dhcp, unsigned long subnet, size_t occupied_bits)
 {
     unsigned long dummy = 0;
@@ -69,16 +82,16 @@ static dhcp_t *InitDhcp(dhcp_t *dhcp, unsigned long subnet, size_t occupied_bits
 
     dhcp->subnet_id_long = subnet;
     dhcp->subnet_mask = ((1 << occupied_bits) - 1) << (BITS_IN_IP - occupied_bits);
-    dhcp->reserved_addresses[0] = dhcp->subnet_mask & subnet;
-    dhcp->reserved_addresses[2] = ((~dhcp->subnet_mask) | subnet);
-    dhcp->reserved_addresses[1] = dhcp->reserved_addresses[2] - 1;
+    dhcp->reserved_addresses[NETWORK_ADDRESS] = dhcp->subnet_mask & subnet;
+    dhcp->reserved_addresses[BROADCAST_ADDRESS] = ((~dhcp->subnet_mask) | subnet);
+    dhcp->reserved_addresses[SERVER_ADDRESS] = dhcp->reserved_addresses[BROADCAST_ADDRESS] - 1;
 
-    if  (  TrieInsert(dhcp->trie, dhcp->reserved_addresses[0], &dummy)
-        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[1], &dummy)
-        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[2], &dummy))
-    {
-        TrieDestroy(dhcp->trie);
-        free(dhcp);
+    if  (  TrieInsert(dhcp->trie, dhcp->reserved_addresses[NETWORK_ADDRESS], &dummy)
+        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[SERVER_ADDRESS], &dummy)
+        || TrieInsert(dhcp->trie, dhcp->reserved_addresses[BROADCAST_ADDRESS], &dummy))
+    {   
+        DhcpDestroy(dhcp);
+        
         return (NULL);
     }
 
@@ -169,18 +182,6 @@ size_t DhcpCountFree(const dhcp_t *dhcp)
     assert(dhcp->trie);
 
     return ((0x1 << (BITS_IN_IP - dhcp->occupied_bits)) - TrieSize(dhcp->trie));
-}
-
-void DhcpDestroy(dhcp_t *dhcp)
-{
-    assert(dhcp);
-    assert(dhcp->trie);
-
-    TrieDestroy(dhcp->trie);
-    dhcp->trie = NULL;
-    free(dhcp);
-
-    return;
 }
 
 /* ------------------------Static Funcs ---------------------------------- */

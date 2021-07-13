@@ -11,8 +11,8 @@ static void PrintIp(unsigned char *ip);
 
 int main()
 {
-/*     TestDhcp1();
- */    TestDhcp2();
+     TestDhcp1();
+     TestDhcp2();
 
     return 0;
 }
@@ -130,17 +130,17 @@ static void TestDhcp1()
 
     if (NOT_IN_SUBNET_RANGE != DhcpAllocteIp(dhcp, network_address, new_ip))
     {
-        printf("DhcpFreeIp failed at line: %d\n", __LINE__);
+        printf("DhcpAllocteIp failed at line: %d\n", __LINE__);
     }
 
     if (NOT_IN_SUBNET_RANGE != DhcpAllocteIp(dhcp, broadcast_address, new_ip))
     {
-        printf("DhcpFreeIp failed at line: %d\n", __LINE__);
+        printf("DhcpAllocteIp failed at line: %d\n", __LINE__);
     }
 
     if (NOT_IN_SUBNET_RANGE != DhcpAllocteIp(dhcp, server_address, new_ip))
     {
-        printf("DhcpFreeIp failed at line: %d\n", __LINE__);
+        printf("DhcpAllocteIp failed at line: %d\n", DhcpAllocteIp(dhcp, server_address, new_ip));
     }
 
     if (1 != DhcpCountFree(dhcp))

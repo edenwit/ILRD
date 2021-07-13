@@ -5,6 +5,7 @@
 #include "trie.h"
 
 #define BITS_IN_IP (32)
+#define CHILD_TO_GO(BITS, IP) (((IP) >> ((BITS) - 1)) & 1)
 
 typedef enum nodes
 {
@@ -27,20 +28,24 @@ static int IsRightChild(trie_node_t *node);
 static void UpdateToNotFull(trie_node_t *node);
 static void UpdateIsFull(trie_node_t *node);
 /* allocate funcs */
-static trie_node_t *AllocatePath(trie_node_t *node, size_t bits_left, nodes_t direction);
-static trie_status_t AllocateByArr(trie_node_t *node, size_t bits_left, unsigned long requested_ip, unsigned long *output_ip);
+static trie_node_t *AllocatePath(trie_node_t *node, size_t bits_left, 
+                                 nodes_t direction);
+static trie_status_t AllocateByArr(trie_node_t *node, size_t bits_left, 
+                                   unsigned long requested_ip,
+                                   unsigned long *output_ip);
 /* node init funcs */
 static void InitTrieNode(trie_node_t *node);
 static void FreeNode(trie_node_t *node);
 /* inner size funcs */
 static size_t RecTrieSize(trie_node_t *node, size_t height);
 /* traverse funcs */
-static trie_status_t FindNext(trie_node_t *node, size_t bits_left, unsigned long *output_ip);
+static trie_status_t FindNext(trie_node_t *node, size_t bits_left, 
+                              unsigned long *output_ip);
 
 #define HAS_RIGHT_CHILD(X) ((X)->nodes[RIGHT])
 #define HAS_LEFT_CHILD(X) ((X)->nodes[LEFT])
-#define IS_RIGHT_CHILD_FULL(X) ((X)->nodes[RIGHT]->is_full)
-#define IS_LEFT_CHILD_FULL(X) ((X)->nodes[LEFT]->is_full)
+#define IS_RCHILD_FULL(X) ((X)->nodes[RIGHT]->is_full)
+#define IS_LCHILD_FULL(X) ((X)->nodes[LEFT]->is_full)
 #define IS_FULL(X) ((X)->is_full)
 #define IS_ROOT(X) (!(X)->nodes[PARENT])
 
@@ -91,6 +96,8 @@ void TrieDestroy(trie_t *trie)
 
     InnerDestroy(trie->root);
 
+    trie->root = NULL;
+
     free(trie);
 
     return;
@@ -111,7 +118,8 @@ static void InnerDestroy(trie_node_t *node)
     return;
 }
 
-trie_status_t TrieInsert(trie_t *trie, unsigned long requested_ip, unsigned long *output_ip)
+trie_status_t TrieInsert(trie_t *trie, unsigned long requested_ip, 
+                         unsigned long *output_ip)
 {
     trie_node_t *cur_node = NULL;
     size_t bits_left = 0;
@@ -123,13 +131,15 @@ trie_status_t TrieInsert(trie_t *trie, unsigned long requested_ip, unsigned long
 
     bits_left = trie->branch_depth;
 
-    while (0 < bits_left && !IS_FULL(cur_node) && cur_node->nodes[(requested_ip >> (bits_left - 1)) & 1])
+    while (0 < bits_left && !IS_FULL(cur_node) 
+           && cur_node->nodes[CHILD_TO_GO(bits_left, requested_ip)])
     {
-        cur_node = cur_node->nodes[(requested_ip >> (bits_left - 1)) & 1];
+        cur_node = cur_node->nodes[CHILD_TO_GO(bits_left, requested_ip)];
         --bits_left;
     }
 
-    if (0 < bits_left && NULL == cur_node->nodes[(requested_ip >> (bits_left - 1)) & 1])
+    if (0 < bits_left 
+        && NULL == cur_node->nodes[CHILD_TO_GO(bits_left, requested_ip)])
     {
         return (AllocateByArr(cur_node, bits_left, requested_ip, output_ip));
     }
@@ -147,9 +157,10 @@ int TrieRemove(trie_t *trie, unsigned long data_to_remove)
     cur_node = (trie_node_t *)trie->root;
     bits_left = trie->branch_depth;
 
-    while ((0 < bits_left) && (cur_node->nodes[(data_to_remove >> (bits_left - 1)) & 1]))
+    while ((0 < bits_left) 
+            && (cur_node->nodes[CHILD_TO_GO(bits_left, data_to_remove)]))
     {
-        cur_node = cur_node->nodes[(data_to_remove >> ((bits_left - 1)) & 1)];
+        cur_node = cur_node->nodes[CHILD_TO_GO(bits_left, data_to_remove)];
         --bits_left;
     }
 
@@ -165,16 +176,14 @@ int TrieRemove(trie_t *trie, unsigned long data_to_remove)
 
 size_t TrieSize(trie_t *trie)
 {
-    size_t height = 0;
-
     assert(trie);
 
-    height = trie->branch_depth;
-
-    return RecTrieSize(trie->root, height);
+    return (RecTrieSize(trie->root, trie->branch_depth));
 }
 
-static trie_status_t AllocateByArr(trie_node_t *node, size_t bits_left, unsigned long requested_ip, unsigned long *output_ip)
+static trie_status_t AllocateByArr(trie_node_t *node, size_t bits_left, 
+                                   unsigned long requested_ip, 
+                                   unsigned long *output_ip)
 {
     trie_node_t *new_node = NULL;
 
@@ -194,7 +203,8 @@ static trie_status_t AllocateByArr(trie_node_t *node, size_t bits_left, unsigned
         }
 
         InitTrieNode(new_node);
-        node->nodes[(requested_ip >> (bits_left - 1)) & 1] = new_node;
+        node->nodes[CHILD_TO_GO(bits_left, requested_ip)] = new_node;
+
         new_node->nodes[PARENT] = node;
         node = new_node;
         --bits_left;
@@ -207,12 +217,13 @@ static trie_status_t AllocateByArr(trie_node_t *node, size_t bits_left, unsigned
     return (GetFullPath(node, output_ip));
 }
 
-static trie_status_t FindNext(trie_node_t *node, size_t bits_left, unsigned long *output_ip)
+static trie_status_t FindNext(trie_node_t *node, size_t bits_left, 
+                            unsigned long *output_ip)
 {
     assert(node);
     assert(output_ip);
 
-    while (!IS_ROOT(node) && (IsRightChild(node) || (node->nodes[PARENT]->nodes[RIGHT] && IS_FULL(node->nodes[PARENT]->nodes[RIGHT]))))
+    while (!IS_ROOT(node) && (IsRightChild(node)))
     {
         node = node->nodes[PARENT];
         ++bits_left;
@@ -231,7 +242,7 @@ static trie_status_t FindNext(trie_node_t *node, size_t bits_left, unsigned long
         node = node->nodes[RIGHT];
         --bits_left;
 
-        while (HAS_LEFT_CHILD(node) && !IS_LEFT_CHILD_FULL(node))
+        while (HAS_LEFT_CHILD(node) && !IS_LCHILD_FULL(node))
         {
             node = node->nodes[LEFT];
             --bits_left;
@@ -241,12 +252,22 @@ static trie_status_t FindNext(trie_node_t *node, size_t bits_left, unsigned long
         {
             node = AllocatePath(node, bits_left, LEFT);
 
+            if (NULL == node)
+            {
+                return (TRIE_MALLOC_FAILED);
+            }
+            
             return (GetFullPath(node, output_ip));
         }
     }
 
-    node = AllocatePath(node, bits_left, RIGHT);
+        node = AllocatePath(node, bits_left, RIGHT);
 
+        if (NULL == node)
+        {
+           return (TRIE_MALLOC_FAILED);
+        }
+            
     return (GetFullPath(node, output_ip));
 }
 
@@ -295,7 +316,7 @@ static void UpdateIsFull(trie_node_t *node)
     {
         if (HAS_LEFT_CHILD(node) && HAS_RIGHT_CHILD(node))
         {
-            node->is_full = (IS_LEFT_CHILD_FULL(node) & IS_RIGHT_CHILD_FULL(node));
+            node->is_full = (IS_LCHILD_FULL(node) & IS_RCHILD_FULL(node));
         }
         else
         {
@@ -307,7 +328,7 @@ static void UpdateIsFull(trie_node_t *node)
 
     if (HAS_LEFT_CHILD(node) && HAS_RIGHT_CHILD(node))
     {
-        node->is_full = (IS_LEFT_CHILD_FULL(node) & IS_RIGHT_CHILD_FULL(node));
+        node->is_full = (IS_LCHILD_FULL(node) & IS_RCHILD_FULL(node));
     }
 
     return;
@@ -320,7 +341,8 @@ static int IsRightChild(trie_node_t *node)
     return (node == node->nodes[PARENT]->nodes[RIGHT]);
 }
 
-static trie_node_t *AllocatePath(trie_node_t *node, size_t bits_left, nodes_t direction)
+static trie_node_t *AllocatePath(trie_node_t *node, size_t bits_left, 
+                                 nodes_t direction)
 {
     trie_node_t *new_node = NULL;
 
@@ -419,8 +441,9 @@ static size_t RecTrieSize(trie_node_t *node, size_t height)
 
     if (IS_FULL(node))
     {
-        return pow(2, height);
+        return (1 << height);
     }
 
-    return (RecTrieSize(node->nodes[LEFT], height - 1) + RecTrieSize(node->nodes[RIGHT], height - 1));
+    return (RecTrieSize(node->nodes[LEFT], height - 1) 
+            + RecTrieSize(node->nodes[RIGHT], height - 1));
 }
