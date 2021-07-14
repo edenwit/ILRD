@@ -2,7 +2,7 @@
 #include <stddef.h> /* size_t */
 #include <stdlib.h> /* malloc */
 
-#include "../../include/sll.h"
+#include "sll.h"
 
 #define UNUSED(X) ((void) X)
 

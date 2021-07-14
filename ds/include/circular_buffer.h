@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <stddef.h>
 
-
-
 /* version 1.0 approved */
 
 typedef struct circular_buffer c_buffer_t;

@@ -1,6 +1,5 @@
 /*19.4.20 13:55 version_7*/
 
-
 #ifndef __LINKED_LIST_H__
 #define __LINKED_LIST_H__
 
