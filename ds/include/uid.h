@@ -2,12 +2,13 @@
 #define __OL102_UID_H__
 
 #include <sys/types.h> /* pid_t */
+#include <stdatomic.h> /* atomic_size_t */
 
 /* DO NOT USE INTERNAL MEMBERS OF THE STRUCT */
 
 typedef struct unique_id
 {
-	size_t count;
+	static atomic_size_t count;
 	pid_t process_ID;
 	time_t time_stamp;
 } ilrd_uid_t;

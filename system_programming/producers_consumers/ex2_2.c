@@ -114,8 +114,8 @@ void *Consumer(void *list)
 		SLLRemove(SLLBegin((s_list_t *)list));
 		arr[i] = temp;
 
-		pthread_mutex_unlock(&lock);
 		++i;
+		pthread_mutex_unlock(&lock);
 	}
 
 	return (NULL);

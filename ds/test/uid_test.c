@@ -3,7 +3,7 @@
 
 #include "uid.h"
 
-#define LOOPS (3)
+#define LOOPS (30)
 #define SECONDS_TO_WAIT (2)
 
 static void UidTest();
@@ -34,7 +34,7 @@ static void UidTest()
 	{
 		if (uids[i].count != (uids[i - 1].count + 1))
 		{
-			printf("Count failed! pair checked: %ld-%ld.\n", uids[i].count, uids[i - 1].count);
+			printf("Count failed! pair checked: %d-%d.\n", uids[i].count, uids[i - 1].count);
 		}
 		if ((uids[i].process_ID != (uids[i - 1].process_ID) || (uids[i].process_ID != process_id)))
 		{
@@ -68,7 +68,8 @@ static void UidTest()
 
 static void PrintUid(ilrd_uid_t uid)
 {
-	printf("Uid:\ncount:%ld\nprocess_id: %d\ntime_stamp: %ld\n", uid.count, uid.process_ID, uid.time_stamp);
+	printf("Uid:\ncount:%d\nprocess_id: %d\ntime_stamp: %ld\n",
+			uid.count, uid.process_ID, uid.time_stamp);
 	
 	return;
 }
