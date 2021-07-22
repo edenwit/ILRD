@@ -13,14 +13,14 @@ void towerOfHanoi(int n, char from_rod, char to_rod, char aux_rod);
 int main(int argc, char *argv[])
 {
 	size_t i = 0;
-	int n = 20; /* Number of disks */
+	int n = 40; /* Number of disks */
 	
 	UNUSED(argc);
 
     printf("Hi im the user. blah blah blah. pid: %ld\n", getpid());
 	
     printf("now im gonna activate the WatchDog security\n");
-	WDStart(argv, 5, 1);
+	WDStart(argv, 5, 2);
 
 	for (i = 0; i < RUNS; ++i)
 	{
