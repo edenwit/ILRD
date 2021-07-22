@@ -2,13 +2,15 @@
 #include <time.h> 		/* time_t */
 #include <limits.h> 	/* MAX_INT */
 #include "uid.h"
+#include <stdatomic.h> /* atomic_size_t */
+
 
 #define MAX_SIZE_T (~(size_t)0)
 
 /* Approved by eden girl */
 ilrd_uid_t UidCreate(void)
 {
-	static size_t count = 0;
+	static atomic_size_t count = 0;
 	ilrd_uid_t uid ={0};	
 	
 	++count;

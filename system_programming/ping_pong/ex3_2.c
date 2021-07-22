@@ -5,6 +5,8 @@
 #include <stdio.h>	   /* printf */
 #include <unistd.h>	   /* pause, sleep */
 #include <sys/types.h> /* pid_t */
+#include <siginfo.h> /* siginfo_t */
+
 
 #define UNUSED(X) ((void)X)
 

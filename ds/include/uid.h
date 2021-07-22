@@ -8,7 +8,7 @@
 
 typedef struct unique_id
 {
-	static atomic_size_t count;
+	atomic_size_t count;
 	pid_t process_ID;
 	time_t time_stamp;
 } ilrd_uid_t;
