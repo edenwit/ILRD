@@ -28,12 +28,12 @@ static atomic_size_t counter = 0;
 static atomic_int to_stop = 0;
 pthread_t thread = {0};
 /* -------------------- signal handlers ------------------------------*/
-void Sig1Handler(int sig);
-void Sig2Handler(int sig);
+static void Sig1Handler(int sig);
+static void Sig2Handler(int sig);
 /* -------------------- scheduler tasks ------------------------------*/
-int SendSignal(void *pid);
-int CheckSignal(void *watchdog);
-int WDStopSched(void *watchdog);
+static int SendSignal(void *pid);
+static int CheckSignal(void *watchdog);
+static int WDStopSched(void *watchdog);
 /* --------------------- thread funcs ------------------------------- */
 static void *RunWD(void *watchdog);
 /* ------------------init helper functions -------------------------- */
@@ -98,7 +98,14 @@ int WDStart(char **argv, int check_ratio, int beats_interval)
 		printf("kid created\n");
 
 #endif
-		execv(WATCHDOG_EXE, argv);
+		if (-1 == execv(WATCHDOG_EXE, argv))
+		{
+#ifndef NDEBUG
+
+			printf("execv to watchdog file failed\n");
+#endif			
+			return (1);
+		}
 	}
 	/*user process*/
 	sprintf(watchdog_pid_buf, "%d", pid);
@@ -140,15 +147,31 @@ watchdog_t *InitSchedAndHandlers(int check_ratio, int beats_interval)
 	watchdog_t *watchdog = NULL;
 	struct sigaction handler1 = {0};
 	struct sigaction handler2 = {0};
+	sem_t *semo = NULL;
 
 	to_stop = 0;
 
 	handler1.sa_handler = Sig1Handler;
 	handler2.sa_handler = Sig2Handler;
 
-	sigaction(SIGUSR1, &handler1, NULL);
-	sigaction(SIGUSR2, &handler2, NULL);
+	if (-1 == sigaction(SIGUSR1, &handler1, NULL))
+	{
+#ifndef NDEBUG
 
+	printf("sigaction on SIGUSR1 failed.\n");
+
+#endif		
+	return (NULL);
+	}
+	if (-1 == sigaction(SIGUSR2, &handler2, NULL))
+	{
+#ifndef NDEBUG
+
+	printf("sigaction on SIGUSR2 failed.\n");
+
+#endif	
+	return (NULL);
+	}
 	watchdog = (watchdog_t *)malloc(sizeof(watchdog_t));
 
 	if (NULL == watchdog)
@@ -165,7 +188,20 @@ watchdog_t *InitSchedAndHandlers(int check_ratio, int beats_interval)
 		return (NULL);
 	}
 
-	watchdog->semophore = sem_open(SEMOPHORE_NAME, O_CREAT, 0666, 0);
+	semo = sem_open(SEMOPHORE_NAME, O_CREAT, 0666, 0);
+
+	if (SEM_FAILED == semo)
+	{
+#ifndef NDEBUG
+
+		printf("sem_open failed on semophore '%s'\n", SEMOPHORE_NAME);
+#endif		
+		WatchdogCleanUp(watchdog);
+
+		return (NULL);
+	}
+
+	watchdog->semophore = semo;
 	watchdog->is_watchdog = 0;
 
 	if (AddTasksToSched(watchdog, check_ratio, beats_interval))
@@ -191,8 +227,11 @@ static int AddTasksToSched(watchdog_t *watchdog, int check_ratio,
 
 	if (UidIsSame(uid, GetBadUid()))
 	{
+#ifndef NDEBUG
+
 		printf("HeapSchedulerAdd SendSignal failed!\n");
 
+#endif
 		return (1);
 	}
 
@@ -201,8 +240,11 @@ static int AddTasksToSched(watchdog_t *watchdog, int check_ratio,
 
 	if (UidIsSame(uid, GetBadUid()))
 	{
-		printf("HeapSchedulerAdd SendSignal failed!\n");
+#ifndef NDEBUG
 
+		printf("HeapSchedulerAdd CheckSignal failed!\n");
+
+#endif
 		return (1);
 	}
 
@@ -211,8 +253,11 @@ static int AddTasksToSched(watchdog_t *watchdog, int check_ratio,
 
 	if (UidIsSame(uid, GetBadUid()))
 	{
-		printf("HeapSchedulerAdd SendSignal failed!\n");
+#ifndef NDEBUG
 
+		printf("HeapSchedulerAdd WDStopSched failed!\n");
+
+#endif
 		return (1);
 	}
 
@@ -246,7 +291,7 @@ static int SetEnvVars(char *user_file_name, char *check_ratio_buf,
 	return (0);
 }
 
-void Sig1Handler(int sig)
+static void Sig1Handler(int sig)
 {
 	UNUSED(sig);
 
@@ -261,7 +306,7 @@ void Sig1Handler(int sig)
 	return;
 }
 
-void Sig2Handler(int sig)
+static void Sig2Handler(int sig)
 {
 	UNUSED(sig);
 
@@ -276,7 +321,7 @@ void Sig2Handler(int sig)
 	return;
 }
 
-int SendSignal(void *pid)
+static int SendSignal(void *pid)
 {
 	assert(pid);
 
@@ -290,7 +335,7 @@ int SendSignal(void *pid)
 	return (TASK_REPEAT);
 }
 
-int CheckSignal(void *watchdog)
+static int CheckSignal(void *watchdog)
 {
 	pid_t pid = 0;
 	watchdog_t *watchdog_ptr = (watchdog_t *)watchdog;
@@ -325,7 +370,14 @@ int CheckSignal(void *watchdog)
 
 #endif
 
-		execv(getenv(USER_FILE_NAME), watchdog_ptr->args);
+		if (-1 == execv(getenv(USER_FILE_NAME), watchdog_ptr->args))
+		{
+#ifndef NDEBUG
+
+			printf("execv to user file failed\n");
+#endif			
+		return (TASK_FAIL);
+		}
 	}
 	else
 	{
@@ -360,7 +412,14 @@ int CheckSignal(void *watchdog)
 
 #endif
 
-			execv(WATCHDOG_EXE, watchdog_ptr->args);
+			if (-1 == execv(WATCHDOG_EXE, watchdog_ptr->args))
+		{
+#ifndef NDEBUG
+
+				printf("execv to watchdog file failed\n");
+#endif			
+				return (1);
+		}
 		}
 		/* user process */
 
@@ -394,7 +453,7 @@ static void *RunWD(void *watchdog)
 	return (NULL);
 }
 
-int WDStopSched(void *watchdog)
+static int WDStopSched(void *watchdog)
 {
 	watchdog_t *watchdog_ptr = (watchdog_t *)watchdog;
 

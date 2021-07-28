@@ -39,14 +39,13 @@ int main(int argc, char **argv)
 
 	watchdog = InitSchedAndHandlers(check_ratio, beats_interval);
 
-	watchdog->args = argv;
-
 	if (NULL == watchdog)
 	{
 		printf("Failed to init Watchdog parts\n");
 		return (1);
 	}
 
+	watchdog->args = argv;
 	watchdog->send_pid = getppid();
 	watchdog->is_watchdog = 1;
 
