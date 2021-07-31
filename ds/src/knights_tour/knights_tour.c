@@ -10,6 +10,8 @@
 #define BOARD_AXIS 8
 #define TIMER_SECONDS 3600
 #define UNUSED(X) ((void)X)
+#define BIT_ARR_MAX (BitArrSetAll((bit_arr_t)0))
+
 
 typedef struct position_with_possibilities
 {
@@ -172,28 +174,47 @@ static return_val_t RecWarnsdorffsGoToNext(bit_arr_t chess_board,
     position_with_possibilities_t pos_arr[BOARD_AXIS] = {0};
     size_t i = 0;
     int status = STUCK;
+    char next_step = '\0';
+    size_t degree = 0;
 
+    path[BitArrCountOn(chess_board)] = curr_position;
+    chess_board = BitArrSetOn(chess_board, (size_t)curr_position);
+   
     if (1 == timed_out)
     {
         return (TIME_OUT);
     }
 
+    InitAndSortPosArr(chess_board, curr_position, pos_arr);
+    
     if (BOARD_SIZE == BitArrCountOn(chess_board))
     {
         return (SUCCESS);
     }
 
-    InitAndSortPosArr(chess_board, curr_position, pos_arr);
 
-    path[BitArrCountOn(chess_board)] = curr_position;
 
     for (i = 0; i < BOARD_AXIS && -1 == status; ++i)
     {
-        if ((-1 != curr_position) && (1 != BitArrGetVal(chess_board, curr_position)) && (0 < (pos_arr + i)->possibilities))
+        next_step = (pos_arr + i)->position;
+        degree = (pos_arr + i)->possibilities;       
+
+        if (-1 == next_step)
         {
-            status = RecWarnsdorffsGoToNext(BitArrSetOn(chess_board, curr_position),
-                                            (pos_arr + i)->position, path);
+            continue;
         }
+
+        if ((0 < degree) && (0 == BitArrGetVal(chess_board, (size_t)next_step)))
+        {
+            status = RecWarnsdorffsGoToNext(chess_board, next_step, path);
+        }
+        else if ((0 == degree) &&
+                 (chess_board == ~(BitArrSetOn((bit_arr_t)0, next_step))))
+        {
+            path[BitArrCountOn(chess_board)] = next_step;
+            return (SUCCESS);
+        }
+        
     }
 
     return (status);
