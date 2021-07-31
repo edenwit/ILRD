@@ -4,10 +4,9 @@
 #include <stddef.h>     /* size_t */
 
  typedef enum return_val
- { 
+ {  STUCK = -1,
     SUCCESS,
     TIME_OUT
-    /*more... */
  } return_val_t;
 
 #define BOARD_SIZE (64)
