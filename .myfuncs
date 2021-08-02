@@ -1,12 +1,54 @@
-#
-# gcc compilation aliases: c89, c99, dubug mode, release mode
-alias gd='gcc -ansi -pedantic-errors -Wall -Wextra -g'
+#!/bin/bash
+
+#alias
+
+alias gconGun='git config --global user.name'
+alias gic='git commit -m'
+alias gip='git push -u origin master'
+alias gsi='git status --ignored'
+alias gst='git status'
+alias gia='git add'
+
+alias go='gcc -ansi -pedantic-errors -Wall -Wextra -g -c'
+alias g='gcc -ansi -pedantic-errors -Wall -Wextra -g'
 alias gc='gcc -ansi -pedantic-errors -Wall -Wextra -DNDEBUG -O3'
 alias gd9='gcc -std=c99 -pedantic-errors -Wall -Wextra -g'
 alias gc9='gcc -std=c99 -pedantic-errors -Wall -Wextra -DNDEBUG -O3'
-#
-# Valgrind alias
 alias vlg='valgrind --leak-check=yes --track-origins=yes'
+alias gi='g -I'
 
-#Added on worksheet 7
-alias gd_c='gcc -ansi -pedantic-errors -Wall -Wextra -g -c'
+alias gnw='gcc -ansi -g' #befor u start c++ q2: no error insted of warnings 
+
+
+#c++
+alias gd+='g++ -std=c++98 -pedantic-errors -Wall -Wextra -g '
+alias gc+='g++ -std=c++98 -pedantic-errors -Wall -Wextra -DNDEBUG -O3'
+alias gdnw+='g++ -std=c++98 -g'
+alias gcnw+='g++ -std=c++98 -DNDEBUG -O3'
+alias gd11+='g++ -std=c++11 -pedantic-errors -Wall -Wextra -g'
+alias gc11+='g++ -std=c++11 -pedantic-errors -Wall -Wextra -DNDEBUG -O3'
+
+alias G='gedit'
+alias h='history'
+alias l='ll'
+alias c='cd'
+function gq { cd  ~/git/quizzes/quiz$@; }
+alias gs='c git/shelly/'
+
+
+function GDSD { cd  ~/git/ds/src/$@; }
+alias cdi='c git/ds/include'
+alias cdb='c git/ds/bin'
+alias cdt='c git/ds/test'
+alias cds='c git/ds/src'
+
+alias t='touch'
+
+#make alias
+function mktest { ~/git/ds/bin/$@; }
+function mkvlg { vlg ~/git/ds/bin/$@; }
+function mkhlg { valgrind --tool=helgrind --history-level=approx  ~/git/ds/bin/$@; }
+
+#'f(){cd git/c/ws"$@" f; }; f'
+
+

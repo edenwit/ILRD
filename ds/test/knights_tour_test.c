@@ -21,7 +21,8 @@ int main()
 
     for (i = 0; i < BOARD_SIZE; ++i)
     {
-        CreateWarnsdorffsTourTest(7);
+        /* CreateTourTest(i); */
+        CreateWarnsdorffsTourTest(i);
     }
 
     /*     CreateTourTest(0);

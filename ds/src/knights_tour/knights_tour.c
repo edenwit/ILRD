@@ -1,8 +1,10 @@
+#define _POSIX_C_SOURCE 200112L
 #include <pthread.h> /* pthred_create */
 #include <assert.h>  /* assert */
 #include <unistd.h>  /* sleep */
 #include <stdio.h>   /* printf */
 #include <stdlib.h>
+#include <signal.h> /* sigterm*/
 
 #include "knights_tour.h"
 #include "bit_array.h"
@@ -12,14 +14,13 @@
 #define UNUSED(X) ((void)X)
 #define BIT_ARR_MAX (BitArrSetAll((bit_arr_t)0))
 
-
 typedef struct position_with_possibilities
 {
     char position;
     size_t possibilities;
 } position_with_possibilities_t;
 
-int timed_out = 0;
+int stop_working = 0;
 
 /* knights tour funcs */
 static return_val_t RecGoToNext(bit_arr_t chess_board, char curr_position,
@@ -52,7 +53,11 @@ int CreateTour(char start_position, char path[BOARD_SIZE])
         return (1);
     }
 
-    pthread_cancel(thread);
+    stop_working = 1;
+    pthread_join(thread, NULL);
+    
+
+    stop_working = 0;
 
     return (0);
 }
@@ -72,7 +77,10 @@ int WarnsdorffsTour(char start_position, char path[BOARD_SIZE])
         return (1);
     }
 
-    pthread_cancel(thread);
+    pthread_kill(thread, SIGKILL);
+    pthread_join(thread, NULL);
+
+    stop_working = 0;
 
     return (0);
 }
@@ -82,25 +90,28 @@ static return_val_t RecGoToNext(bit_arr_t chess_board, char curr_position,
 {
     size_t i = 0;
     int status = -1;
+    char next_position = -2;
 
-    if (1 == timed_out)
+    if (1 == stop_working)
     {
         return (TIME_OUT);
     }
+
+    path[BitArrCountOn(chess_board)] = curr_position;
+    chess_board = BitArrSetOn(chess_board, (size_t)curr_position);
 
     if (BOARD_SIZE == BitArrCountOn(chess_board))
     {
         return (SUCCESS);
     }
 
-    path[BitArrCountOn(chess_board)] = curr_position;
-
     for (i = 0; i < BOARD_AXIS && -1 == status; ++i)
     {
-        if ((-1 != curr_position) && (1 != BitArrGetVal(chess_board, curr_position)))
+
+        next_position = GetNextAvalableStep(curr_position, i);
+        if (-1 != next_position && 0 == BitArrGetVal(chess_board, next_position))
         {
-            status = RecGoToNext(BitArrSetOn(chess_board, curr_position),
-                                 GetNextAvalableStep(curr_position, i), path);
+            status = RecGoToNext(chess_board, next_position, path);
         }
     }
 
@@ -112,29 +123,13 @@ static void InitAndSortPosArr(bit_arr_t chess_board, char curr_position,
 {
     size_t i = 0;
 
-    /*     for (i = 0; i < BOARD_AXIS; ++i)
-    {
-        printf("(%d, %d, %d) ", curr_position, (arr + i)->position, (arr + i)->possibilities);
-    } */
     for (i = 0; i < BOARD_AXIS; ++i)
     {
         (arr + i)->position = GetNextAvalableStep(curr_position, i);
         (arr + i)->possibilities = GetDegrees(BitArrSetOn(chess_board, curr_position), GetNextAvalableStep(curr_position, i));
     }
 
-    /*     printf("\n");
-
-    sleep(1); */
-
     qsort(arr, BOARD_AXIS, sizeof(position_with_possibilities_t), CmpFunc);
-
-    /*      for (i = 0; i < BOARD_AXIS; ++i)
-    {
-        printf("(%d, %d, %d) ", curr_position, (arr + i)->position, (arr + i)->possibilities);
-    }
-    printf("\n");
-
-        sleep(1);  */
 
     return;
 }
@@ -145,8 +140,6 @@ static size_t GetDegrees(bit_arr_t chess_board, char curr_position)
     size_t counter = 0;
     char next_position = 0;
 
-    /*     printf("\ncheckig steps for %d\n", curr_position);
- */
     if (-1 == curr_position)
     {
         return (0);
@@ -155,12 +148,10 @@ static size_t GetDegrees(bit_arr_t chess_board, char curr_position)
     for (j = 0; j < BOARD_AXIS; ++j)
     {
         next_position = GetNextAvalableStep(curr_position, j);
-        /*         printf("checking for %d\n", next_position);
- */
+
         if ((-1 != next_position) && (0 == BitArrGetVal(chess_board, next_position)))
         {
-            /*             printf("for %d: %d, %d\n",next_position, (-1 != next_position) , (0 == BitArrGetVal(chess_board, next_position)));
- */
+
             ++counter;
         }
     }
@@ -179,25 +170,23 @@ static return_val_t RecWarnsdorffsGoToNext(bit_arr_t chess_board,
 
     path[BitArrCountOn(chess_board)] = curr_position;
     chess_board = BitArrSetOn(chess_board, (size_t)curr_position);
-   
-    if (1 == timed_out)
+
+    if (1 == stop_working)
     {
         return (TIME_OUT);
     }
 
     InitAndSortPosArr(chess_board, curr_position, pos_arr);
-    
+
     if (BOARD_SIZE == BitArrCountOn(chess_board))
     {
         return (SUCCESS);
     }
 
-
-
     for (i = 0; i < BOARD_AXIS && -1 == status; ++i)
     {
         next_step = (pos_arr + i)->position;
-        degree = (pos_arr + i)->possibilities;       
+        degree = (pos_arr + i)->possibilities;
 
         if (-1 == next_step)
         {
@@ -206,7 +195,7 @@ static return_val_t RecWarnsdorffsGoToNext(bit_arr_t chess_board,
 
         if ((0 < degree) && (0 == BitArrGetVal(chess_board, (size_t)next_step)))
         {
-            status = RecWarnsdorffsGoToNext(chess_board, next_step, path);
+            status = RecWarnsdorffsGoToNext(chess_board, (pos_arr + i)->position, path);
         }
         else if ((0 == degree) &&
                  (chess_board == ~(BitArrSetOn((bit_arr_t)0, next_step))))
@@ -214,7 +203,6 @@ static return_val_t RecWarnsdorffsGoToNext(bit_arr_t chess_board,
             path[BitArrCountOn(chess_board)] = next_step;
             return (SUCCESS);
         }
-        
     }
 
     return (status);
@@ -223,7 +211,7 @@ static return_val_t RecWarnsdorffsGoToNext(bit_arr_t chess_board,
 static char GetNextAvalableStep(char position, size_t move)
 {
     static char lut[BOARD_SIZE][BOARD_AXIS] =
-       {{10, 17, -1, -1, -1, -1, -1, -1},
+        {{10, 17, -1, -1, -1, -1, -1, -1},
          {11, 18, 16, -1, -1, -1, -1, -1},
          {12, 19, 17, 8, -1, -1, -1, -1},
          {13, 20, 18, 9, -1, -1, -1, -1},
@@ -288,7 +276,6 @@ static char GetNextAvalableStep(char position, size_t move)
          {-1, -1, -1, -1, 52, 45, 47, -1},
          {-1, -1, -1, -1, 53, 46, -1, -1}};
 
-
     return (lut[(size_t)position][move]);
 }
 
@@ -298,12 +285,12 @@ void *TimeOutClock(void *param)
 
     UNUSED(param);
 
-    while (0 < remain)
+    while ((0 < remain))
     {
-        remain = sleep(remain);
+        sleep(1);
     }
 
-    timed_out = 1;
+    stop_working = 1;
 
     return (0);
 }

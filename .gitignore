@@ -13,7 +13,7 @@
 !/system_programming
 !Makefile
 /tests_for_friends
-
+/monday
 !.myFunc
 !*.c
 !*.md
