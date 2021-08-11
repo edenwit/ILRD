@@ -10,9 +10,9 @@ int main(void)
     return (0);
 }
 
-void foo(void)
+void foo(int x)
 {
-    printf("checking print\n");
+    printf("checking print %d\n", x);
 
 
     return (0);

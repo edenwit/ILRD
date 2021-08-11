@@ -3,12 +3,40 @@
 
  *  Description: Data Structure Exam 2;							*/
 
-#include <stdio.h>
+#include <stdio.h>	/* printf */
+#include <limits.h> /* INT_MIN */
+#include <assert.h> /* assert */
+#include <stdlib.h> /* malloc */
 
 #include "stack.h"
 #include "bst.h"
 
 #define CHARS (256)
+
+void Swap(char *x, char *y);
+
+typedef struct node
+{
+	void *data;
+	struct node *next;
+
+} node_t;
+
+typedef struct bst_node
+{
+	void *data;
+	struct bst_node *left;
+	struct bst_node *right;
+	struct bst_node *parent;
+
+} bst_node_t;
+
+struct bst
+{
+	bst_node_t dummy;
+	int (*cmp_func)(void *data1, void *data2, void *param);
+	void *param;
+};
 
 /* Question 1 */
 
@@ -90,7 +118,7 @@ int SortStack(stack_t *stack)
 	stack_t *stackush = NULL;
 	int val = 0;
 
-	stakush = StackCreate(StackCapacity(stack));
+	stackush = StackCreate(StackGetCapacity(stack));
 
 	if (NULL == stackush)
 	{
@@ -99,16 +127,16 @@ int SortStack(stack_t *stack)
 
 	while (!StackIsEmpty(stack))
 	{
-		val = (int)(StackPeek(stack));
+		val = (int)(long)(StackPeek(stack));
 		StackPop(stack);
 
-		while ((!StackIsEmpty(stackush)) && ((int)StackPeek(stackush) > val))
+		while ((!StackIsEmpty(stackush)) && ((int)(long)StackPeek(stackush) > val))
 		{
 			StackPush(stack, StackPeek(stackush));
 			StackPop(stackush);
 		}
 
-		StackPush(stackushm val);
+		StackPush(stackush, (void *)(long)val);
 	}
 
 	while (!StackIsEmpty(stackush))
@@ -146,6 +174,7 @@ int SortCharsInFile(const char *filename, char *result)
 
 	if (NULL == res_file_ptr)
 	{
+		fclose(file_ptr);
 		return (1);
 	}
 
@@ -156,10 +185,10 @@ int SortCharsInFile(const char *filename, char *result)
 
 	for (i = 0; i < CHARS; ++i)
 	{
-		while (0 < chars_count[i])
+		while (0 < char_counts[i])
 		{
-			fputc(char(i), res_file_ptr);
-			--chars_count[i];
+			fputc((char)i, res_file_ptr);
+			--char_counts[i];
 		}
 	}
 
@@ -169,12 +198,21 @@ int SortCharsInFile(const char *filename, char *result)
 	return (0);
 }
 
+int main()
+{
+	SortCharsInFile("src_file.txt", "dest_file.txt");
+
+	return (0);
+}
+
+
 /* Question 5 */
 
-int IterativeBstInsert(bst_t *tree, int val)
+bst_node_t *IterativeBstInsert(bst_node_t *tree, int val)
 {
 	bst_node_t *root = NULL;
 	bst_node_t *node = NULL;
+	void *val_ptr = (void *)(long)val;
 
 	assert(tree);
 
@@ -183,15 +221,16 @@ int IterativeBstInsert(bst_t *tree, int val)
 
 	if (NULL == node)
 	{
-		return (1);
+		return (NULL);
 	}
 
-	node->data = val;
-	node->next = NULL;
+	node->data = val_ptr;
+	node->left = NULL;
+	node->right = NULL;
 
 	while (NULL != root)
 	{
-		if (root->data < val)
+		if (root->data < val_ptr)
 		{
 			if (root->right)
 			{
@@ -202,7 +241,7 @@ int IterativeBstInsert(bst_t *tree, int val)
 				node->parent = root;
 				root->right = node;
 
-				return (0);
+				return (node);
 			}
 		}
 		else
@@ -216,42 +255,45 @@ int IterativeBstInsert(bst_t *tree, int val)
 				node->parent = root;
 				root->left = node;
 
-				return (0);
+				return (node);
 			}
 		}
 	}
+
+	return (root);
 }
 
-bst_node_t *RecursiveBstInsert(bst_t *root, int val)
+bst_node_t *RecursiveBstInsert(bst_node_t *root, int val)
 {
 	bst_node_t *node = NULL;
+	void *val_ptr = (void *)(long)val;
 
 	assert(root);
 
 	if (NULL == root)
 	{
-		node = (bst_node_t *)malloc(bst_node_t);
+		node = (bst_node_t *)malloc(sizeof(bst_node_t));
 
 		if (NULL == node)
 		{
 			return (NULL);
 		}
 
-		node->data = val;
+		node->data = val_ptr;
 		node->left = NULL;
 		node->right = NULL;
 
 		return (node);
 	}
 
-	if (root->data < val)
+	if ((int)(long)(root->data) < (int)(long)val_ptr)
 	{
-		root->right = RecursiveBstInsert(root->right, val)
+		root->right = RecursiveBstInsert(root->right, val);
 	}
 
 	else
 	{
-		root->left = RecursiveBstInsert(rot->left, val);
+		root->left = RecursiveBstInsert(root->left, val);
 	}
 
 	return (root);
@@ -299,6 +341,7 @@ void FlipString(char *str, size_t from, size_t to)
 	return;
 }
 
+
 void Swap(char *x, char *y)
 {
 	char temp = 0;
@@ -315,21 +358,23 @@ void Swap(char *x, char *y)
 
 /* Question 8 */
 
-void Permute(char *a, int l, int r)
+void Permute(char *str, size_t l, size_t r)
 {
 	size_t i = 0;
 
+	assert(str);
+
 	if (l == r)
 	{
-		printf("%s\n", a);
+		printf("%s\n", str);
 	}
 	else
 	{
 		for (i = l; i <= r; i++)
 		{
-			Swap((a + l), (a + i));
-			Permute(a, l + 1, r);
-			Swap((a + l), (a + i));
+			Swap((str + l), (str + i));
+			Permute(str, l + 1, r);
+			Swap((str + l), (str + i));
 		}
 	}
 
@@ -341,19 +386,19 @@ void RecStackInsert(stack_t *stack, int val)
 {
 	int temp = 0;
 
-	if (StackIsEmpty(stack) || (int)StackPeek(stack) > val)
+	if (StackIsEmpty(stack) || (int)(long)StackPeek(stack) > val)
 	{
-		StackPush(stack, val);
+		StackPush(stack, (void *)(long)val);
 
 		return;
 	}
 
 	else
 	{
-		temp = (int)StackPeek(stack);
+		temp = (int)(long)StackPeek(stack);
 		StackPop(stack);
 		RecStackInsert(stack, val);
-		StackPush(stack, val);
+		StackPush(stack, (void *)(long)temp);
 	}
 
 	return;
