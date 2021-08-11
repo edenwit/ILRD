@@ -9,7 +9,7 @@ int operator+(const X& x1_, const X& x2_)
     return 7;
 }
 
-ostream& operator<<(ostream& os_, const X& x_);
+// ostream& operator<<(ostream& os_, const X& x_);
 
 class X
 {

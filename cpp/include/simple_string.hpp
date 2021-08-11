@@ -2,9 +2,11 @@
 #define ILRD_RD102_SIMPLE_STRING_HPP
 
 #include <cstddef>
-
+#include <iosfwd>
+#include "simple_string.hpp"
 namespace ilrd
 {
+
 class String
 {
 public:
@@ -18,7 +20,11 @@ public:
 private:
 	char *m_cstr;
 };
-} //ilrd
 
+bool operator<(const String &lhs, const String &rhs);
+bool operator>(const String &lhs, const String &rhs);
+bool operator==(const String &lhs, const String &rhs);
+std::ostream &operator<<(std::ostream &os, const String &str);
+} //ilrd
 
 #endif /* ILRD_RD102_SIMPLE_STRING_HPP */
