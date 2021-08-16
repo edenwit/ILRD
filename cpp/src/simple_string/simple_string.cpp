@@ -1,7 +1,7 @@
-#include <cstddef>
-#include <cstring>
-#include <iostream>
-#include <cassert>
+#include <cstddef> // size_t
+#include <cstring> // strcmp, strcpy
+#include <iostream>// cout
+#include <cassert> // assert
 
 #include "simple_string.hpp"
 

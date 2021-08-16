@@ -8,77 +8,128 @@ INC = ../include
 BIN = ../bin
 
 OBJ = ../obj
+OBJ_REL = ../obj_rel
+
 CC = g++
 CFLAGS = -std=c++98 -pedantic-errors -Wall -Wextra -g -I$(INC) 
 RELEASE_FLAGS =  -std=c++98 -pedantic-errors -Wall -Wextra -DNDEBUG -O3 -I$(INC) 
 
 #----------------shared object flags------------------#
-
+SOFLAG_FIRST = -c -fpic 
 SOFLAG_SECOND = -shared 
-LDFLAGS = -L$(LIB) -Wl,-rpath=$(LIB) -lcla -lpthread
-#----------------------------------------------------#
 
+#----------------	PHONYs	------------------#
+.PHONY:	silent_test nw_test nmw_test test build vlgT hlgT so_debug
+		update_debug clean_d libcla 
 
-.PHONY: libcla build_single build test vlgT hlgT shared_obj_debug release release_single
-		change clean 
+		silent_test_release nw_test_release nmw_test_release 
+		test_release release vlgT_release vlgh_release so_release 
+		update_release clean_r reless_lib
+		
+		change clean libtests libtests_r 
+
+#----------------DEBUG------------------#
+
+silent_test: 
+	@make -s -f ./.make/libtests
+	@make -s -f ./.make/run_silent
+
+nw_test: 
+	@make -f ./.make/libtests
+	@make -f ./.make/run_NW
+
+nmw_test: 
+	@make -s -f ./.make/libtests
+	@make -s -f ./.make/run_no_make_worning
+
 test: 
+	@make -f ./.make/libtests
 	@make -f ./.make/run
 
+build: 
+	@make -f ./.make/libtests
+	@make -f ./.make/build
+
+so_debug: 
+	@make -f ./.make/libtests
+	@make -f ./.make/shared_obj_debug
+
 vlgT: 
+	@make -f ./.make/libtests
 	@make -f ./.make/runV
 
 hlgT: 
+	@make -f ./.make/libtests
 	@make -f ./.make/runH
 
- libcla:
-	$(CC) $(CFLAGS) $(SOFLAG_SECOND) $(shell find $(OBJ)/*/. -type f -regex ".*\.o")  -o $(LIB)/libcla.so
+update_debug: 
+	@make -f ./.make/libtests
+	@make -f ./.make/update_debug
 
+#----------------RELEASE------------------#
+	
+	
+silent_test_release: 
+	@make -f ./.make/libtests
+	@make -s -f ./.make/run_rel_silent
 
+nw_test_release: 
+	@make -f ./.make/libtests
+	@make -f ./.make/run_rel_NW
 
-build_single:
-	@make -f ./.make/build_single
+nmw_test_release: 
+	@make -s libtests_r
+	@make -s -f ./.make/run_rel_no_make_worning
 
-build:
-	@make shared_obj_debug
-	@make libcla
-	@make -f ./.make/build
-
-
-test_release:
-
+test_release: libtests_r
 	@make -f ./.make/run_rel
 
-shared_obj_debug:
-#	@mkdir -p $(OBJ)/tests_for_sorts 
-#	@mkdir -p $(OBJ)/trie 
-#	$(CC) $(CFLAGS) ./tests_for_sorts.c -c -fpic -o $(OBJ)/tests_for_sorts/tests_for_sorts.o 
-#	$(CC) $(CFLAGS) ./trie.c -c -fpic -o $(OBJ)/trie/trie.o 
-	@make -f ./.make/shared_obj
+release: libtests_r
+	@make -f ./.make/releass
 
-release:
-#	@mkdir -p $(OBJ)/tests_for_sorts
-#	@mkdir -p $(OBJ)/extra_avl 
-#	$(CC) $(RELEASE_FLAGS) ./tests_for_sorts.c -c -fpic -o $(OBJ)/tests_for_sorts/tests_for_sorts.o 
-#	$(CC) $(RELEASE_FLAGS)  ./avl/extra_func.c -c -fpic -o $(OBJ)/extra_avl/extra_avl.o 
-	@make -f ./.make/releass1
-	@make libcla
-	@make -f ./.make/releass2_build
+so_release: libtests_r
+	@make -f ./.make/shared_obj_release
 
-release_so:
-	@make -f ./.make/releass1
+vlgT_release: libtests_r
+	@make -f ./.make/runV_rel
+
+hlgT_release: libtests_r
+	@make -f ./.make/runH_rel
+
+update_release: libtests_r
+	@make -f ./.make/update_release
+
+#----------------GENERAL------------------#
+$(OBJ)/tests_lib/%.o: ../../tools/%.c
+	@mkdir -p $(OBJ)/tests_lib 
+	$(CC) $(CFLAGS) $(SOFLAG_FIRST) $^ -o $@ 
+
+libcla: 
+	$(CC) $(CFLAGS) $(SOFLAG_SECOND) $(shell find $(OBJ)/*/. -type f -regex ".*\.o")  -o $(LIB)/libcla.so
+
+reless_lib:  
+	$(CC) $(RELEASE_FLAGS) $(SOFLAG_SECOND)  $(shell find $(OBJ_REL)/*/. -type f -regex ".*\.o")  -o $(LIB)/libcla.so
+
+
+libtests: $(TEST_OBJs)
+
+libtests_r: CFLAGS = $(RELEASE_FLAGS)
+libtests_r: libtests
 
 change:
 	@make -f ./.make/change
 
-clean:
+
+clean :
 	@make -f ./.make/clean
-	@rm -r -f $(LIB)/libcla.so
-	@rm -r -f ./*.o
 
 
 
+clean_d :
+	@rm -f -r $(OBJ)
+	@make -f ./.make/clean_d
 
-#all:
-#	@make so
-#	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(shell find $(OBJ)_rel/*/. -maxdepth 1 -type f -regex ".*\.o")  -o $(LIB)/libcla_rel.so
-#	@make -f ./.make/makefile3
+
+clean_r :
+	@rm -f -r $(OBJ_REL)
+	@make -f ./.make/clean_r
