@@ -5,11 +5,11 @@ using namespace std;
 class B
 {
 public:
-    B(int a_ = 8) : m_a(a_) { cout << "B::Ctor" << endl; }
-    virtual ~B() { cout << "B::Dtor" << endl; }
+    B(int a_) : m_a(a_) { cout << "B::Ctor" << endl; }
+    ~B() { cout << "B::Dtor" << endl; }
     //java style is not allowed in our coding convention
     virtual void Print1() const;
-    virtual void Print2() const;
+    void Print2() const;
     virtual void Print3() const;
 
 private:
@@ -34,7 +34,7 @@ void B::Print3() const
 class X : public B
 {
 public:
-    X() : m_b(0) { cout << "X::Ctor" << endl; }
+    X() :B(8), m_b(0) {  cout << "X::Ctor" << endl; }
 
     ~X() { cout << "X::Dtor" << endl; }
 
@@ -53,7 +53,7 @@ private:
 
 int main()
 {
-    B *b1 = new B;
+    B *b1 = new B(8);
     B *b2 = new X;
 
     cout << endl
