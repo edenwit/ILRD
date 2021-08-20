@@ -5,34 +5,32 @@
 
 namespace ilrd
 {
+    typedef class StringRC RefCountStr_t;
 
-class RCString
-{
-public:
-	RCString(const char *cstr_ = ""); // non-explicit on purpose 
-	RCString(const RCString &other_);
-	~RCString();
-	RCString &operator=(const RCString &other_); 
-	size_t Length() const;
-	const char *CStr() const;
-	char& operator[] (size_t index);
-	char operator[] (size_t index) const;
+    class RCString
+    {
+    public:
+        RCString(const char *cstr = ""); // non-explicit on purpose
+        RCString(const RCString &other);
+        ~RCString();
+        RCString &operator=(const RCString &other);
+        size_t Length() const;
+        const char *CStr() const;
+        char &operator[](size_t index);
+        char operator[](size_t index) const;
 
-private:
-	char *m_cstr_;
-	size_t *ref_count;
-	
-}; //RCString
+    private:
+        RefCountStr_t *m_data;
 
-std::ostream &operator<<(std::ostream &os, const RCString &str);
-std::istream &operator>>(std::istream &is, RCString &str);
-bool operator<(const RCString &str1, const RCString &str2);
-bool operator>(const RCString &str1, const RCString &str2);
-bool operator==(const RCString &str1, const RCString &str2);
-bool operator!=(const RCString &str1, const RCString &str2);
+    }; //RCString
 
+    std::ostream &operator<<(std::ostream &os, const RCString &str);
+    std::istream &operator>>(std::istream &is, RCString &str);
+    bool operator<(const RCString &str1, const RCString &str2);
+    bool operator>(const RCString &str1, const RCString &str2);
+    bool operator==(const RCString &str1, const RCString &str2);
+    bool operator!=(const RCString &str1, const RCString &str2);
 
 } //ilrd
-
 
 #endif /* ILRD_RD102_RCSTRING_HPP */

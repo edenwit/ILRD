@@ -46,15 +46,15 @@ int main() {
     {         
         cerr << "Out of memory! exiting."; exit(2);     
     }     
+    catch(BadDog& b)     
+    {         
+        cerr << "Bad dog exception: " << b.what(); exit(3);     
+    }     
     catch( exception& r )
     {
         cerr << "unknown exception: " << r.what();
         exit(4);     
     }
-    catch(BadDog& b)     
-    {         
-        cerr << "Bad dog exception: " << b.what(); exit(3);     
-    }     
     catch (...)
     {
         cerr << "catch them all!!" ;
