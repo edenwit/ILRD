@@ -1,28 +1,31 @@
-#include "iostream" // std::isstream
-#include "cstring" // memcpy
-#include <cstddef> // offsetof
-#include <vector> // std::vector
-#include <cstdio> // EOF
+#include "iostream" //  isstream
+#include "cstring" //   memcpy
+#include <cstddef> //   offsetof
+#include <vector> //    vector
+#include <cstdio> //    EOF
 
 #include "rcstring.hpp"
 
 namespace ilrd
 {
+void ManipulateRef(RefCountStr *m_data);
 
-struct StringRC
+struct RefCountStr
 {
 public:
-    size_t m_ref_count;
+    size_t m_r_counter;
+    bool m_char_ref;
     char m_cstr[1];
 };
 
-inline StringRC *InitRCString(const char *str)
+inline RefCountStr *InitRCString(const char *str)
 {
-    const size_t LEN = strlen(str) + 1;
+    const size_t LEN = (strlen(str) + 1);
 
-    StringRC *value = static_cast<StringRC *>(::operator new (LEN 
-                                                + offsetof(StringRC, m_cstr)));
-    value->m_ref_count = 1;
+    RefCountStr *value = static_cast<RefCountStr *>(::operator new (LEN 
+                                                + offsetof(RefCountStr, m_cstr)));
+    value->m_r_counter = 1;
+    value->m_char_ref = false;
 
     memcpy(value->m_cstr, str, LEN);
 
@@ -36,26 +39,34 @@ RCString::RCString(const char *cstr) : m_data(InitRCString(cstr))
 
 RCString::~RCString()
 {
-    --m_data->m_ref_count;
-
-    if (m_data->m_ref_count == 0)
-    {
-        delete (m_data);
-        m_data = 0;
-    }
+    ManipulateRef(m_data);
 }
 
 RCString::RCString(const RCString &other_): m_data(other_.m_data)
 {
-    ++(this->m_data->m_ref_count);
+    if (other_.m_data->m_char_ref)
+    {
+        m_data = InitRCString(other_.CStr());
+    }
+    else
+    {
+        ++(other_.m_data->m_r_counter);
+    }
 }
 
 RCString &RCString::operator=(const RCString &other)
-{
-    this->~RCString();
-
-    m_data = other.m_data;
-    ++(m_data->m_ref_count);
+{ 
+    if (other.m_data->m_char_ref)
+    {
+        ManipulateRef(m_data);
+        m_data = InitRCString(other.CStr());
+    }
+    else
+    {
+        ++(other.m_data->m_r_counter);
+        ManipulateRef(m_data);
+        m_data = other.m_data;
+    }
 
     return (*this);
 }
@@ -95,13 +106,15 @@ char RCString::operator[] (size_t index) const
     return (m_data->m_cstr[index]);
 }
 
-char& RCString::operator[] (size_t index)
+char &RCString::operator[](size_t index)
 {
-    if (1 != m_data->m_ref_count)
+    if (1 != (m_data->m_r_counter))
     {
-        --(m_data->m_ref_count);
+        --(m_data->m_r_counter);
         m_data = InitRCString(m_data->m_cstr);
     }
+
+    m_data->m_char_ref = true;
 
     return (m_data->m_cstr[index]);
 }
@@ -117,7 +130,7 @@ std::istream &operator>>(std::istream &is, RCString &str)
 
     int ch = is.get();
 
-    while (EOF != ch && '\n' != ch)
+    while ((EOF != ch) && ('\n' != ch))
     {
         string.push_back(ch);
         ch = is.get();
@@ -128,6 +141,19 @@ std::istream &operator>>(std::istream &is, RCString &str)
     str = RCString(&string[0]); 
 
     return (is);
+}
+
+void ManipulateRef(RefCountStr *m_data)
+{
+    --(m_data->m_r_counter);
+    
+    if (0 == m_data->m_r_counter)
+    {
+        delete (m_data);
+        m_data = 0;
+    }
+
+    return;
 }
 }
 
