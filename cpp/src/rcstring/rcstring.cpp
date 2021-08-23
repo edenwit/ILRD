@@ -20,10 +20,10 @@ public:
 
 inline RefCountStr *InitRCString(const char *str)
 {
-    const size_t LEN = (strlen(str) + 1);
+    static const size_t LEN = (strlen(str) + 1); 
 
-    RefCountStr *value = static_cast<RefCountStr *>(::operator new (LEN 
-                                                + offsetof(RefCountStr, m_cstr)));
+    RefCountStr *value = static_cast<RefCountStr *>(operator new (LEN 
+                                    + offsetof(RefCountStr, m_cstr)));
     value->m_r_counter = 1;
     value->m_char_ref = false;
 
@@ -34,7 +34,7 @@ inline RefCountStr *InitRCString(const char *str)
 
 RCString::RCString(const char *cstr) : m_data(InitRCString(cstr))
 {
-    ;
+    //"empty on purpose"
 }
 
 RCString::~RCString()
