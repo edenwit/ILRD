@@ -43,6 +43,16 @@ typedef struct SpecialTaxi
     Taxi_t m_taxi;
 } SpecialTaxi_t;
 
+typedef struct PublicConvoy
+{
+	PublicTransport_t m_pt;
+
+	PublicTransport_t *m_p1;
+	PublicTransport_t *m_p2;
+	Minibus_t m_m;
+	Taxi_t m_t;
+} PublicConvoy_t;
+
 /* ---------- funcs declerations --------------*/
 
 void PublicTransportCreate(PublicTransport_t *pt);
@@ -68,6 +78,11 @@ void SpecialTaxiDestroy(void *taxi);
 void SpecialTaxiCopyCreate(SpecialTaxi_t *this, const struct SpecialTaxi *other);
 void SpecialTaxiDisplay(void *const this);
 
+void PublicConvoyCreate(PublicConvoy_t * const pt);
+void PublicConvoyDestroy(void * const pt);
+void PublicConvoyCopyCreate(PublicConvoy_t * const pt, const PublicConvoy_t *other);
+void PublicConvoyDisplay(void *const this);
+
 /*-----------static funcs ---------------*/
 
 static void PrintCount();
@@ -80,7 +95,7 @@ vtable_t g_public_transport_vtble = {PublicTransportDestroy, PublicTransportDisp
 vtable_t g_minibus_vtble = {MinibusDestroy, MinibusDisplay, Wash};
 vtable_t g_taxi_vtble = {TaxiDestroy, TaxiDisplay, NULL};
 vtable_t g_special_taxi_vtble = {SpecialTaxiDestroy, SpecialTaxiDisplay, NULL};
-
+vtable_t g_public_convoy_vtable = {PublicConvoyDestroy, PublicConvoyDisplay, NULL};
 /* ---------- MAX impl --------------*/
 
 int MAX(int a, int b)
@@ -175,7 +190,7 @@ void MinibusCopyCreate(Minibus_t *this, const Minibus_t *other)
     this->m_pt.vptr = &g_minibus_vtble;
     this->m_numSeats = other->m_numSeats;
 
-    printf("Minibus::CCtor()%d\n", this->m_pt.m_license_plate);
+    printf("Minibus::CCtor()\n");
 
     return;
 }
@@ -271,6 +286,70 @@ void SpecialTaxiDisplay(void *const this)
     return;
 }
 
+/* ------------------------ PublicConvoy ---------------------*/
+
+
+void PublicConvoyCreate(PublicConvoy_t * const pc)
+{
+	PublicTransportCreate(&pc->m_pt);
+
+	pc->m_p1 = malloc(sizeof(Minibus_t));
+	MinibusCreate((Minibus_t *) pc->m_p1);
+	pc->m_p2 = malloc(sizeof(Taxi_t));
+	TaxiCreate((Taxi_t *) pc->m_p2);
+
+	MinibusCreate(&pc->m_m);
+	TaxiCreate(&pc->m_t);
+
+	pc->m_pt.vptr = &g_public_convoy_vtable;
+    printf("PublicConvoy::Ctor()\n");
+
+	return;
+}
+void PublicConvoyDestroy(void * const pc)
+{	
+
+	(((PublicConvoy_t *)pc)->m_p1)->vptr->Dtor((((PublicConvoy_t *)pc)->m_p1));
+	(((PublicConvoy_t *)pc)->m_p2)->vptr->Dtor((((PublicConvoy_t *)pc)->m_p2));
+	free(((PublicConvoy_t *)pc)->m_p1);
+	free(((PublicConvoy_t *)pc)->m_p2);
+
+    printf("PublicConvoy::Dtor()\n");
+	TaxiDestroy(&((PublicConvoy_t *)pc)->m_t);
+	MinibusDestroy(&((PublicConvoy_t *)pc)->m_m);
+	
+	PublicTransportDestroy(&((PublicConvoy_t *)pc)->m_pt);
+
+	return;
+}
+void PublicConvoyCopyCreate(PublicConvoy_t * const pc, const PublicConvoy_t *other)
+{
+	PublicTransportCopyCreate(&pc->m_pt, &other->m_pt);
+
+	pc->m_p1 = malloc(sizeof(Minibus_t));
+	MinibusCopyCreate((Minibus_t *) pc->m_p1, (Minibus_t *) other->m_p1);
+	pc->m_p2 = malloc(sizeof(Taxi_t));
+	TaxiCopyCreate((Taxi_t *) pc->m_p2, (Taxi_t *) other->m_p2);
+	
+	MinibusCopyCreate(&pc->m_m, &other->m_m);
+	TaxiCopyCreate(&pc->m_t, &other->m_t);
+
+	pc->m_pt.vptr = &g_public_convoy_vtable;
+    printf("PublicConvoy::CCtor()\n");
+
+	return;
+}
+void PublicConvoyDisplay(void *const this)
+{
+	((PublicConvoy_t *)this)->m_p1->vptr->Display(((PublicConvoy_t *)this)->m_p1);
+	((PublicConvoy_t *)this)->m_p2->vptr->Display(((PublicConvoy_t *)this)->m_p2);
+
+	MinibusDisplay(&((PublicConvoy_t *)this)->m_m);
+	TaxiDisplay(&((PublicConvoy_t *)this)->m_t);
+
+	return;
+}
+
 /* -------------------------PrintInfos-----------------------*/
 
 void PrintInfoPublicTransport(PublicTransport_t *a)
@@ -307,6 +386,9 @@ PublicTransport_t PrintInfoI(int i)
 
     return (pt);
 }
+
+
+
 
 /* --------------------- main ----------------------*/
 
@@ -424,14 +506,30 @@ int main(/* int argc, char **argv, char **envp */)
 
     printf("------------------------------------------------\n");
 
-    /*
-    PublicConvoy *ts1 = new PublicConvoy();
-    PublicConvoy *ts2 = new PublicConvoy(*ts1);
-    ts1->display();
-    ts2->display();
-    delete ts1;
-    ts2->display(); // this crashes. fix the bug!
-    delete ts2;*/
+	PublicConvoy_t *ts1 = malloc(sizeof(PublicConvoy_t));
+	PublicConvoyCreate(ts1);
+        printf("------------------------------------------------\n");
+
+	PublicConvoy_t *ts2 = malloc(sizeof(PublicConvoy_t));
+	PublicConvoyCopyCreate(ts2, ts1);
+    printf("------------------------------------------------\n");
+
+	ts1->m_pt.vptr->Display(ts1);
+    printf("------------------------------------------------\n");
+
+	ts2->m_pt.vptr->Display(ts2);
+    printf("------------------------------------------------\n");
+
+	PublicConvoyDestroy(ts1); free(ts1);
+    printf("------------------------------------------------\n");
+
+	ts2->m_pt.vptr->Display(ts2);
+    printf("------------------------------------------------\n");
+
+	PublicConvoyDestroy(ts2); free(ts2);
+    printf("------------------------------------------------\n");
+
+
 
     SpecialTaxiDestroy(&st);
 

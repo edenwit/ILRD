@@ -1,4 +1,5 @@
 #include <iostream> //cout
+#include <cstring> //memmove
 using namespace std;
 
 class PublicTransport {
@@ -130,16 +131,30 @@ public:
 private:
 };
 
-/*class PublicConvoy: public PublicTransport {
+class PublicConvoy: public PublicTransport {
 public:
     PublicConvoy() : m_pt1(new Minibus()), m_pt2(new Taxi())
     {
+        cout << "PublicConvoy::Ctor()" << endl;
+
+    }
+
+    PublicConvoy(PublicConvoy &other) : 
+    PublicTransport(other),
+    m_pt1(new Minibus(dynamic_cast<Minibus&>(*(other.m_pt1)))), 
+    m_pt2(new Taxi(dynamic_cast<Taxi&>(*(other.m_pt2)))),
+    m_m(other.m_m), m_t(other.m_t)
+    {
+
+        cout << "PublicConvoy::CCtor()" << endl;
     }
 
     ~PublicConvoy()
     {
         delete m_pt1;
         delete m_pt2;
+        cout << "PublicConvoy::Dtor()" << endl;
+
     }
 
     void display()
@@ -155,7 +170,7 @@ private:
     PublicTransport *m_pt2;
     Minibus m_m;
     Taxi m_t;
-};*/
+};
 
 void print_info(PublicTransport &a)
 {
@@ -255,13 +270,26 @@ int main(int argc, char **argv, char **envp)
         std::cout << "------------------------------------------------" << std::endl;
 
 
-    /*PublicConvoy *ts1 = new PublicConvoy();
+    PublicConvoy *ts1 = new PublicConvoy();
+        std::cout << "------------------------------------------------" << std::endl;
+
     PublicConvoy *ts2 = new PublicConvoy(*ts1);
+        std::cout << "------------------------------------------------" << std::endl;
+
     ts1->display();
+        std::cout << "------------------------------------------------" << std::endl;
+
     ts2->display();
+
+        std::cout << "------------------------------------------------" << std::endl;
     delete ts1;
+        std::cout << "------------------------------------------------" << std::endl;
+
     ts2->display(); // this crashes. fix the bug!
-    delete ts2;*/
+        std::cout << "------------------------------------------------" << std::endl;
+
+    delete ts2;
+        std::cout << "------------------------------------------------" << std::endl;
 
     return 0;
 }
