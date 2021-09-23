@@ -47,7 +47,7 @@ int main()
 
 	len = sizeof(cliaddr); //len is value/resuslt
 
-	for (i = 0; i < LOOPS; ++i)
+	for (i = 1; i <= LOOPS; ++i)
 	{
 		n = recvfrom(sockfd, (char *)buffer, MAXLINE,
 					 MSG_WAITALL, (struct sockaddr *)&cliaddr,

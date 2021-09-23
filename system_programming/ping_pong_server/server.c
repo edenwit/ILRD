@@ -4,9 +4,11 @@
 #include <strings.h>    /* bzero */
 #include <string.h>     /* memset, memcpy */
 #include <unistd.h>     /* read, write, close */
-#include <sys/select.h> /* fd_set */
+#include <sys/select.h> /* select, fd_set */
+#include <sys/socket.h> /* accept*/
+#include <netinet/in.h> /* sockaddr_in */
 
-#include "tcp.h"
+#include "tcp_udp_utils.h"
 
 #define PORT 5000
 #define MAXLINE 1024
@@ -20,18 +22,15 @@ int main()
     int tcp_fd = 0;
     int udp_fd = 0;
     int stdin_fd = STDIN_FILENO;
-
     int maxfdp1 = 0;
     char buffer[MAXLINE];
-
     fd_set rset = {0};
     socklen_t len;
-
-    struct sockaddr_in cliaddr, servaddr;
+    struct sockaddr_in cliaddr = {0};
+    struct sockaddr_in servaddr = {0};
     struct timeval time_out = {TIMEOUT, 0};
-
     char buff[MAXLINE] = {'\0'};
-    ssize_t response = 0;
+    ssize_t response = -1;
 
     memset(&servaddr, 0, sizeof(servaddr));
     memset(&cliaddr, 0, sizeof(cliaddr));
@@ -83,25 +82,20 @@ int main()
         return (EXIT_FAILURE);
     }
 
-    /* clear the descriptor set */
-    FD_ZERO(&rset);
-
-    /* get maxfd */
-
-    maxfdp1 = MAX2(MAX2(server_fd, udp_fd), stdin_fd) + 1;
-
     while (1)
     {
-
+        response = -1;
         time_out.tv_sec = TIMEOUT;
 
+        /* clear the descriptor set */
         FD_ZERO(&rset);
 
         /* set server_fd and udp_fd in readset */
         FD_SET(server_fd, &rset);
         FD_SET(udp_fd, &rset);
         FD_SET(stdin_fd, &rset);
-        /* FD_SET(tcp_fd, &rset); */
+
+        maxfdp1 = MAX2(server_fd, udp_fd) + 1;
 
         /* select the ready descriptor */
         if (!select(maxfdp1, &rset, NULL, NULL, &time_out))
@@ -111,16 +105,12 @@ int main()
 
         /* if tcp socket is readable then handle */
         /* it by accepting the connection */
-
-        if (FD_ISSET(server_fd, &rset))
+        else if (FD_ISSET(server_fd, &rset))
         {
-            puts("inside serverfd");
             len = sizeof(cliaddr);
 
-            if (0 == response)
-            {
-                tcp_fd = accept(server_fd, (struct sockaddr *)&cliaddr, &len);
-            }
+            tcp_fd = accept(server_fd, (struct sockaddr *)&cliaddr, &len);
+            /* setsockopt(tcp_fd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&time_out, sizeof time_out); */
 
             if (0 > tcp_fd)
             {
@@ -129,17 +119,13 @@ int main()
                 perror("accept failed\n");
                 exit(1);
             }
-            else if (0 < tcp_fd)
+            while (0 != response)
             {
                 bzero(buff, MAXLINE);
-                response = recv(tcp_fd, buff, sizeof(buff), 0);
 
-                if (0 == response)
-                {
-                    puts("TCP client closed.");
-                    close(tcp_fd);
-                }
-                else if (-1 == response)
+                response = TCPGetMessage(tcp_fd, buff);
+
+                if (0 > response)
                 {
                     perror("recv failed\n");
                     close(tcp_fd);
@@ -149,18 +135,20 @@ int main()
                 {
                     printf("TCP client: %s\n", buff);
 
-                    if (-1 == send(tcp_fd, "pong", 4, 0))
+                    if (-1 == TCPSendMessage(tcp_fd, "pong"))
                     {
                         perror("send failed\n");
                         close(tcp_fd);
+                        exit(1);
                     }
                 }
             }
+            puts("TCP client closed.");
+            close(tcp_fd);
         }
-        /* if (FD_ISSET(tcp_fd, &rset)) */
 
         /* if udp socket is readable receive the message. */
-        if (FD_ISSET(udp_fd, &rset))
+        else if (FD_ISSET(udp_fd, &rset))
         {
             len = sizeof(cliaddr);
             bzero(buffer, sizeof(buffer));
@@ -175,8 +163,9 @@ int main()
                 perror("sendto fail");
             }
         }
-        if (FD_ISSET(stdin_fd, &rset))
+        else if (FD_ISSET(stdin_fd, &rset))
         {
+
             bzero(buffer, sizeof(buffer));
             read(stdin_fd, buffer, sizeof(buffer));
 
@@ -190,11 +179,11 @@ int main()
             {
                 puts("stdin pong!");
             }
-
-            /*close(stdin_fd);*/
-            /*close(server_fd); */
         }
     }
+
+    close(server_fd);
+    close(udp_fd);
 
     return (0);
 }
