@@ -11,55 +11,49 @@ namespace MappedMemoryServer
         // Process A:
         static void Main(string[] args)
         {
+            Semaphore sem_server = new Semaphore(initialCount: 0, maximumCount: 1, name: "sem_server");
+            Semaphore sem_client = new Semaphore(initialCount: 0, maximumCount: 1, name: "sem_client");
+
             Console.WriteLine("First process started.");
 
-            using (MemoryMappedFile mmf = MemoryMappedFile.CreateNew("C://Users//edenw//source//Repos//eden-wittenberg//c#//IPC//mapped_file//file_fun", 10000))
+
+            using (MemoryMappedFile mmf = MemoryMappedFile.CreateNew("C://Users//edenw//source//Repos//eden-wittenberg//c#//IPC//mapped_file//file_fun1", 10000))
             {
-                Mutex server_write_mutex = new Mutex(true, "ping_pong_server_write_mutex");
-                Mutex server_read_mutex;
+                Thread.Sleep(10000);
 
-                while (false == Mutex.TryOpenExisting("ping_pong_server_read_mutex", out server_read_mutex))
+                String text;
+
+                using (MemoryMappedViewStream stream = mmf.CreateViewStream())
                 {
-                    Thread.Sleep(2000);
-                    Console.WriteLine("waiting for mutex creation.");
-                }
+                    BinaryWriter writer = new BinaryWriter(stream);
+                    text = "first ping";
+                    writer.Write(text);
+                
 
-                for (int i = 0; i < 5; ++i)
-                {
-                    Thread.Sleep(2000);
+                Console.WriteLine("server first write");
 
-                    server_write_mutex.WaitOne();
-                    //Console.WriteLine("Process A locked mutex 1");
-                    
+                sem_client.Release();
 
-                    using (MemoryMappedViewStream stream = mmf.CreateViewStream())
+                Console.WriteLine("after wait");
+
+                
+                    for (int i = 0; i < 20; ++i)
                     {
-                        BinaryWriter writer = new BinaryWriter(stream);
-                        writer.Write("ping");
+                        sem_server.WaitOne();
+
+                        Thread.Sleep(2000);
+
+                            BinaryReader reader = new BinaryReader(stream);
+                            Console.WriteLine("Process B says: {0}", reader.ReadString());
+                            text = "ping" + i;
+                            writer.Write(text);
+                            sem_client.Release();
                     }
 
-                    server_read_mutex.WaitOne();
-                    //Console.WriteLine("Process A locked mutex 2");
-
-
-                    server_write_mutex.ReleaseMutex();
-                    //Console.WriteLine("Process A released mutex 1");
-
-
-                    using (MemoryMappedViewStream stream = mmf.CreateViewStream())
-                    {
-                        BinaryReader reader = new BinaryReader(stream);
-                        Console.WriteLine("Process B says: {0}", reader.ReadString());
-                    
-                    }
-
-                    server_read_mutex.ReleaseMutex();
-                    //Console.WriteLine("Process A released mutex 2");
-
-
-
                 }
+
+
             }
-        }
+          }
     }
 }
