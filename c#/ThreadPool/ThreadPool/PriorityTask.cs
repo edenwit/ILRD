@@ -1,32 +1,23 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 namespace ThreadPool
 {
     public class PriorityTask : IPrioritizable
     {
-        private Task ttask;
-        public PriorityTask(Task t, PRIORITY p)
+        private Action _task;
+        public PriorityTask(Action t, PRIORITY p = PRIORITY.MEDIUM) : base(p)
         {
-            this.Priority = p;
-            this.ttask = t;
+            _task = t;
         }
 
-        public PRIORITY Priority 
+        public Action GetTask()
         {
-            get
-            {
-                return Priority;
-            }
-            set
-            {
-                Priority = value;
-            }
+            return _task;
         }
 
-        public Task GetTask()
+        public PRIORITY Priority()
         {
-            return ttask;
+            return GetPriority();
         }
     }
 }

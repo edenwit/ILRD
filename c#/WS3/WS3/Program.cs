@@ -19,8 +19,8 @@ namespace WS3
             m_color = color;
         }
 
-        public abstract double Area();
-        public abstract double Perimeter();
+        public virtual double Area();
+        public virtual double Perimeter();
 
         public override string ToString()
         {

@@ -1,57 +1,69 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ThreadPool
 {
-    public interface IPrioritizable
+    public class IPrioritizable
     {
-        /// <summary>
-        /// Priority of the item.
-        /// </summary>
-        PRIORITY Priority { get; set; }
+        public IPrioritizable(PRIORITY prior)
+        {
+            _priority = prior;
+        }
+
+        public PRIORITY GetPriority()
+        {
+            return _priority;
+        }
+
+        public void SetPriority(PRIORITY prior)
+        {
+            _priority = prior;
+        }
+
+        private PRIORITY _priority;
     }
 
-    public sealed class PriorityQueue<TEntry>
-        where TEntry : IPrioritizable
+    public sealed class PriorityQueue
     {
-        public LinkedList<TEntry> Entries { get; } = new LinkedList<TEntry>();
+        public LinkedList<PriorityTask> Entries { get; } = new LinkedList<PriorityTask>();
 
         public int Count()
         {
             return Entries.Count;
         }
 
-        public TEntry Dequeue()
+        public PriorityTask Dequeue()
         {
             if (Entries.Any())
             {
-                var itemTobeRemoved = Entries.First.Value;
+                PriorityTask itemTobeRemoved = Entries.First.Value;
                 Entries.RemoveFirst();
                 return itemTobeRemoved;
             }
-
-            return default(TEntry);
+            else
+            {
+                Console.WriteLine("Queue empty, cannot dequeue");
+                return null;
+            }
         }
 
-        public void Enqueue(TEntry entry)
+        public void Enqueue(PriorityTask entry)
         {
-            var value = new LinkedListNode<TEntry>(entry);
+            LinkedListNode< PriorityTask> value = new LinkedListNode<PriorityTask>(entry);
             if (Entries.First == null)
             {
                 Entries.AddFirst(value);
             }
             else
             {
-                var ptr = Entries.First;
-                while (ptr.Next != null && ptr.Value.Priority < entry.Priority)
+                LinkedListNode<PriorityTask> ptr = Entries.First;
+                while ((ptr.Next != null) && (ptr.Value.GetPriority() < entry.GetPriority()))
                 {
                     ptr = ptr.Next;
                 }
 
-                if (ptr.Value.Priority <= entry.Priority)
+                if (ptr.Value.GetPriority() <= entry.GetPriority())
                 {
                     Entries.AddAfter(ptr, value);
                 }

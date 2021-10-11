@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System;
 
 namespace ThreadPool
 {
@@ -6,35 +7,34 @@ namespace ThreadPool
     {
         public WaitableQueue()
         {
-            tasks = new PriorityQueue<PriorityTask>();
-            alock = new object();
+            _tasks = new PriorityQueue();
+            _lock = new object();
         }
 
-        public void Enqueue(PriorityTask task_to_insert)
+        public void Enqueue(PriorityTask _taskToInsert)
         {
-            Monitor.Enter(alock);
-            tasks.Enqueue(task_to_insert);
-            Monitor.PulseAll(alock);
-            Monitor.Exit(alock);
+            Monitor.Enter(_lock);
+            _tasks.Enqueue(_taskToInsert);
+            Monitor.Pulse(_lock);
+            Monitor.Exit(_lock);
         }
         public PriorityTask Dequeue()
         {
-            Monitor.Enter(alock);
+            Monitor.Enter(_lock);
 
-            if (tasks.Count() == 0)
+            while (_tasks.Count() == 0)
             {
-                Monitor.Wait(alock);
+                //Console.WriteLine("thread {0} 'tasks' queue empty. waiting.", Thread.CurrentThread.ManagedThreadId);
+                Monitor.Wait(_lock);
             }
 
-            PriorityTask task = tasks.Dequeue();
+            PriorityTask task = _tasks.Dequeue();
             
-            Monitor.Exit(alock);
+            Monitor.Exit(_lock);
 
             return task;
-
         }
-
-        private PriorityQueue<PriorityTask> tasks;
-        private object alock;
+        private PriorityQueue _tasks;
+        private object _lock;
     }
 }

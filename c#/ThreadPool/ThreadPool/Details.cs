@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ThreadPool
+﻿namespace ThreadPool
 {
     public enum PRIORITY
     {
+        DO_IT_NOW,
         VERY_HIGH,
         HIGH,
         MEDIUM,
