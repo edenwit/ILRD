@@ -24,7 +24,7 @@ namespace ThreadPool
 
             while (_tasks.Count() == 0)
             {
-                //Console.WriteLine("thread {0} 'tasks' queue empty. waiting.", Thread.CurrentThread.ManagedThreadId);
+                Console.WriteLine("thread {0} 'tasks' queue empty. waiting.", Thread.CurrentThread.ManagedThreadId);
                 Monitor.Wait(_lock);
             }
 

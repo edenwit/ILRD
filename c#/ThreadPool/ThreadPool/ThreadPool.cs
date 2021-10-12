@@ -152,7 +152,7 @@ namespace ThreadPool
             {
                 WorkerThread WT = new WorkerThread(ref this._waitingQueue);
                 _workersDictionary.Add(WT.GetThreadNum(), WT);
-                //Console.WriteLine("Worker added with thread num {0}", WT.GetThreadNum());
+                Console.WriteLine("Worker added with thread num {0}", WT.GetThreadNum());
             }    
 
             return;
