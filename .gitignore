@@ -25,6 +25,11 @@
 !*.cpp
 !*.hpp
 !*.cs
-!.sln
+!*.sln
+!*.csproj
+!*.dgspec
+!*.props
+!*.targets
+
 
 
